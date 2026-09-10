@@ -1,298 +1,346 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ลงทะเบียนผู้บริจาคไต | Kidney Transplant Follow-up System</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
-        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ลงทะเบียนผู้บริจาคไต | Kidney Transplant Follow-up System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
       },
-    },
-  };
-</script>
-<link rel="stylesheet" href="../assets/css/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
 </head>
+
 <body class="font-sans bg-bgapp text-slate-800">
 
-<div class="flex min-h-screen">
-  <div id="app-sidebar"></div>
+  <div class="flex min-h-screen">
+    <div id="app-sidebar"></div>
 
-  <div class="flex-1 min-w-0 flex flex-col">
-    <div id="app-topbar"></div>
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div id="app-topbar"></div>
 
-    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-5xl w-full mx-auto">
+      <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-5xl w-full mx-auto">
 
-      <!-- Header -->
-      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
-        <div>
-          <h2 class="text-xl font-bold text-slate-800">Donor Registration</h2>
-          <p class="text-sm text-slate-500 mt-0.5">กรอกข้อมูลผู้บริจาคเพื่อนำเข้าสู่กระบวนการ Screening และ Evaluation</p>
-        </div>
-        <a href="donor-dashboard.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> กลับแดชบอร์ดผู้บริจาค</a>
-      </div>
-
-      <form id="donor-form" class="space-y-6">
-
-        <!-- Section 1: Personal Information -->
-        <div class="card p-5 fade-in">
-          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="user-round" class="w-4 h-4 text-primary"></i> Section 1 · Personal Information</h3>
-          <div class="grid md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">รหัสผู้บริจาค (Donor ID)</label>
-              <input id="donor-id-field" type="text" readonly class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-500 outline-none" />
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">ชื่อ-นามสกุล</label>
-              <input type="text" placeholder="เช่น นายสมชาย ใจดี" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">วันเกิด</label>
-              <input type="text" placeholder="เช่น 14 พ.ค. 2540" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">อายุ (ปี)</label>
-              <input type="number" value="35" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">เพศ</label>
-              <select class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-                <option>ชาย</option>
-                <option>หญิง</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">เลขบัตรประชาชน</label>
-              <input type="text" placeholder="1-XXXX-XXXXX-XX-X" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">เบอร์โทร</label>
-              <input type="text" placeholder="08X-XXX-XXXX" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">กรุ๊ปเลือด</label>
-              <select class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-                <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
-                <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">จังหวัด (Province)</label>
-              <input type="text" placeholder="เช่น กรุงเทพมหานคร" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div class="md:col-span-3">
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">ที่อยู่</label>
-              <input type="text" placeholder="บ้านเลขที่ ถนน จังหวัด" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Donor Registration</h2>
+            <p class="text-sm text-slate-500 mt-0.5">กรอกข้อมูลผู้บริจาคเพื่อนำเข้าสู่กระบวนการ Screening และ Evaluation
+            </p>
           </div>
+          <a href="donor-dashboard.html"
+            class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i
+              data-lucide="arrow-left" class="w-4 h-4"></i> กลับแดชบอร์ดผู้บริจาค</a>
         </div>
 
-        <!-- Section 2: Donation Type -->
-        <div class="card p-5 fade-in">
-          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="heart-handshake" class="w-4 h-4 text-primary"></i> Section 2 · Donation Type</h3>
-          <div class="grid sm:grid-cols-2 gap-3 mb-4">
-            <label class="donation-type-card flex items-center gap-3 rounded-xl border-2 border-primary bg-blue-50/40 p-4 cursor-pointer transition">
-              <input type="radio" name="donationType" value="living" checked class="w-4 h-4 text-primary focus:ring-primary" />
+        <form id="donor-form" class="space-y-6">
+
+          <!-- Section 1: Personal Information -->
+          <div class="card p-5 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="user-round"
+                class="w-4 h-4 text-primary"></i> Section 1 · Personal Information</h3>
+            <div class="grid md:grid-cols-3 gap-4">
               <div>
-                <p class="text-sm font-bold text-slate-800">Living Donor</p>
-                <p class="text-xs text-slate-500 mt-0.5">ผู้บริจาคที่มีชีวิต (ญาติ/บุคคลใกล้ชิดผู้ป่วย)</p>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">รหัสผู้บริจาค (Donor ID)</label>
+                <input id="donor-id-field" type="text" readonly
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-500 outline-none" />
               </div>
-            </label>
-            <label class="donation-type-card flex items-center gap-3 rounded-xl border-2 border-slate-200 p-4 cursor-pointer transition">
-              <input type="radio" name="donationType" value="deceased" class="w-4 h-4 text-primary focus:ring-primary" />
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">ชื่อ-นามสกุล</label>
+                <input type="text" placeholder="เช่น นายสมชาย ใจดี"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
               <div>
-                <p class="text-sm font-bold text-slate-800">Deceased Donor</p>
-                <p class="text-xs text-slate-500 mt-0.5">ผู้บริจาคสมองตาย</p>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">วันเกิด</label>
+                <input type="text" placeholder="เช่น 14 พ.ค. 2540"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
               </div>
-            </label>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">อายุ (ปี)</label>
+                <input type="number" value="35"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">เพศ</label>
+                <select
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
+                  <option>ชาย</option>
+                  <option>หญิง</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">เลขบัตรประชาชน</label>
+                <input type="text" placeholder="1-XXXX-XXXXX-XX-X"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">เบอร์โทร</label>
+                <input type="text" placeholder="08X-XXX-XXXX"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">กรุ๊ปเลือด</label>
+                <select
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
+                  <option>O+</option>
+                  <option>O-</option>
+                  <option>A+</option>
+                  <option>A-</option>
+                  <option>B+</option>
+                  <option>B-</option>
+                  <option>AB+</option>
+                  <option>AB-</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">จังหวัด (Province)</label>
+                <input type="text" placeholder="เช่น กรุงเทพมหานคร"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div class="md:col-span-3">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">ที่อยู่</label>
+                <input type="text" placeholder="บ้านเลขที่ ถนน จังหวัด"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+            </div>
           </div>
-          <div id="relationship-field">
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">ความสัมพันธ์กับผู้รับ (Relationship)</label>
-            <select id="relationship-select" class="w-full md:w-1/2 px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-              <option value="parent">Parent (บิดา/มารดา)</option>
-              <option value="sibling">Sibling (พี่น้อง)</option>
-              <option value="relative">Relative (ญาติ)</option>
-              <option value="spouse">Spouse (คู่สมรส)</option>
-              <option value="other">Other (อื่นๆ)</option>
-            </select>
-          </div>
-        </div>
 
-        <!-- Section 3: Medical History -->
+          <!-- Section 2: Donation Type -->
+          <div class="card p-5 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i
+                data-lucide="heart-handshake" class="w-4 h-4 text-primary"></i> Section 2 · Donation Type</h3>
+            <div class="grid sm:grid-cols-2 gap-3 mb-4">
+              <label
+                class="donation-type-card flex items-center gap-3 rounded-xl border-2 border-primary bg-blue-50/40 p-4 cursor-pointer transition">
+                <input type="radio" name="donationType" value="living" checked
+                  class="w-4 h-4 text-primary focus:ring-primary" />
+                <div>
+                  <p class="text-sm font-bold text-slate-800">Living Donor</p>
+                  <p class="text-xs text-slate-500 mt-0.5">ผู้บริจาคที่มีชีวิต (ญาติ/บุคคลใกล้ชิดผู้ป่วย)</p>
+                </div>
+              </label>
+              <label
+                class="donation-type-card flex items-center gap-3 rounded-xl border-2 border-slate-200 p-4 cursor-pointer transition">
+                <input type="radio" name="donationType" value="deceased"
+                  class="w-4 h-4 text-primary focus:ring-primary" />
+                <div>
+                  <p class="text-sm font-bold text-slate-800">Deceased Donor</p>
+                  <p class="text-xs text-slate-500 mt-0.5">ผู้บริจาคสมองตาย</p>
+                </div>
+              </label>
+            </div>
+            <div id="relationship-field">
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">ความสัมพันธ์กับผู้รับ
+                (Relationship)</label>
+              <select id="relationship-select"
+                class="w-full md:w-1/2 px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
+                <option value="parent">Parent (บิดา/มารดา)</option>
+                <option value="sibling">Sibling (พี่น้อง)</option>
+                <option value="relative">Relative (ญาติ)</option>
+                <option value="spouse">Spouse (คู่สมรส)</option>
+                <option value="other">Other (อื่นๆ)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Section 3: Medical History -->
+          <div class="card p-5 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i
+                data-lucide="clipboard-list" class="w-4 h-4 text-primary"></i> Section 3 · Medical History</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">โรคประจำตัว</label>
+                <input type="text" placeholder="เช่น ไม่มีโรคประจำตัว"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Medication (ยาที่ใช้ประจำ)</label>
+                <input type="text" placeholder="เช่น ไม่มี"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Previous Surgery
+                  (ประวัติการผ่าตัด)</label>
+                <input type="text" placeholder="เช่น ไม่มี"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Allergy (ประวัติการแพ้)</label>
+                <input type="text" placeholder="เช่น ไม่มี"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Smoking (การสูบบุหรี่)</label>
+                <select
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
+                  <option>ไม่สูบบุหรี่</option>
+                  <option>สูบบุหรี่</option>
+                  <option>เลิกสูบบุหรี่แล้ว</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Alcohol (การดื่มแอลกอฮอล์)</label>
+                <select
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
+                  <option>ไม่ดื่มแอลกอฮอล์</option>
+                  <option>ดื่มเป็นครั้งคราว</option>
+                  <option>ดื่มเป็นประจำ</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Recipient Information -->
+          <div id="recipient-section" class="card p-5 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i
+                data-lucide="user-round-search" class="w-4 h-4 text-primary"></i> Section 4 · Recipient Information</h3>
+            <div class="grid md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Recipient HN</label>
+                <select id="recipient-hn-select"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white"></select>
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Recipient Name</label>
+                <input id="recipient-name-field" type="text" readonly
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-500 outline-none" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 5: ข้อมูลอวัยวะและกระบวนการ (สำหรับใช้ในขั้นตอน Matching ภายหลัง) -->
+          <div class="card p-5 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="heart-pulse"
+                class="w-4 h-4 text-primary"></i> Section 5 · ข้อมูลอวัยวะและ HLA</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">อวัยวะ</label>
+                <select
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
+                  <option>ไตซ้าย</option>
+                  <option>ไตขวา</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">โรงพยาบาล</label>
+                <input type="text" placeholder="เช่น รพ.ศิริราช"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">HLA Typing</label>
+                <input type="text" placeholder="เช่น A2,A24,B13,B60,DR4,DR15"
+                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <a href="donor-dashboard.html"
+              class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 bg-white">ยกเลิก</a>
+            <button type="submit"
+              class="px-5 py-2 text-sm rounded-lg bg-primary hover:bg-primary-dark text-white font-medium flex items-center gap-2"><i
+                data-lucide="save" class="w-4 h-4"></i> บันทึกข้อมูลผู้บริจาค</button>
+          </div>
+        </form>
+
+        <!-- Donor list -->
         <div class="card p-5 fade-in">
-          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="clipboard-list" class="w-4 h-4 text-primary"></i> Section 3 · Medical History</h3>
-          <div class="grid md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">โรคประจำตัว</label>
-              <input type="text" placeholder="เช่น ไม่มีโรคประจำตัว" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Medication (ยาที่ใช้ประจำ)</label>
-              <input type="text" placeholder="เช่น ไม่มี" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Previous Surgery (ประวัติการผ่าตัด)</label>
-              <input type="text" placeholder="เช่น ไม่มี" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Allergy (ประวัติการแพ้)</label>
-              <input type="text" placeholder="เช่น ไม่มี" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Smoking (การสูบบุหรี่)</label>
-              <select class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-                <option>ไม่สูบบุหรี่</option>
-                <option>สูบบุหรี่</option>
-                <option>เลิกสูบบุหรี่แล้ว</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Alcohol (การดื่มแอลกอฮอล์)</label>
-              <select class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-                <option>ไม่ดื่มแอลกอฮอล์</option>
-                <option>ดื่มเป็นครั้งคราว</option>
-                <option>ดื่มเป็นประจำ</option>
-              </select>
-            </div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="list"
+                class="w-4 h-4 text-primary"></i> รายชื่อผู้บริจาคในระบบ (Donor Registry)</h3>
+            <span id="donor-row-count" class="badge badge-blue"></span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="table-modern">
+              <thead>
+                <tr>
+                  <th>Donor ID</th>
+                  <th>ชื่อผู้บริจาค</th>
+                  <th>Type</th>
+                  <th>Age</th>
+                  <th>Blood Group</th>
+                  <th>Status</th>
+                  <th class="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="donor-tbody"></tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Section 4: Recipient Information -->
-        <div id="recipient-section" class="card p-5 fade-in">
-          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="user-round-search" class="w-4 h-4 text-primary"></i> Section 4 · Recipient Information</h3>
-          <div class="grid md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Recipient HN</label>
-              <select id="recipient-hn-select" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white"></select>
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Recipient Name</label>
-              <input id="recipient-name-field" type="text" readonly class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-500 outline-none" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Section 5: ข้อมูลอวัยวะและกระบวนการ (สำหรับใช้ในขั้นตอน Matching ภายหลัง) -->
-        <div class="card p-5 fade-in">
-          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="heart-pulse" class="w-4 h-4 text-primary"></i> Section 5 · ข้อมูลอวัยวะและ HLA</h3>
-          <div class="grid md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">อวัยวะ</label>
-              <select class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-                <option>ไตซ้าย</option>
-                <option>ไตขวา</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">โรงพยาบาล</label>
-              <input type="text" placeholder="เช่น รพ.ศิริราช" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">HLA Typing</label>
-              <input type="text" placeholder="เช่น A2,A24,B13,B60,DR4,DR15" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-2">
-          <a href="donor-dashboard.html" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 bg-white">ยกเลิก</a>
-          <button type="submit" class="px-5 py-2 text-sm rounded-lg bg-primary hover:bg-primary-dark text-white font-medium flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> บันทึกข้อมูลผู้บริจาค</button>
-        </div>
-      </form>
-
-      <!-- Donor list -->
-      <div class="card p-5 fade-in">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="list" class="w-4 h-4 text-primary"></i> รายชื่อผู้บริจาคในระบบ (Donor Registry)</h3>
-          <span id="donor-row-count" class="badge badge-blue"></span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="table-modern">
-            <thead>
-              <tr>
-                <th>Donor ID</th>
-                <th>ชื่อผู้บริจาค</th>
-                <th>Type</th>
-                <th>Age</th>
-                <th>Blood Group</th>
-                <th>Status</th>
-                <th class="text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody id="donor-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-    </main>
+      </main>
+    </div>
   </div>
-</div>
 
-<script src="../assets/js/data.js"></script>
-<script src="../assets/js/layout.js"></script>
-<script src="../assets/js/components.js"></script>
-<script>
-  StaffLayout.init({ role: "doctor", active: "donor-registration", title: "ลงทะเบียนผู้บริจาคไต" });
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    StaffLayout.init({ role: "doctor", active: "donor-registration", title: "ลงทะเบียนผู้บริจาคไต" });
 
-  const D = window.MOCK_DATA;
+    const D = window.MOCK_DATA;
 
-  document.getElementById("donor-id-field").value = "DNR-" + (5500 + Math.floor(Math.random() * 400));
+    document.getElementById("donor-id-field").value = "DNR-" + (5500 + Math.floor(Math.random() * 400));
 
-  // Donation type toggle — Relationship + Recipient section ใช้เฉพาะ Living Donor
-  const relationshipField = document.getElementById("relationship-field");
-  const recipientSection = document.getElementById("recipient-section");
-  const donationTypeCards = document.querySelectorAll(".donation-type-card");
-  function toggleLivingFields() {
-    const isLiving = document.querySelector('input[name="donationType"]:checked').value === "living";
-    relationshipField.classList.toggle("hidden", !isLiving);
-    recipientSection.classList.toggle("hidden", !isLiving);
-  }
-  donationTypeCards.forEach((card) => {
-    card.addEventListener("click", () => {
-      donationTypeCards.forEach((c) => c.classList.remove("border-primary", "bg-blue-50/40"));
-      donationTypeCards.forEach((c) => c.classList.add("border-slate-200"));
-      card.classList.remove("border-slate-200");
-      card.classList.add("border-primary", "bg-blue-50/40");
-      card.querySelector("input").checked = true;
-      toggleLivingFields();
+    // Donation type toggle — Relationship + Recipient section ใช้เฉพาะ Living Donor
+    const relationshipField = document.getElementById("relationship-field");
+    const recipientSection = document.getElementById("recipient-section");
+    const donationTypeCards = document.querySelectorAll(".donation-type-card");
+    function toggleLivingFields() {
+      const isLiving = document.querySelector('input[name="donationType"]:checked').value === "living";
+      relationshipField.classList.toggle("hidden", !isLiving);
+      recipientSection.classList.toggle("hidden", !isLiving);
+    }
+    donationTypeCards.forEach((card) => {
+      card.addEventListener("click", () => {
+        donationTypeCards.forEach((c) => c.classList.remove("border-primary", "bg-blue-50/40"));
+        donationTypeCards.forEach((c) => c.classList.add("border-slate-200"));
+        card.classList.remove("border-slate-200");
+        card.classList.add("border-primary", "bg-blue-50/40");
+        card.querySelector("input").checked = true;
+        toggleLivingFields();
+      });
     });
-  });
 
-  // Recipient dropdown — ดึงจากบัญชีผู้ป่วยรอคิว (waitingList)
-  document.getElementById("recipient-hn-select").innerHTML = D.waitingList
-    .map((p) => `<option value="${p.hn}" data-name="${p.name}">${p.hn} · ${p.name}</option>`)
-    .join("");
-  function updateRecipientName() {
-    const sel = document.getElementById("recipient-hn-select");
-    document.getElementById("recipient-name-field").value = sel.selectedOptions[0]?.dataset.name || "";
-  }
-  document.getElementById("recipient-hn-select").addEventListener("change", updateRecipientName);
-  updateRecipientName();
-  toggleLivingFields();
+    // Recipient dropdown — ดึงจากบัญชีผู้ป่วยรอคิว (waitingList)
+    document.getElementById("recipient-hn-select").innerHTML = D.waitingList
+      .map((p) => `<option value="${p.hn}" data-name="${p.name}">${p.hn} · ${p.name}</option>`)
+      .join("");
+    function updateRecipientName() {
+      const sel = document.getElementById("recipient-hn-select");
+      document.getElementById("recipient-name-field").value = sel.selectedOptions[0]?.dataset.name || "";
+    }
+    document.getElementById("recipient-hn-select").addEventListener("change", updateRecipientName);
+    updateRecipientName();
+    toggleLivingFields();
 
-  document.getElementById("donor-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-    UI.toast("บันทึกข้อมูลผู้บริจาคสำเร็จ", "success");
-    setTimeout(() => (window.location.href = "donor-dashboard.html"), 800);
-  });
+    document.getElementById("donor-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      UI.toast("บันทึกข้อมูลผู้บริจาคสำเร็จ", "success");
+      setTimeout(() => (window.location.href = "donor-dashboard.html"), 800);
+    });
 
-  // Donor list table
-  const donorStatusBadge = {
-    registered: '<span class="badge badge-slate">Registered</span>',
-    screening: '<span class="badge badge-blue">Screening</span>',
-    approved: '<span class="badge badge-green">Approved</span>',
-    rejected: '<span class="badge badge-red">Rejected</span>',
-    used: '<span class="badge badge-teal">Used</span>',
-  };
-  document.getElementById("donor-row-count").textContent = `${D.donors.length} รายการ`;
-  document.getElementById("donor-tbody").innerHTML = D.donors
-    .map(
-      (d) => `
+    // Donor list table
+    const donorStatusBadge = {
+      registered: '<span class="badge badge-slate">Registered</span>',
+      screening: '<span class="badge badge-blue">Screening</span>',
+      approved: '<span class="badge badge-green">Approved</span>',
+      rejected: '<span class="badge badge-red">Rejected</span>',
+      used: '<span class="badge badge-teal">Used</span>',
+    };
+    document.getElementById("donor-row-count").textContent = `${D.donors.length} รายการ`;
+    document.getElementById("donor-tbody").innerHTML = D.donors
+      .map(
+        (d) => `
     <tr>
       <td class="font-medium text-slate-700">${d.id}</td>
       <td>${d.name}</td>
@@ -302,10 +350,11 @@
       <td>${donorStatusBadge[d.status] || ""}</td>
       <td class="text-right"><a href="donor-profile.html?id=${d.id}" class="text-xs font-semibold text-primary hover:underline">ดูโปรไฟล์</a></td>
     </tr>`
-    )
-    .join("");
+      )
+      .join("");
 
-  lucide.createIcons();
-</script>
+    lucide.createIcons();
+  </script>
 </body>
+
 </html>

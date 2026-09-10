@@ -1,221 +1,257 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>โปรไฟล์ผู้บริจาค | Kidney Transplant Follow-up System</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
-        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>โปรไฟล์ผู้บริจาค | Kidney Transplant Follow-up System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
       },
-    },
-  };
-</script>
-<link rel="stylesheet" href="../assets/css/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
-<style>
-  .tab-btn { padding: .7rem 1.1rem; font-size: .8rem; font-weight: 600; color: #64748b; border-bottom: 2px solid transparent; white-space: nowrap; transition: all .15s ease; }
-  .tab-btn:hover { color: #1e293b; }
-  .tab-btn.tab-active { color: #2563eb; border-color: #2563eb; }
-</style>
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <style>
+    .tab-btn {
+      padding: .7rem 1.1rem;
+      font-size: .8rem;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all .15s ease;
+    }
+
+    .tab-btn:hover {
+      color: #1e293b;
+    }
+
+    .tab-btn.tab-active {
+      color: #2563eb;
+      border-color: #2563eb;
+    }
+  </style>
 </head>
+
 <body class="font-sans bg-bgapp text-slate-800">
 
-<div class="flex min-h-screen">
-  <div id="app-sidebar"></div>
+  <div class="flex min-h-screen">
+    <div id="app-sidebar"></div>
 
-  <div class="flex-1 min-w-0 flex flex-col">
-    <div id="app-topbar"></div>
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div id="app-topbar"></div>
 
-    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+      <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
 
-      <!-- Breadcrumb -->
-      <div class="flex items-center gap-1.5 text-xs text-slate-400 fade-in">
-        <a href="donor-dashboard.html" class="hover:text-primary hover:underline">Donor Management</a>
-        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-        <span class="text-slate-600 font-medium">Donor Profile</span>
-      </div>
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-1.5 text-xs text-slate-400 fade-in">
+          <a href="donor-dashboard.html" class="hover:text-primary hover:underline">Donor Management</a>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          <span class="text-slate-600 font-medium">Donor Profile</span>
+        </div>
 
-      <!-- Profile header -->
-      <div class="card p-5 fade-in fade-in-delay-1">
-        <div class="flex flex-col md:flex-row md:items-center gap-5 justify-between">
-          <div class="flex items-center gap-4">
-            <div id="donor-avatar" class="w-16 h-16 rounded-2xl text-white flex items-center justify-center text-xl font-bold shrink-0" style="background:#0f766e"></div>
-            <div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <h2 id="donor-name" class="text-lg font-bold text-slate-800"></h2>
-                <span id="donor-type-badge" class="badge badge-blue"></span>
-                <span id="donor-status-badge"></span>
+        <!-- Profile header -->
+        <div class="card p-5 fade-in fade-in-delay-1">
+          <div class="flex flex-col md:flex-row md:items-center gap-5 justify-between">
+            <div class="flex items-center gap-4">
+              <div id="donor-avatar"
+                class="w-16 h-16 rounded-2xl text-white flex items-center justify-center text-xl font-bold shrink-0"
+                style="background:#0f766e"></div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h2 id="donor-name" class="text-lg font-bold text-slate-800"></h2>
+                  <span id="donor-type-badge" class="badge badge-blue"></span>
+                  <span id="donor-status-badge"></span>
+                </div>
+                <p id="donor-sub" class="text-sm text-slate-500 mt-0.5"></p>
+                <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-slate-500">
+                  <span class="flex items-center gap-1"><i data-lucide="hash" class="w-3.5 h-3.5"></i> <span
+                      id="donor-id"></span></span>
+                  <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> <span
+                      id="donor-province"></span></span>
+                  <span class="flex items-center gap-1"><i data-lucide="hospital" class="w-3.5 h-3.5"></i> <span
+                      id="donor-hospital"></span></span>
+                  <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> ลงทะเบียน
+                    <span id="donor-register-date"></span></span>
+                </div>
               </div>
-              <p id="donor-sub" class="text-sm text-slate-500 mt-0.5"></p>
-              <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-slate-500">
-                <span class="flex items-center gap-1"><i data-lucide="hash" class="w-3.5 h-3.5"></i> <span id="donor-id"></span></span>
-                <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> <span id="donor-province"></span></span>
-                <span class="flex items-center gap-1"><i data-lucide="hospital" class="w-3.5 h-3.5"></i> <span id="donor-hospital"></span></span>
-                <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> ลงทะเบียน <span id="donor-register-date"></span></span>
+            </div>
+            <div class="flex gap-2 shrink-0 flex-wrap">
+              <a id="link-evaluation" href="donor-evaluation.html"
+                class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i
+                  data-lucide="stethoscope" class="w-4 h-4"></i> ประเมินสุขภาพ</a>
+              <a id="link-assessment" href="donor-assessment.html"
+                class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i
+                  data-lucide="clipboard-check" class="w-4 h-4"></i> Committee Review</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Information -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 fade-in fade-in-delay-2">
+          <div class="card p-4">
+            <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="cake" class="w-3.5 h-3.5"></i>
+              Age</p>
+            <p id="info-age" class="text-base font-bold text-slate-800 mt-1.5"></p>
+          </div>
+          <div class="card p-4">
+            <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="droplet"
+                class="w-3.5 h-3.5"></i> Blood Group</p>
+            <p id="info-blood" class="text-base font-bold text-slate-800 mt-1.5"></p>
+          </div>
+          <div class="card p-4">
+            <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="scale" class="w-3.5 h-3.5"></i>
+              BMI</p>
+            <p id="info-bmi" class="text-base font-bold text-slate-800 mt-1.5"></p>
+          </div>
+          <div class="card p-4">
+            <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="heart-pulse"
+                class="w-3.5 h-3.5"></i> Kidney Function</p>
+            <p id="info-kidney" class="text-sm font-bold text-slate-800 mt-1.5"></p>
+          </div>
+          <div class="card p-4 col-span-2 lg:col-span-1">
+            <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="shield-alert"
+                class="w-3.5 h-3.5"></i> Risk Level</p>
+            <p id="info-risk" class="mt-1.5"></p>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card fade-in fade-in-delay-3 overflow-hidden">
+          <div data-tabs data-tabs-target="#tab-panels" class="flex overflow-x-auto border-b border-slate-200 px-2">
+            <button data-tab-btn="overview" class="tab-btn tab-active">Overview</button>
+            <button data-tab-btn="evaluation" class="tab-btn">Evaluation</button>
+            <button data-tab-btn="lab" class="tab-btn">Laboratory</button>
+            <button data-tab-btn="matching" class="tab-btn">Matching</button>
+            <button data-tab-btn="timeline" class="tab-btn">Timeline</button>
+            <button data-tab-btn="followup" class="tab-btn">Follow-up</button>
+          </div>
+
+          <div id="tab-panels" class="p-5">
+
+            <!-- Overview -->
+            <div data-tab-panel="overview">
+              <div id="ov-personal-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"></div>
+              <div id="ov-medical-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- Evaluation -->
+            <div data-tab-panel="evaluation" class="hidden">
+              <div id="eval-panel"></div>
+            </div>
+
+            <!-- Laboratory -->
+            <div data-tab-panel="lab" class="hidden">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-sm text-slate-500">ผลตรวจทางห้องปฏิบัติการล่าสุดของผู้บริจาค</p>
+                <a id="link-lab-full" href="donor-laboratory.html"
+                  class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">ดูผลตรวจ Lab
+                  แบบเต็ม <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
               </div>
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Lab Dashboard</p>
+              <div id="lab-general-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4"></div>
+              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Compatibility Lab</p>
+              <div id="lab-compat-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
             </div>
-          </div>
-          <div class="flex gap-2 shrink-0 flex-wrap">
-            <a id="link-evaluation" href="donor-evaluation.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="stethoscope" class="w-4 h-4"></i> ประเมินสุขภาพ</a>
-            <a id="link-assessment" href="donor-assessment.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i data-lucide="clipboard-check" class="w-4 h-4"></i> Committee Review</a>
-          </div>
-        </div>
-      </div>
 
-      <!-- Quick Information -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 fade-in fade-in-delay-2">
-        <div class="card p-4">
-          <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="cake" class="w-3.5 h-3.5"></i> Age</p>
-          <p id="info-age" class="text-base font-bold text-slate-800 mt-1.5"></p>
-        </div>
-        <div class="card p-4">
-          <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="droplet" class="w-3.5 h-3.5"></i> Blood Group</p>
-          <p id="info-blood" class="text-base font-bold text-slate-800 mt-1.5"></p>
-        </div>
-        <div class="card p-4">
-          <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="scale" class="w-3.5 h-3.5"></i> BMI</p>
-          <p id="info-bmi" class="text-base font-bold text-slate-800 mt-1.5"></p>
-        </div>
-        <div class="card p-4">
-          <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="heart-pulse" class="w-3.5 h-3.5"></i> Kidney Function</p>
-          <p id="info-kidney" class="text-sm font-bold text-slate-800 mt-1.5"></p>
-        </div>
-        <div class="card p-4 col-span-2 lg:col-span-1">
-          <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Risk Level</p>
-          <p id="info-risk" class="mt-1.5"></p>
-        </div>
-      </div>
-
-      <!-- Tabs -->
-      <div class="card fade-in fade-in-delay-3 overflow-hidden">
-        <div data-tabs data-tabs-target="#tab-panels" class="flex overflow-x-auto border-b border-slate-200 px-2">
-          <button data-tab-btn="overview" class="tab-btn tab-active">Overview</button>
-          <button data-tab-btn="evaluation" class="tab-btn">Evaluation</button>
-          <button data-tab-btn="lab" class="tab-btn">Laboratory</button>
-          <button data-tab-btn="matching" class="tab-btn">Matching</button>
-          <button data-tab-btn="timeline" class="tab-btn">Timeline</button>
-          <button data-tab-btn="followup" class="tab-btn">Follow-up</button>
-        </div>
-
-        <div id="tab-panels" class="p-5">
-
-          <!-- Overview -->
-          <div data-tab-panel="overview">
-            <div id="ov-personal-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"></div>
-            <div id="ov-medical-cards" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-          </div>
-
-          <!-- Evaluation -->
-          <div data-tab-panel="evaluation" class="hidden">
-            <div id="eval-panel"></div>
-          </div>
-
-          <!-- Laboratory -->
-          <div data-tab-panel="lab" class="hidden">
-            <div class="flex items-center justify-between mb-4">
-              <p class="text-sm text-slate-500">ผลตรวจทางห้องปฏิบัติการล่าสุดของผู้บริจาค</p>
-              <a id="link-lab-full" href="donor-laboratory.html" class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">ดูผลตรวจ Lab แบบเต็ม <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+            <!-- Matching -->
+            <div data-tab-panel="matching" class="hidden">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-sm text-slate-500">ผลการจับคู่กับผู้ป่วยในบัญชีรอคิว</p>
+                <a href="kidney-matching.html"
+                  class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">เปิดหน้า Kidney
+                  Matching <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+              </div>
+              <div id="matching-panel" class="space-y-3"></div>
             </div>
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Lab Dashboard</p>
-            <div id="lab-general-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4"></div>
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Compatibility Lab</p>
-            <div id="lab-compat-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-          </div>
 
-          <!-- Matching -->
-          <div data-tab-panel="matching" class="hidden">
-            <div class="flex items-center justify-between mb-4">
-              <p class="text-sm text-slate-500">ผลการจับคู่กับผู้ป่วยในบัญชีรอคิว</p>
-              <a href="kidney-matching.html" class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">เปิดหน้า Kidney Matching <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+            <!-- Timeline -->
+            <div data-tab-panel="timeline" class="hidden">
+              <div id="timeline-panel" class="timeline-line space-y-6"></div>
             </div>
-            <div id="matching-panel" class="space-y-3"></div>
-          </div>
 
-          <!-- Timeline -->
-          <div data-tab-panel="timeline" class="hidden">
-            <div id="timeline-panel" class="timeline-line space-y-6"></div>
-          </div>
+            <!-- Follow-up -->
+            <div data-tab-panel="followup" class="hidden">
+              <div id="followup-panel"></div>
+            </div>
 
-          <!-- Follow-up -->
-          <div data-tab-panel="followup" class="hidden">
-            <div id="followup-panel"></div>
           </div>
-
         </div>
-      </div>
 
-    </main>
+      </main>
+    </div>
   </div>
-</div>
 
-<script src="../assets/js/data.js"></script>
-<script src="../assets/js/layout.js"></script>
-<script src="../assets/js/components.js"></script>
-<script>
-  StaffLayout.init({ role: "doctor", active: "donor-dashboard", title: "Donor Profile" });
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    StaffLayout.init({ role: "doctor", active: "donor-dashboard", title: "Donor Profile" });
 
-  const D = window.MOCK_DATA;
-  const donors = D.donors;
+    const D = window.MOCK_DATA;
+    const donors = D.donors;
 
-  const params = new URLSearchParams(window.location.search);
-  const donor = donors.find((d) => d.id === params.get("id")) || donors[0];
+    const params = new URLSearchParams(window.location.search);
+    const donor = donors.find((d) => d.id === params.get("id")) || donors[0];
 
-  const statusBadge = { registered: '<span class="badge badge-slate">Registered</span>', screening: '<span class="badge badge-blue">Screening</span>', approved: '<span class="badge badge-green">Approved</span>', rejected: '<span class="badge badge-red">Rejected</span>', used: '<span class="badge badge-teal">Used</span>' };
-  const riskBadge = { low: '<span class="badge badge-green">Low Risk</span>', medium: '<span class="badge badge-amber">Medium Risk</span>', high: '<span class="badge badge-red">High Risk</span>' };
+    const statusBadge = { registered: '<span class="badge badge-slate">Registered</span>', screening: '<span class="badge badge-blue">Screening</span>', approved: '<span class="badge badge-green">Approved</span>', rejected: '<span class="badge badge-red">Rejected</span>', used: '<span class="badge badge-teal">Used</span>' };
+    const riskBadge = { low: '<span class="badge badge-green">Low Risk</span>', medium: '<span class="badge badge-amber">Medium Risk</span>', high: '<span class="badge badge-red">High Risk</span>' };
 
-  document.getElementById("donor-avatar").innerHTML = `<i data-lucide="heart-handshake" class="w-8 h-8"></i>`;
-  document.getElementById("donor-name").textContent = donor.name;
-  document.getElementById("donor-id").textContent = donor.id;
-  document.getElementById("donor-type-badge").textContent = donor.type;
-  document.getElementById("donor-status-badge").innerHTML = statusBadge[donor.status] || "";
-  document.getElementById("donor-sub").textContent = `${donor.age} ปี · ${donor.gender} · กรุ๊ปเลือด ${donor.blood}`;
-  document.getElementById("donor-province").textContent = donor.province;
-  document.getElementById("donor-hospital").textContent = donor.hospital;
-  document.getElementById("donor-register-date").textContent = donor.registerDate;
-  document.getElementById("link-evaluation").href = `donor-evaluation.html?id=${donor.id}`;
-  document.getElementById("link-assessment").href = `donor-assessment.html?id=${donor.id}`;
-  document.getElementById("link-lab-full").href = `donor-laboratory.html?id=${donor.id}`;
+    document.getElementById("donor-avatar").innerHTML = `<i data-lucide="heart-handshake" class="w-8 h-8"></i>`;
+    document.getElementById("donor-name").textContent = donor.name;
+    document.getElementById("donor-id").textContent = donor.id;
+    document.getElementById("donor-type-badge").textContent = donor.type;
+    document.getElementById("donor-status-badge").innerHTML = statusBadge[donor.status] || "";
+    document.getElementById("donor-sub").textContent = `${donor.age} ปี · ${donor.gender} · กรุ๊ปเลือด ${donor.blood}`;
+    document.getElementById("donor-province").textContent = donor.province;
+    document.getElementById("donor-hospital").textContent = donor.hospital;
+    document.getElementById("donor-register-date").textContent = donor.registerDate;
+    document.getElementById("link-evaluation").href = `donor-evaluation.html?id=${donor.id}`;
+    document.getElementById("link-assessment").href = `donor-assessment.html?id=${donor.id}`;
+    document.getElementById("link-lab-full").href = `donor-laboratory.html?id=${donor.id}`;
 
-  const evalRecord = D.donorEvaluations.find((e) => e.donorId === donor.id);
-  document.getElementById("info-age").textContent = `${donor.age} ปี`;
-  document.getElementById("info-blood").textContent = donor.blood;
-  document.getElementById("info-bmi").textContent = evalRecord ? evalRecord.bmi : "-";
-  document.getElementById("info-kidney").textContent = donor.kidneyCondition;
-  document.getElementById("info-risk").innerHTML = riskBadge[donor.risk] || "";
+    const evalRecord = D.donorEvaluations.find((e) => e.donorId === donor.id);
+    document.getElementById("info-age").textContent = `${donor.age} ปี`;
+    document.getElementById("info-blood").textContent = donor.blood;
+    document.getElementById("info-bmi").textContent = evalRecord ? evalRecord.bmi : "-";
+    document.getElementById("info-kidney").textContent = donor.kidneyCondition;
+    document.getElementById("info-risk").innerHTML = riskBadge[donor.risk] || "";
 
-  // Overview
-  document.getElementById("ov-personal-cards").innerHTML = [
-    { label: "วันเกิด", icon: "cake", value: donor.dob },
-    { label: "เบอร์โทร", icon: "phone", value: donor.phone },
-    { label: "ที่อยู่", icon: "map-pin", value: donor.address },
-    { label: "ความสัมพันธ์ / ผู้รับ", icon: "user-round-search", value: donor.relationship === "-" ? "-" : `${donor.relationship} → ${donor.recipientName} (${donor.recipientHn})` },
-  ]
-    .map((c) => `<div class="rounded-xl border border-slate-100 p-4"><p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="${c.icon}" class="w-3.5 h-3.5"></i> ${c.label}</p><p class="text-sm font-semibold text-slate-800 mt-1.5">${c.value}</p></div>`)
-    .join("");
+    // Overview
+    document.getElementById("ov-personal-cards").innerHTML = [
+      { label: "วันเกิด", icon: "cake", value: donor.dob },
+      { label: "เบอร์โทร", icon: "phone", value: donor.phone },
+      { label: "ที่อยู่", icon: "map-pin", value: donor.address },
+      { label: "ความสัมพันธ์ / ผู้รับ", icon: "user-round-search", value: donor.relationship === "-" ? "-" : `${donor.relationship} → ${donor.recipientName} (${donor.recipientHn})` },
+    ]
+      .map((c) => `<div class="rounded-xl border border-slate-100 p-4"><p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="${c.icon}" class="w-3.5 h-3.5"></i> ${c.label}</p><p class="text-sm font-semibold text-slate-800 mt-1.5">${c.value}</p></div>`)
+      .join("");
 
-  document.getElementById("ov-medical-cards").innerHTML = [
-    { label: "โรคประจำตัว", icon: "clipboard-list", value: donor.medicalHistory },
-    { label: "Medication", icon: "pill", value: donor.medication },
-    { label: "Previous Surgery", icon: "scissors", value: donor.previousSurgery },
-    { label: "Allergy", icon: "shield-alert", value: donor.allergy },
-    { label: "Smoking / Alcohol", icon: "cigarette-off", value: `${donor.smoking} · ${donor.alcohol}` },
-    { label: "Cold Ischemic Time", icon: "timer", value: donor.coldIschemic },
-  ]
-    .map((c) => `<div class="rounded-xl border border-slate-100 p-4"><p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="${c.icon}" class="w-3.5 h-3.5"></i> ${c.label}</p><p class="text-sm font-semibold text-slate-800 mt-1.5">${c.value}</p></div>`)
-    .join("");
+    document.getElementById("ov-medical-cards").innerHTML = [
+      { label: "โรคประจำตัว", icon: "clipboard-list", value: donor.medicalHistory },
+      { label: "Medication", icon: "pill", value: donor.medication },
+      { label: "Previous Surgery", icon: "scissors", value: donor.previousSurgery },
+      { label: "Allergy", icon: "shield-alert", value: donor.allergy },
+      { label: "Smoking / Alcohol", icon: "cigarette-off", value: `${donor.smoking} · ${donor.alcohol}` },
+      { label: "Cold Ischemic Time", icon: "timer", value: donor.coldIschemic },
+    ]
+      .map((c) => `<div class="rounded-xl border border-slate-100 p-4"><p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="${c.icon}" class="w-3.5 h-3.5"></i> ${c.label}</p><p class="text-sm font-semibold text-slate-800 mt-1.5">${c.value}</p></div>`)
+      .join("");
 
-  // Evaluation tab (รวมผล Committee Review ไว้ในแท็บนี้)
-  const evalResultBadge = { suitable: '<span class="badge badge-green">Suitable</span>', risk: '<span class="badge badge-amber">Suitable with Risk</span>', "not-suitable": '<span class="badge badge-red">Not Suitable</span>', pending: '<span class="badge badge-slate">Pending</span>' };
-  const stageBadge = { pending: '<span class="badge badge-slate">Pending</span>', "in-progress": '<span class="badge badge-blue">In Progress</span>', completed: '<span class="badge badge-green">Completed</span>' };
-  const assessRecord = D.donorAssessments.find((a) => a.donorId === donor.id);
+    // Evaluation tab (รวมผล Committee Review ไว้ในแท็บนี้)
+    const evalResultBadge = { suitable: '<span class="badge badge-green">Suitable</span>', risk: '<span class="badge badge-amber">Suitable with Risk</span>', "not-suitable": '<span class="badge badge-red">Not Suitable</span>', pending: '<span class="badge badge-slate">Pending</span>' };
+    const stageBadge = { pending: '<span class="badge badge-slate">Pending</span>', "in-progress": '<span class="badge badge-blue">In Progress</span>', completed: '<span class="badge badge-green">Completed</span>' };
+    const assessRecord = D.donorAssessments.find((a) => a.donorId === donor.id);
 
-  document.getElementById("eval-panel").innerHTML = evalRecord
-    ? `
+    document.getElementById("eval-panel").innerHTML = evalRecord
+      ? `
     <div class="rounded-xl border border-slate-100 p-4 mb-4">
       <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Clinical Evaluation · ${evalRecord.date}</p>
@@ -247,8 +283,7 @@
       <p class="text-xs text-slate-400 mt-4">บันทึกเพิ่มเติม</p>
       <p class="text-sm text-slate-600 mt-1">${evalRecord.note}</p>
     </div>
-    ${
-      assessRecord
+    ${assessRecord
         ? `<div class="rounded-xl border border-slate-100 p-4">
       <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Committee Review · ${assessRecord.date}</p>
@@ -257,25 +292,25 @@
       <p class="text-sm text-slate-600">${assessRecord.note}</p>
     </div>`
         : ""
-    }
+      }
     <a href="donor-evaluation.html?id=${donor.id}" class="text-xs font-semibold text-primary hover:underline flex items-center gap-1 mt-3">ไปที่หน้าประเมินสุขภาพ <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>`
-    : Components.emptyState({ icon: "stethoscope", title: "ยังไม่มีข้อมูลการประเมินสุขภาพ", action: { label: "ประเมินสุขภาพผู้บริจาค", href: `donor-evaluation.html?id=${donor.id}` } });
+      : Components.emptyState({ icon: "stethoscope", title: "ยังไม่มีข้อมูลการประเมินสุขภาพ", action: { label: "ประเมินสุขภาพผู้บริจาค", href: `donor-evaluation.html?id=${donor.id}` } });
 
-  // Laboratory tab
-  const panel = D.donorLabPanels[donor.id] || [];
-  const renderLabCard = (p) =>
-    p.name === "HLA Typing"
-      ? `<div class="medical-data-card status-${p.status}"><p class="text-sm font-semibold text-slate-800">${p.name}</p><p class="text-sm font-bold text-slate-800 mt-1.5 break-all">${p.value}</p></div>`
-      : Components.medicalDataCard({ name: p.name, value: p.value, unit: p.unit, range: p.range, status: p.status });
-  const cardsFor = (group) => panel.filter((p) => p.group === group).map(renderLabCard).join("");
-  document.getElementById("lab-general-cards").innerHTML = cardsFor("general") || Components.emptyState({ icon: "flask-conical", title: "ยังไม่มีผลตรวจ Lab" });
-  document.getElementById("lab-compat-cards").innerHTML = cardsFor("compatibility");
+    // Laboratory tab
+    const panel = D.donorLabPanels[donor.id] || [];
+    const renderLabCard = (p) =>
+      p.name === "HLA Typing"
+        ? `<div class="medical-data-card status-${p.status}"><p class="text-sm font-semibold text-slate-800">${p.name}</p><p class="text-sm font-bold text-slate-800 mt-1.5 break-all">${p.value}</p></div>`
+        : Components.medicalDataCard({ name: p.name, value: p.value, unit: p.unit, range: p.range, status: p.status });
+    const cardsFor = (group) => panel.filter((p) => p.group === group).map(renderLabCard).join("");
+    document.getElementById("lab-general-cards").innerHTML = cardsFor("general") || Components.emptyState({ icon: "flask-conical", title: "ยังไม่มีผลตรวจ Lab" });
+    document.getElementById("lab-compat-cards").innerHTML = cardsFor("compatibility");
 
-  // Matching tab
-  const matches = D.matchingResults.filter((m) => m.donorId === donor.id);
-  const matchStatusBadge = { passed: '<span class="badge badge-green">Passed</span>', rejected: '<span class="badge badge-red">Rejected</span>', accepted: '<span class="badge badge-teal">Accepted</span>' };
-  document.getElementById("matching-panel").innerHTML = matches.length
-    ? matches
+    // Matching tab
+    const matches = D.matchingResults.filter((m) => m.donorId === donor.id);
+    const matchStatusBadge = { passed: '<span class="badge badge-green">Passed</span>', rejected: '<span class="badge badge-red">Rejected</span>', accepted: '<span class="badge badge-teal">Accepted</span>' };
+    document.getElementById("matching-panel").innerHTML = matches.length
+      ? matches
         .map((m) => {
           const patient = D.waitingList.find((p) => p.hn === m.patientHn) || {};
           return `
@@ -291,25 +326,25 @@
       </div>`;
         })
         .join("")
-    : Components.emptyState({ icon: "git-compare-arrows", title: "ยังไม่มีผลการจับคู่สำหรับผู้บริจาครายนี้", action: { label: "ไปที่หน้า Kidney Matching", href: "kidney-matching.html" } });
+      : Components.emptyState({ icon: "git-compare-arrows", title: "ยังไม่มีผลการจับคู่สำหรับผู้บริจาครายนี้", action: { label: "ไปที่หน้า Kidney Matching", href: "kidney-matching.html" } });
 
-  // Timeline tab
-  const timelineEvents = D.donorTimeline[donor.id] || [];
-  document.getElementById("timeline-panel").innerHTML = Components.timeline(
-    timelineEvents.map((t) => ({
-      icon: t.icon || (t.state === "done" ? "check" : t.state === "active" ? "loader-circle" : "clock"),
-      state: t.state,
-      color: t.color,
-      title: t.event,
-      date: t.date,
-      desc: t.desc,
-    }))
-  );
+    // Timeline tab
+    const timelineEvents = D.donorTimeline[donor.id] || [];
+    document.getElementById("timeline-panel").innerHTML = Components.timeline(
+      timelineEvents.map((t) => ({
+        icon: t.icon || (t.state === "done" ? "check" : t.state === "active" ? "loader-circle" : "clock"),
+        state: t.state,
+        color: t.color,
+        title: t.event,
+        date: t.date,
+        desc: t.desc,
+      }))
+    );
 
-  // Follow-up tab
-  const visits = D.donorFollowups.filter((f) => f.donorId === donor.id);
-  document.getElementById("followup-panel").innerHTML = visits.length
-    ? `<div class="timeline-line space-y-6">${Components.timeline(
+    // Follow-up tab
+    const visits = D.donorFollowups.filter((f) => f.donorId === donor.id);
+    document.getElementById("followup-panel").innerHTML = visits.length
+      ? `<div class="timeline-line space-y-6">${Components.timeline(
         visits.map((v) => ({
           icon: v.state === "done" ? "check" : v.state === "active" ? "calendar-clock" : "clock",
           state: v.state,
@@ -319,9 +354,10 @@
         }))
       )}</div>
       <a href="donor-followup.html?id=${donor.id}" class="text-xs font-semibold text-primary hover:underline flex items-center gap-1 mt-4">ไปที่หน้าติดตามหลังบริจาค <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>`
-    : Components.emptyState({ icon: "history", title: "ยังไม่มีข้อมูลการติดตามหลังบริจาค", desc: donor.status === "used" ? "" : "การติดตามจะเริ่มขึ้นหลังผู้บริจาคผ่านการผ่าตัดเรียบร้อยแล้ว" });
+      : Components.emptyState({ icon: "history", title: "ยังไม่มีข้อมูลการติดตามหลังบริจาค", desc: donor.status === "used" ? "" : "การติดตามจะเริ่มขึ้นหลังผู้บริจาคผ่านการผ่าตัดเรียบร้อยแล้ว" });
 
-  lucide.createIcons();
-</script>
+    lucide.createIcons();
+  </script>
 </body>
+
 </html>

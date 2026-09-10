@@ -1,102 +1,114 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>แชทกับผู้ป่วย | Kidney Transplant Follow-up System</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
-        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>แชทกับผู้ป่วย | Kidney Transplant Follow-up System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
       },
-    },
-  };
-</script>
-<link rel="stylesheet" href="../assets/css/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
 </head>
+
 <body class="font-sans bg-bgapp text-slate-800">
 
-<div class="flex min-h-screen">
-  <div id="app-sidebar"></div>
-  <div class="flex-1 min-w-0 flex flex-col">
-    <div id="app-topbar"></div>
+  <div class="flex min-h-screen">
+    <div id="app-sidebar"></div>
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div id="app-topbar"></div>
 
-    <main class="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto">
-      <div class="card fade-in overflow-hidden" style="height: calc(100vh - 7.5rem);">
-        <div class="flex h-full">
+      <main class="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto">
+        <div class="card fade-in overflow-hidden" style="height: calc(100vh - 7.5rem);">
+          <div class="flex h-full">
 
-          <!-- Patient list -->
-          <div class="w-80 shrink-0 border-r border-slate-100 flex flex-col">
-            <div class="p-4 border-b border-slate-100">
-              <h3 class="font-semibold text-slate-800 text-sm mb-3">แชทกับผู้ป่วย</h3>
-              <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" placeholder="ค้นหาผู้ป่วย..." class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 outline-none" />
+            <!-- Patient list -->
+            <div class="w-80 shrink-0 border-r border-slate-100 flex flex-col">
+              <div class="p-4 border-b border-slate-100">
+                <h3 class="font-semibold text-slate-800 text-sm mb-3">แชทกับผู้ป่วย</h3>
+                <div class="relative">
+                  <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                  <input type="text" placeholder="ค้นหาผู้ป่วย..."
+                    class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 bg-slate-50 outline-none" />
+                </div>
+              </div>
+              <div id="thread-list" class="flex-1 overflow-y-auto"></div>
+            </div>
+
+            <!-- Chat window -->
+            <div class="flex-1 flex flex-col min-w-0">
+              <div class="flex items-center gap-3 p-4 border-b border-slate-100">
+                <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center font-bold text-sm"
+                  style="color:#0f766e">พท</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-slate-800" id="chat-partner-name">นางพรทิพย์ อยู่เย็น</p>
+                  <p class="text-xs text-slate-500" id="chat-partner-hn">HN-102350</p>
+                </div>
+                <div id="chat-partner-status"></div>
+              </div>
+
+              <div id="chat-messages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/50"></div>
+
+              <!-- Quick Reply -->
+              <div class="px-3 pt-2.5 flex items-center gap-1.5 overflow-x-auto">
+                <span class="text-[11px] text-slate-400 shrink-0">Quick Reply:</span>
+                <button data-quick-reply="รับทราบค่ะ กำลังประสานงานให้นะคะ"
+                  class="chip-btn shrink-0 px-3 py-1 rounded-full text-xs border border-slate-200 text-slate-600 hover:bg-slate-50">รับทราบค่ะ</button>
+                <button data-quick-reply="กรุณามาพบแพทย์ตามนัดที่กำหนดไว้นะคะ"
+                  class="chip-btn shrink-0 px-3 py-1 rounded-full text-xs border border-slate-200 text-slate-600 hover:bg-slate-50">แจ้งเตือนนัดหมาย</button>
+                <button data-quick-reply="กรุณาทานยาตรงเวลาต่อเนื่องนะคะ หากมีอาการผิดปกติแจ้งได้ทันที"
+                  class="chip-btn shrink-0 px-3 py-1 rounded-full text-xs border border-slate-200 text-slate-600 hover:bg-slate-50">เตือนกินยา</button>
+                <button data-quick-reply="อาการนี้ควรมาพบแพทย์ด่วน ดิฉันจะประสานนัดหมายให้ทันทีค่ะ"
+                  class="chip-btn shrink-0 px-3 py-1 rounded-full text-xs border border-slate-200 text-slate-600 hover:bg-slate-50">นัดด่วน</button>
+              </div>
+
+              <div class="p-3 border-t border-slate-100">
+                <div class="flex items-center gap-2">
+                  <button id="btn-attach-image" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"
+                    title="แนบรูปภาพ"><i data-lucide="image" class="w-5 h-5"></i></button>
+                  <button id="btn-attach-doc" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500"
+                    title="แนบเอกสาร"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
+                  <input id="chat-input" type="text" placeholder="พิมพ์ข้อความ..."
+                    class="flex-1 px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary outline-none" />
+                  <button id="btn-send-chat" class="p-2.5 rounded-lg bg-primary text-white hover:bg-primary-dark"><i
+                      data-lucide="send" class="w-4 h-4"></i></button>
+                </div>
               </div>
             </div>
-            <div id="thread-list" class="flex-1 overflow-y-auto"></div>
+
           </div>
-
-          <!-- Chat window -->
-          <div class="flex-1 flex flex-col min-w-0">
-            <div class="flex items-center gap-3 p-4 border-b border-slate-100">
-              <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center font-bold text-sm" style="color:#0f766e">พท</div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-slate-800" id="chat-partner-name">นางพรทิพย์ อยู่เย็น</p>
-                <p class="text-xs text-slate-500" id="chat-partner-hn">HN-102350</p>
-              </div>
-              <div id="chat-partner-status"></div>
-            </div>
-
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/50"></div>
-
-            <!-- Quick Reply -->
-            <div class="px-3 pt-2.5 flex items-center gap-1.5 overflow-x-auto">
-              <span class="text-[11px] text-slate-400 shrink-0">Quick Reply:</span>
-              <button data-quick-reply="รับทราบค่ะ กำลังประสานงานให้นะคะ" class="chip-btn shrink-0 px-3 py-1 rounded-full text-xs border border-slate-200 text-slate-600 hover:bg-slate-50">รับทราบค่ะ</button>
-              <button data-quick-reply="กรุณามาพบแพทย์ตามนัดที่กำหนดไว้นะคะ" class="chip-btn shrink-0 px-3 py-1 rounded-full text-xs border border-slate-200 text-slate-600 hover:bg-slate-50">แจ้งเตือนนัดหมาย</button>
-              <button data-quick-reply="กรุณาทานยาตรงเวลาต่อเนื่องนะคะ หากมีอาการผิดปกติแจ้งได้ทันที" class="chip-btn shrink-0 px-3 py-1 rounded-full text-xs border border-slate-200 text-slate-600 hover:bg-slate-50">เตือนกินยา</button>
-              <button data-quick-reply="อาการนี้ควรมาพบแพทย์ด่วน ดิฉันจะประสานนัดหมายให้ทันทีค่ะ" class="chip-btn shrink-0 px-3 py-1 rounded-full text-xs border border-slate-200 text-slate-600 hover:bg-slate-50">นัดด่วน</button>
-            </div>
-
-            <div class="p-3 border-t border-slate-100">
-              <div class="flex items-center gap-2">
-                <button id="btn-attach-image" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500" title="แนบรูปภาพ"><i data-lucide="image" class="w-5 h-5"></i></button>
-                <button id="btn-attach-doc" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500" title="แนบเอกสาร"><i data-lucide="paperclip" class="w-5 h-5"></i></button>
-                <input id="chat-input" type="text" placeholder="พิมพ์ข้อความ..." class="flex-1 px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary outline-none" />
-                <button id="btn-send-chat" class="p-2.5 rounded-lg bg-primary text-white hover:bg-primary-dark"><i data-lucide="send" class="w-4 h-4"></i></button>
-              </div>
-            </div>
-          </div>
-
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   </div>
-</div>
 
-<script src="../assets/js/data.js"></script>
-<script src="../assets/js/layout.js"></script>
-<script src="../assets/js/components.js"></script>
-<script>
-  StaffLayout.init({ role: "nurse", active: "chat", title: "แชทกับผู้ป่วย" });
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    StaffLayout.init({ role: "nurse", active: "chat", title: "แชทกับผู้ป่วย" });
 
-  const D = window.MOCK_DATA;
+    const D = window.MOCK_DATA;
 
-  const statusDot = { online: "bg-green-500", waiting: "bg-amber-500", urgent: "bg-red-500" };
-  const statusBadgeHtml = {
-    online: '<span class="badge badge-green"><i data-lucide="circle" class="w-2 h-2 fill-current"></i> Online</span>',
-    waiting: '<span class="badge badge-amber"><i data-lucide="clock" class="w-3 h-3"></i> Waiting Reply</span>',
-    urgent: '<span class="badge badge-red"><i data-lucide="alert-triangle" class="w-3 h-3"></i> Urgent</span>',
-  };
+    const statusDot = { online: "bg-green-500", waiting: "bg-amber-500", urgent: "bg-red-500" };
+    const statusBadgeHtml = {
+      online: '<span class="badge badge-green"><i data-lucide="circle" class="w-2 h-2 fill-current"></i> Online</span>',
+      waiting: '<span class="badge badge-amber"><i data-lucide="clock" class="w-3 h-3"></i> Waiting Reply</span>',
+      urgent: '<span class="badge badge-red"><i data-lucide="alert-triangle" class="w-3 h-3"></i> Urgent</span>',
+    };
 
-  document.getElementById("thread-list").innerHTML = D.chatThreads
-    .map(
-      (t, i) => `
+    document.getElementById("thread-list").innerHTML = D.chatThreads
+      .map(
+        (t, i) => `
     <button data-thread="${t.hn}" class="thread-item w-full text-left flex items-start gap-3 p-4 border-b border-slate-50 hover:bg-slate-50 transition ${i === 1 ? "bg-blue-50" : ""}">
       <div class="relative shrink-0">
         <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-sm text-slate-500">${t.name.slice(0, 2)}</div>
@@ -111,70 +123,71 @@
       </div>
       ${t.unread ? `<span class="w-5 h-5 rounded-full bg-primary text-white text-[10px] flex items-center justify-center shrink-0">${t.unread}</span>` : ""}
     </button>`
-    )
-    .join("");
+      )
+      .join("");
 
-  const activeThread = D.chatThreads[1];
-  document.getElementById("chat-partner-status").innerHTML = statusBadgeHtml[activeThread.status] || "";
+    const activeThread = D.chatThreads[1];
+    document.getElementById("chat-partner-status").innerHTML = statusBadgeHtml[activeThread.status] || "";
 
-  document.querySelectorAll("[data-thread]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const t = D.chatThreads.find((c) => c.hn === btn.getAttribute("data-thread"));
-      document.getElementById("chat-partner-name").textContent = t.name;
-      document.getElementById("chat-partner-hn").textContent = t.hn;
-      document.getElementById("chat-partner-status").innerHTML = statusBadgeHtml[t.status] || "";
-      lucide.createIcons();
+    document.querySelectorAll("[data-thread]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const t = D.chatThreads.find((c) => c.hn === btn.getAttribute("data-thread"));
+        document.getElementById("chat-partner-name").textContent = t.name;
+        document.getElementById("chat-partner-hn").textContent = t.hn;
+        document.getElementById("chat-partner-status").innerHTML = statusBadgeHtml[t.status] || "";
+        lucide.createIcons();
+      });
     });
-  });
 
-  const sampleMessages = [
-    { from: "patient", text: "สวัสดีค่ะพยาบาล รู้สึกบวมที่ขาทั้งสองข้างตั้งแต่เมื่อคืนค่ะ", time: "08:02" },
-    { from: "nurse", text: "สวัสดีค่ะคุณพรทิพย์ มีอาการอื่นร่วมด้วยไหมคะ เช่น น้ำหนักเพิ่มขึ้น หรือปัสสาวะลดลง", time: "08:05" },
-    { from: "patient", text: "น้ำหนักเพิ่มขึ้นประมาณ 1.5 กก. ค่ะ ปัสสาวะก็น้อยลงเล็กน้อย", time: "08:10" },
-    { from: "nurse", text: "รับทราบค่ะ อาการนี้ควรมาพบแพทย์เพื่อตรวจเพิ่มเติม ดิฉันจะประสานนัดหมายด่วนให้นะคะ", time: "08:13" },
-    { from: "patient", text: "รู้สึกบวมที่ขาทั้งสองข้างค่ะ ควรทำอย่างไรดี", time: "08:15" },
-  ];
+    const sampleMessages = [
+      { from: "patient", text: "สวัสดีค่ะพยาบาล รู้สึกบวมที่ขาทั้งสองข้างตั้งแต่เมื่อคืนค่ะ", time: "08:02" },
+      { from: "nurse", text: "สวัสดีค่ะคุณพรทิพย์ มีอาการอื่นร่วมด้วยไหมคะ เช่น น้ำหนักเพิ่มขึ้น หรือปัสสาวะลดลง", time: "08:05" },
+      { from: "patient", text: "น้ำหนักเพิ่มขึ้นประมาณ 1.5 กก. ค่ะ ปัสสาวะก็น้อยลงเล็กน้อย", time: "08:10" },
+      { from: "nurse", text: "รับทราบค่ะ อาการนี้ควรมาพบแพทย์เพื่อตรวจเพิ่มเติม ดิฉันจะประสานนัดหมายด่วนให้นะคะ", time: "08:13" },
+      { from: "patient", text: "รู้สึกบวมที่ขาทั้งสองข้างค่ะ ควรทำอย่างไรดี", time: "08:15" },
+    ];
 
-  document.getElementById("chat-messages").innerHTML = sampleMessages
-    .map(
-      (m) => `
+    document.getElementById("chat-messages").innerHTML = sampleMessages
+      .map(
+        (m) => `
     <div class="flex ${m.from === "nurse" ? "justify-end" : "justify-start"}">
       <div class="max-w-[70%]">
         <div class="${m.from === "nurse" ? "bg-primary text-white rounded-2xl rounded-tr-sm" : "bg-white border border-slate-200 text-slate-700 rounded-2xl rounded-tl-sm"} px-4 py-2.5 text-sm shadow-sm">${m.text}</div>
         <p class="text-[11px] text-slate-400 mt-1 ${m.from === "nurse" ? "text-right" : ""}">${m.time}</p>
       </div>
     </div>`
-    )
-    .join("");
+      )
+      .join("");
 
-  function sendMsg() {
-    const input = document.getElementById("chat-input");
-    if (!input.value.trim()) return;
-    const wrap = document.getElementById("chat-messages");
-    const now = new Date();
-    const time = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0");
-    wrap.insertAdjacentHTML(
-      "beforeend",
-      `<div class="flex justify-end"><div class="max-w-[70%]"><div class="bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm shadow-sm">${input.value}</div><p class="text-[11px] text-slate-400 mt-1 text-right">${time}</p></div></div>`
-    );
-    wrap.scrollTop = wrap.scrollHeight;
-    input.value = "";
-  }
-  document.getElementById("btn-send-chat").addEventListener("click", sendMsg);
-  document.getElementById("chat-input").addEventListener("keydown", (e) => e.key === "Enter" && sendMsg());
+    function sendMsg() {
+      const input = document.getElementById("chat-input");
+      if (!input.value.trim()) return;
+      const wrap = document.getElementById("chat-messages");
+      const now = new Date();
+      const time = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0");
+      wrap.insertAdjacentHTML(
+        "beforeend",
+        `<div class="flex justify-end"><div class="max-w-[70%]"><div class="bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm shadow-sm">${input.value}</div><p class="text-[11px] text-slate-400 mt-1 text-right">${time}</p></div></div>`
+      );
+      wrap.scrollTop = wrap.scrollHeight;
+      input.value = "";
+    }
+    document.getElementById("btn-send-chat").addEventListener("click", sendMsg);
+    document.getElementById("chat-input").addEventListener("keydown", (e) => e.key === "Enter" && sendMsg());
 
-  document.querySelectorAll("[data-quick-reply]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.getElementById("chat-input").value = btn.getAttribute("data-quick-reply");
-      document.getElementById("chat-input").focus();
+    document.querySelectorAll("[data-quick-reply]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.getElementById("chat-input").value = btn.getAttribute("data-quick-reply");
+        document.getElementById("chat-input").focus();
+      });
     });
-  });
 
-  document.getElementById("btn-attach-image").addEventListener("click", () => UI.toast("ฟีเจอร์แนบรูปภาพอยู่ระหว่างพัฒนา", "info"));
-  document.getElementById("btn-attach-doc").addEventListener("click", () => UI.toast("ฟีเจอร์แนบเอกสารอยู่ระหว่างพัฒนา", "info"));
+    document.getElementById("btn-attach-image").addEventListener("click", () => UI.toast("ฟีเจอร์แนบรูปภาพอยู่ระหว่างพัฒนา", "info"));
+    document.getElementById("btn-attach-doc").addEventListener("click", () => UI.toast("ฟีเจอร์แนบเอกสารอยู่ระหว่างพัฒนา", "info"));
 
-  lucide.createIcons();
-  document.getElementById("chat-messages").scrollTop = document.getElementById("chat-messages").scrollHeight;
-</script>
+    lucide.createIcons();
+    document.getElementById("chat-messages").scrollTop = document.getElementById("chat-messages").scrollHeight;
+  </script>
 </body>
+
 </html>

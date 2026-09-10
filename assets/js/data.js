@@ -11,7 +11,7 @@ window.MOCK_DATA = (function () {
       name: "นพ.ธนกร วัฒนสิน",
       role: "doctor",
       roleLabel: "แพทย์ผู้เชี่ยวชาญโรคไต",
-      department: "หน่วยปลูกถ่ายไต โรงพยาบาลศิริราชปิยมหาราชการุณย์",
+      department: "หน่วยปลูกถ่ายไต ศูนย์การแพทย์",
       avatar: "ธก",
     },
     nurse: {
@@ -19,7 +19,7 @@ window.MOCK_DATA = (function () {
       name: "พว.สุพัตรา เจริญพร",
       role: "nurse",
       roleLabel: "พยาบาลผู้ประสานงานปลูกถ่ายไต",
-      department: "หน่วยปลูกถ่ายไต โรงพยาบาลศิริราชปิยมหาราชการุณย์",
+      department: "หน่วยปลูกถ่ายไต ศูนย์การแพทย์",
       avatar: "สพ",
     },
   };

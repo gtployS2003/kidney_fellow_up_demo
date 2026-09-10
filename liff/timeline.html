@@ -1,50 +1,53 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>Timeline การรักษา | Kidney Transplant LIFF</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
-        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Timeline การรักษา | Kidney Transplant LIFF</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
       },
-    },
-  };
-</script>
-<link rel="stylesheet" href="../assets/css/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
 </head>
+
 <body class="liff-body font-sans">
-<div class="liff-shell">
-  <div id="liff-header"></div>
+  <div class="liff-shell">
+    <div id="liff-header"></div>
 
-  <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
+    <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
 
-    <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-3.5 flex items-center gap-2.5 fade-in">
-      <i data-lucide="history" class="w-4.5 h-4.5 text-indigo-600 shrink-0"></i>
-      <p class="text-xs text-indigo-800">ประวัติการรักษาตั้งแต่วันปลูกถ่ายไตจนถึงปัจจุบัน</p>
-    </div>
+      <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-3.5 flex items-center gap-2.5 fade-in">
+        <i data-lucide="history" class="w-4.5 h-4.5 text-indigo-600 shrink-0"></i>
+        <p class="text-xs text-indigo-800">ประวัติการรักษาตั้งแต่วันปลูกถ่ายไตจนถึงปัจจุบัน</p>
+      </div>
 
-    <div id="timeline-list" class="pb-2 fade-in fade-in-delay-1"></div>
+      <div id="timeline-list" class="pb-2 fade-in fade-in-delay-1"></div>
 
-  </main>
+    </main>
 
-  <div id="liff-bottomnav"></div>
-</div>
+    <div id="liff-bottomnav"></div>
+  </div>
 
-<script src="../assets/js/data.js"></script>
-<script src="../assets/js/liff-layout.js"></script>
-<script src="../assets/js/components.js"></script>
-<script>
-  LiffLayout.init({ variant: "plain", title: "Timeline การรักษา", backHref: "home.html" });
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/liff-layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    LiffLayout.init({ variant: "plain", title: "Timeline การรักษา", backHref: "home.html" });
 
-  document.getElementById("timeline-list").innerHTML = Components.timeline(window.MOCK_DATA.timelineEvents);
+    document.getElementById("timeline-list").innerHTML = Components.timeline(window.MOCK_DATA.timelineEvents);
 
-  lucide.createIcons();
-</script>
+    lucide.createIcons();
+  </script>
 </body>
+
 </html>

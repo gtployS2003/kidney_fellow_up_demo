@@ -1,111 +1,147 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>หน้าแรก | Kidney Transplant LIFF</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
-        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>หน้าแรก | Kidney Transplant LIFF</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
       },
-    },
-  };
-</script>
-<link rel="stylesheet" href="../assets/css/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
 </head>
+
 <body class="liff-body font-sans">
-<div class="liff-shell">
-  <div id="liff-header"></div>
+  <div class="liff-shell">
+    <div id="liff-header"></div>
 
-  <main class="flex-1 overflow-y-auto min-h-0 -mt-4 pb-6">
+    <main class="flex-1 overflow-y-auto min-h-0 -mt-4 pb-6">
 
-    <!-- Health Status Card -->
-    <div class="px-4 fade-in">
-      <div id="health-status-card" class="card p-5 shadow-md text-white"></div>
-    </div>
+      <!-- Health Status Card -->
+      <div class="px-4 fade-in">
+        <div id="health-status-card" class="card p-5 shadow-md text-white"></div>
+      </div>
 
-    <!-- Alert -->
-    <div class="px-4 mt-3 fade-in fade-in-delay-1">
-      <div class="rounded-xl bg-amber-50 border border-amber-100 p-3.5 flex items-start gap-2.5">
-        <i data-lucide="alert-triangle" class="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5"></i>
-        <div class="min-w-0">
-          <p class="text-xs font-semibold text-amber-800">พบค่า Potassium สูงกว่าปกติเล็กน้อย</p>
-          <p class="text-[11px] text-amber-700 mt-0.5">ควรลดอาหารที่มีโพแทสเซียมสูง และพบแพทย์ตามนัด</p>
+      <!-- Alert -->
+      <div class="px-4 mt-3 fade-in fade-in-delay-1">
+        <div class="rounded-xl bg-amber-50 border border-amber-100 p-3.5 flex items-start gap-2.5">
+          <i data-lucide="alert-triangle" class="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5"></i>
+          <div class="min-w-0">
+            <p class="text-xs font-semibold text-amber-800">พบค่า Potassium สูงกว่าปกติเล็กน้อย</p>
+            <p class="text-[11px] text-amber-700 mt-0.5">ควรลดอาหารที่มีโพแทสเซียมสูง และพบแพทย์ตามนัด</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Next appointment -->
-    <div class="px-4 mt-4 fade-in fade-in-delay-1">
-      <p class="text-sm font-bold text-slate-700 mb-2">นัดหมายถัดไป</p>
-      <div class="card card-hover p-4">
-        <div class="flex items-center gap-3">
-          <div class="w-14 h-14 rounded-xl bg-primary text-white flex flex-col items-center justify-center shrink-0">
-            <span class="text-[10px] leading-none">ก.ย.</span>
-            <span class="text-lg font-bold leading-none mt-0.5">16</span>
+      <!-- Next appointment -->
+      <div class="px-4 mt-4 fade-in fade-in-delay-1">
+        <p class="text-sm font-bold text-slate-700 mb-2">นัดหมายถัดไป</p>
+        <div class="card card-hover p-4">
+          <div class="flex items-center gap-3">
+            <div class="w-14 h-14 rounded-xl bg-primary text-white flex flex-col items-center justify-center shrink-0">
+              <span class="text-[10px] leading-none">ก.ย.</span>
+              <span class="text-lg font-bold leading-none mt-0.5">16</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-slate-800">ติดตามหลังปลูกถ่ายไต</p>
+              <p class="text-xs text-slate-500 mt-0.5">09:00 น. · นพ.ธนกร วัฒนสิน</p>
+              <p class="text-xs text-slate-400">รพ.ศิริราช อาคาร 100 ปี ชั้น 3</p>
+            </div>
+            <a href="appointment.html" class="p-2 rounded-full bg-slate-50 liff-tap"><i data-lucide="chevron-right"
+                class="w-4 h-4 text-slate-400"></i></a>
           </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-slate-800">ติดตามหลังปลูกถ่ายไต</p>
-            <p class="text-xs text-slate-500 mt-0.5">09:00 น. · นพ.ธนกร วัฒนสิน</p>
-            <p class="text-xs text-slate-400">รพ.ศิริราช อาคาร 100 ปี ชั้น 3</p>
-          </div>
-          <a href="appointment.html" class="p-2 rounded-full bg-slate-50 liff-tap"><i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i></a>
+          <a href="appointment.html"
+            class="liff-tap block w-full mt-3 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold text-center">ดูรายละเอียด</a>
         </div>
-        <a href="appointment.html" class="liff-tap block w-full mt-3 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold text-center">ดูรายละเอียด</a>
       </div>
-    </div>
 
-    <!-- Medication reminder -->
-    <div class="px-4 mt-4 fade-in fade-in-delay-2">
-      <div class="flex items-center justify-between mb-2">
-        <p class="text-sm font-bold text-slate-700">ยาที่ต้องทานวันนี้</p>
-        <a href="medication.html" class="text-xs font-semibold text-primary">ดูทั้งหมด</a>
+      <!-- Medication reminder -->
+      <div class="px-4 mt-4 fade-in fade-in-delay-2">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-bold text-slate-700">ยาที่ต้องทานวันนี้</p>
+          <a href="medication.html" class="text-xs font-semibold text-primary">ดูทั้งหมด</a>
+        </div>
+        <div id="home-med-reminder"></div>
       </div>
-      <div id="home-med-reminder"></div>
-    </div>
 
-    <!-- Menu grid -->
-    <div class="px-4 mt-5 fade-in fade-in-delay-3">
-      <p class="text-sm font-bold text-slate-700 mb-2">เมนูทั้งหมด</p>
-      <div class="grid grid-cols-4 gap-3">
-        <a href="appointment.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3"><div class="w-10 h-10 rounded-xl bg-blue-50 text-primary flex items-center justify-center"><i data-lucide="calendar-days" class="w-5 h-5"></i></div><span class="text-[11px] font-medium text-slate-600 text-center">นัดหมาย</span></a>
-        <a href="medication.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3"><div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center" style="color:#0f766e"><i data-lucide="pill" class="w-5 h-5"></i></div><span class="text-[11px] font-medium text-slate-600 text-center">ยาของฉัน</span></a>
-        <a href="questionnaire.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3"><div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><i data-lucide="clipboard-list" class="w-5 h-5"></i></div><span class="text-[11px] font-medium text-slate-600 text-center">แบบสอบถาม</span></a>
-        <a href="lab-result.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3"><div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center"><i data-lucide="flask-conical" class="w-5 h-5"></i></div><span class="text-[11px] font-medium text-slate-600 text-center">ผลตรวจ</span></a>
-        <a href="timeline.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3"><div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i data-lucide="history" class="w-5 h-5"></i></div><span class="text-[11px] font-medium text-slate-600 text-center">Timeline</span></a>
-        <a href="chat.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3"><div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><i data-lucide="message-circle" class="w-5 h-5"></i></div><span class="text-[11px] font-medium text-slate-600 text-center">แชท</span></a>
-        <a href="knowledge.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3"><div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i data-lucide="book-open" class="w-5 h-5"></i></div><span class="text-[11px] font-medium text-slate-600 text-center">ความรู้</span></a>
-        <a href="profile.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3"><div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i data-lucide="user" class="w-5 h-5"></i></div><span class="text-[11px] font-medium text-slate-600 text-center">โปรไฟล์</span></a>
+      <!-- Menu grid -->
+      <div class="px-4 mt-5 fade-in fade-in-delay-3">
+        <p class="text-sm font-bold text-slate-700 mb-2">เมนูทั้งหมด</p>
+        <div class="grid grid-cols-4 gap-3">
+          <a href="appointment.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 text-primary flex items-center justify-center"><i
+                data-lucide="calendar-days" class="w-5 h-5"></i></div><span
+              class="text-[11px] font-medium text-slate-600 text-center">นัดหมาย</span>
+          </a>
+          <a href="medication.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3">
+            <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center" style="color:#0f766e"><i
+                data-lucide="pill" class="w-5 h-5"></i></div><span
+              class="text-[11px] font-medium text-slate-600 text-center">ยาของฉัน</span>
+          </a>
+          <a href="questionnaire.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><i
+                data-lucide="clipboard-list" class="w-5 h-5"></i></div><span
+              class="text-[11px] font-medium text-slate-600 text-center">แบบสอบถาม</span>
+          </a>
+          <a href="lab-result.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center"><i
+                data-lucide="flask-conical" class="w-5 h-5"></i></div><span
+              class="text-[11px] font-medium text-slate-600 text-center">ผลตรวจ</span>
+          </a>
+          <a href="timeline.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i
+                data-lucide="history" class="w-5 h-5"></i></div><span
+              class="text-[11px] font-medium text-slate-600 text-center">Timeline</span>
+          </a>
+          <a href="chat.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3">
+            <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><i
+                data-lucide="message-circle" class="w-5 h-5"></i></div><span
+              class="text-[11px] font-medium text-slate-600 text-center">แชท</span>
+          </a>
+          <a href="knowledge.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i
+                data-lucide="book-open" class="w-5 h-5"></i></div><span
+              class="text-[11px] font-medium text-slate-600 text-center">ความรู้</span>
+          </a>
+          <a href="profile.html" class="liff-tap flex flex-col items-center gap-1.5 card p-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i
+                data-lucide="user" class="w-5 h-5"></i></div><span
+              class="text-[11px] font-medium text-slate-600 text-center">โปรไฟล์</span>
+          </a>
+        </div>
       </div>
-    </div>
 
-  </main>
+    </main>
 
-  <div id="liff-bottomnav"></div>
-</div>
+    <div id="liff-bottomnav"></div>
+  </div>
 
-<script src="../assets/js/data.js"></script>
-<script src="../assets/js/liff-layout.js"></script>
-<script src="../assets/js/components.js"></script>
-<script>
-  LiffLayout.init({ variant: "home", active: "home" });
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/liff-layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    LiffLayout.init({ variant: "home", active: "home" });
 
-  const patient = window.MOCK_DATA.primaryPatient;
+    const patient = window.MOCK_DATA.primaryPatient;
 
-  // Health Status Card — สถานะสุขภาพวันนี้ (Healthy=Green / Warning=Orange / Critical=Red)
-  const statusMeta = {
-    low: { label: "Stable", gradient: "linear-gradient(135deg,#16a34a,#0d9488)", sub: "อาการคงที่ดี" },
-    medium: { label: "Warning", gradient: "linear-gradient(135deg,#f59e0b,#ea580c)", sub: "ควรเฝ้าระวังอาการ" },
-    high: { label: "Critical", gradient: "linear-gradient(135deg,#dc2626,#b91c1c)", sub: "ควรพบแพทย์ / ติดต่อทีมพยาบาลด่วน" },
-  }[patient.risk] || { label: "Stable", gradient: "linear-gradient(135deg,#16a34a,#0d9488)", sub: "อาการคงที่ดี" };
+    // Health Status Card — สถานะสุขภาพวันนี้ (Healthy=Green / Warning=Orange / Critical=Red)
+    const statusMeta = {
+      low: { label: "Stable", gradient: "linear-gradient(135deg,#16a34a,#0d9488)", sub: "อาการคงที่ดี" },
+      medium: { label: "Warning", gradient: "linear-gradient(135deg,#f59e0b,#ea580c)", sub: "ควรเฝ้าระวังอาการ" },
+      high: { label: "Critical", gradient: "linear-gradient(135deg,#dc2626,#b91c1c)", sub: "ควรพบแพทย์ / ติดต่อทีมพยาบาลด่วน" },
+    }[patient.risk] || { label: "Stable", gradient: "linear-gradient(135deg,#16a34a,#0d9488)", sub: "อาการคงที่ดี" };
 
-  document.getElementById("health-status-card").style.background = statusMeta.gradient;
-  document.getElementById("health-status-card").innerHTML = `
+    document.getElementById("health-status-card").style.background = statusMeta.gradient;
+    document.getElementById("health-status-card").innerHTML = `
     <div class="flex items-center justify-between">
       <p class="text-xs text-white/80">สถานะสุขภาพวันนี้</p>
       <i data-lucide="heart-pulse" class="w-5 h-5 text-white/80"></i>
@@ -113,18 +149,19 @@
     <p class="text-3xl font-extrabold mt-1">${statusMeta.label}</p>
     <p class="text-xs text-white/85 mt-1.5">${statusMeta.sub} · หลังปลูกถ่ายไต ${patient.transplantDate}</p>`;
 
-  // Medication Reminder Card (ใช้ Components.medicationReminderCard)
-  const homeMed = window.MOCK_DATA.medications.find((m) => m.status === "active");
-  document.getElementById("home-med-reminder").innerHTML = Components.medicationReminderCard({
-    drug: homeMed.drug, dose: homeMed.dose, mealTime: "มื้อเย็น หลังอาหาร", time: "20:00 น.", taken: false, onTakenClick: "homeMarkTaken(this)",
-  });
-  function homeMarkTaken(btn) {
-    UI.toast("บันทึกว่ากินยาแล้ว ขอบคุณค่ะ");
-    btn.outerHTML = `<span class="badge badge-green w-full justify-center py-2.5 text-xs"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> กินยาแล้ว</span>`;
-    lucide.createIcons();
-  }
+    // Medication Reminder Card (ใช้ Components.medicationReminderCard)
+    const homeMed = window.MOCK_DATA.medications.find((m) => m.status === "active");
+    document.getElementById("home-med-reminder").innerHTML = Components.medicationReminderCard({
+      drug: homeMed.drug, dose: homeMed.dose, mealTime: "มื้อเย็น หลังอาหาร", time: "20:00 น.", taken: false, onTakenClick: "homeMarkTaken(this)",
+    });
+    function homeMarkTaken(btn) {
+      UI.toast("บันทึกว่ากินยาแล้ว ขอบคุณค่ะ");
+      btn.outerHTML = `<span class="badge badge-green w-full justify-center py-2.5 text-xs"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> กินยาแล้ว</span>`;
+      lucide.createIcons();
+    }
 
-  lucide.createIcons();
-</script>
+    lucide.createIcons();
+  </script>
 </body>
+
 </html>

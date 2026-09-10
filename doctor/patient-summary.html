@@ -1,305 +1,366 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ข้อมูลผู้ป่วย | Kidney Transplant Follow-up System</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
-        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ข้อมูลผู้ป่วย | Kidney Transplant Follow-up System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
       },
-    },
-  };
-</script>
-<link rel="stylesheet" href="../assets/css/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
-<style>
-  .tab-btn { padding: .7rem 1.1rem; font-size: .8rem; font-weight: 600; color: #64748b; border-bottom: 2px solid transparent; white-space: nowrap; transition: all .15s ease; }
-  .tab-btn:hover { color: #1e293b; }
-  .tab-btn.tab-active { color: #2563eb; border-color: #2563eb; }
-</style>
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+  <style>
+    .tab-btn {
+      padding: .7rem 1.1rem;
+      font-size: .8rem;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all .15s ease;
+    }
+
+    .tab-btn:hover {
+      color: #1e293b;
+    }
+
+    .tab-btn.tab-active {
+      color: #2563eb;
+      border-color: #2563eb;
+    }
+  </style>
 </head>
+
 <body class="font-sans bg-bgapp text-slate-800">
 
-<div class="flex min-h-screen">
-  <div id="app-sidebar"></div>
+  <div class="flex min-h-screen">
+    <div id="app-sidebar"></div>
 
-  <div class="flex-1 min-w-0 flex flex-col">
-    <div id="app-topbar"></div>
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div id="app-topbar"></div>
 
-    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+      <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
 
-      <!-- Breadcrumb -->
-      <div class="flex items-center gap-1.5 text-xs text-slate-400 fade-in">
-        <a href="patient-management.html" class="hover:text-primary hover:underline">จัดการผู้ป่วย</a>
-        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-        <span class="text-slate-600 font-medium">ข้อมูลผู้ป่วย</span>
-      </div>
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-1.5 text-xs text-slate-400 fade-in">
+          <a href="patient-management.html" class="hover:text-primary hover:underline">จัดการผู้ป่วย</a>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          <span class="text-slate-600 font-medium">ข้อมูลผู้ป่วย</span>
+        </div>
 
-      <!-- Profile header -->
-      <div class="card p-5 fade-in fade-in-delay-1">
-        <div class="flex flex-col md:flex-row md:items-center gap-5 justify-between">
-          <div class="flex items-center gap-4">
-            <div id="patient-avatar" class="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center text-xl font-bold shrink-0"></div>
-            <div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <h2 id="patient-name" class="text-lg font-bold text-slate-800"></h2>
-                <span class="badge badge-blue">Post Kidney Transplant</span>
-                <span id="patient-risk-badge"></span>
+        <!-- Profile header -->
+        <div class="card p-5 fade-in fade-in-delay-1">
+          <div class="flex flex-col md:flex-row md:items-center gap-5 justify-between">
+            <div class="flex items-center gap-4">
+              <div id="patient-avatar"
+                class="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center text-xl font-bold shrink-0">
               </div>
-              <p id="patient-sub" class="text-sm text-slate-500 mt-0.5"></p>
-              <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-slate-500">
-                <span class="flex items-center gap-1"><i data-lucide="cake" class="w-3.5 h-3.5"></i> <span id="patient-dob"></span></span>
-                <span class="flex items-center gap-1"><i data-lucide="droplet" class="w-3.5 h-3.5"></i> กรุ๊ปเลือด <span id="patient-blood"></span></span>
-                <span class="flex items-center gap-1"><i data-lucide="hospital" class="w-3.5 h-3.5"></i> <span id="patient-hospital"></span></span>
-                <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3.5 h-3.5"></i> <span id="patient-phone"></span></span>
-              </div>
-            </div>
-          </div>
-          <div class="flex gap-2 shrink-0">
-            <a href="../nurse/chat-system.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="message-circle" class="w-4 h-4"></i> แชท</a>
-            <button data-edit-btn class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i data-lucide="pencil" class="w-4 h-4"></i> แก้ไขข้อมูล</button>
-          </div>
-        </div>
-
-        <!-- Clinical Quick Action -->
-        <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100">
-          <button data-quick-action="note" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><i data-lucide="file-plus-2" class="w-4 h-4 text-primary"></i> Create Note</button>
-          <button data-quick-action="lab" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><i data-lucide="flask-conical" class="w-4 h-4 text-primary"></i> Order Lab</button>
-          <a href="medication-management.html" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><i data-lucide="pill" class="w-4 h-4 text-primary"></i> Adjust Medication</a>
-          <button data-quick-action="appointment" class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><i data-lucide="calendar-plus" class="w-4 h-4 text-primary"></i> Create Appointment</button>
-        </div>
-      </div>
-
-      <!-- Transplant info -->
-      <div class="grid lg:grid-cols-4 gap-4 fade-in fade-in-delay-2">
-        <div class="card p-4">
-          <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> วันที่ปลูกถ่าย</p>
-          <p id="info-transplant-date" class="text-base font-bold text-slate-800 mt-1.5"></p>
-        </div>
-        <div class="card p-4">
-          <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="user-round" class="w-3.5 h-3.5"></i> Donor Type</p>
-          <p id="info-donor-type" class="text-base font-bold text-slate-800 mt-1.5"></p>
-        </div>
-        <div class="card p-4">
-          <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="dna" class="w-3.5 h-3.5"></i> HLA Matching</p>
-          <p id="info-hla" class="text-base font-bold text-slate-800 mt-1.5"></p>
-        </div>
-        <div class="card p-4">
-          <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="git-compare-arrows" class="w-3.5 h-3.5"></i> Compatibility</p>
-          <p id="info-compat" class="text-base font-bold text-slate-800 mt-1.5"></p>
-        </div>
-      </div>
-
-      <!-- Tabs -->
-      <div class="card fade-in fade-in-delay-3 overflow-hidden">
-        <div data-tabs data-tabs-target="#tab-panels" class="flex overflow-x-auto border-b border-slate-200 px-2">
-          <button data-tab-btn="overview" class="tab-btn tab-active">Overview</button>
-          <button data-tab-btn="waiting" class="tab-btn">Waiting Status</button>
-          <button data-tab-btn="timeline" class="tab-btn">Timeline</button>
-          <button data-tab-btn="lab" class="tab-btn">Lab</button>
-          <button data-tab-btn="medication" class="tab-btn">Medication</button>
-          <button data-tab-btn="appointment" class="tab-btn">Appointment</button>
-          <button data-tab-btn="chat" class="tab-btn">Chat</button>
-          <button data-tab-btn="followup" class="tab-btn">Follow-up</button>
-        </div>
-
-        <div id="tab-panels" class="p-5">
-
-          <!-- Overview -->
-          <div data-tab-panel="overview">
-            <div id="ov-medical-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
-            <div class="mt-4 rounded-xl bg-blue-50 p-4 flex items-center justify-between flex-wrap gap-3">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-white text-primary flex items-center justify-center shrink-0"><i data-lucide="calendar-clock" class="w-5 h-5"></i></div>
-                <div>
-                  <p class="text-sm font-semibold text-slate-800">นัดหมายครั้งถัดไป</p>
-                  <p id="ov-next-appt" class="text-xs text-slate-500"></p>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h2 id="patient-name" class="text-lg font-bold text-slate-800"></h2>
+                  <span class="badge badge-blue">Post Kidney Transplant</span>
+                  <span id="patient-risk-badge"></span>
                 </div>
-              </div>
-              <a href="appointment-management.html" class="text-xs font-semibold text-primary hover:underline">จัดการนัดหมาย</a>
-            </div>
-          </div>
-
-          <!-- Waiting Status -->
-          <div data-tab-panel="waiting" class="hidden">
-            <div class="rounded-xl border border-slate-100 p-4 mb-5">
-              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Waiting Information</p>
-              <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
-                <div>
-                  <p class="text-xs text-slate-400">Waiting List No.</p>
-                  <p id="wl-number" class="font-semibold text-slate-800 mt-0.5"></p>
-                </div>
-                <div>
-                  <p class="text-xs text-slate-400">Register Date</p>
-                  <p id="wl-register-date" class="font-semibold text-slate-800 mt-0.5"></p>
-                </div>
-                <div>
-                  <p class="text-xs text-slate-400">Hospital</p>
-                  <p id="wl-hospital" class="font-semibold text-slate-800 mt-0.5"></p>
-                </div>
-                <div>
-                  <p class="text-xs text-slate-400">Current Status</p>
-                  <p id="wl-status" class="font-semibold text-slate-800 mt-0.5"></p>
-                </div>
-                <div>
-                  <p class="text-xs text-slate-400">Waiting Duration</p>
-                  <p id="wl-duration" class="font-semibold text-slate-800 mt-0.5"></p>
+                <p id="patient-sub" class="text-sm text-slate-500 mt-0.5"></p>
+                <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-slate-500">
+                  <span class="flex items-center gap-1"><i data-lucide="cake" class="w-3.5 h-3.5"></i> <span
+                      id="patient-dob"></span></span>
+                  <span class="flex items-center gap-1"><i data-lucide="droplet" class="w-3.5 h-3.5"></i> กรุ๊ปเลือด
+                    <span id="patient-blood"></span></span>
+                  <span class="flex items-center gap-1"><i data-lucide="hospital" class="w-3.5 h-3.5"></i> <span
+                      id="patient-hospital"></span></span>
+                  <span class="flex items-center gap-1"><i data-lucide="phone" class="w-3.5 h-3.5"></i> <span
+                      id="patient-phone"></span></span>
                 </div>
               </div>
             </div>
-            <p class="text-sm font-semibold text-slate-700 mb-3">Waiting Timeline</p>
-            <div id="waiting-timeline" class="timeline-line space-y-6"></div>
-          </div>
-
-          <!-- Timeline -->
-          <div data-tab-panel="timeline" class="hidden">
-            <div class="flex items-center justify-between mb-4">
-              <p class="text-sm text-slate-500">เหตุการณ์สำคัญล่าสุดในการรักษา</p>
-              <a href="treatment-timeline.html" class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">ดู Timeline เต็มรูปแบบ <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
-            </div>
-            <div id="mini-timeline" class="timeline-line space-y-6"></div>
-          </div>
-
-          <!-- Lab -->
-          <div data-tab-panel="lab" class="hidden">
-            <div class="mb-5">
-              <p class="text-sm font-semibold text-slate-700 mb-2">แนวโน้มค่า Lab 7 เดือนล่าสุด</p>
-              <div class="h-56"><canvas id="chart-lab-trend"></canvas></div>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="table-modern">
-                <thead><tr><th>รายการ</th><th>ค่าปัจจุบัน</th><th>ค่าก่อนหน้า</th><th>ช่วงปกติ</th><th>สถานะ</th></tr></thead>
-                <tbody id="lab-tbody"></tbody>
-              </table>
+            <div class="flex gap-2 shrink-0">
+              <a href="../nurse/chat-system.html"
+                class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i
+                  data-lucide="message-circle" class="w-4 h-4"></i> แชท</a>
+              <button data-edit-btn
+                class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i
+                  data-lucide="pencil" class="w-4 h-4"></i> แก้ไขข้อมูล</button>
             </div>
           </div>
 
-          <!-- Medication -->
-          <div data-tab-panel="medication" class="hidden">
-            <div class="overflow-x-auto">
-              <table class="table-modern">
-                <thead><tr><th>ชื่อยา</th><th>ขนาดยา</th><th>ความถี่</th><th>วันที่เริ่ม</th><th>สถานะ</th></tr></thead>
-                <tbody id="med-tbody"></tbody>
-              </table>
-            </div>
+          <!-- Clinical Quick Action -->
+          <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100">
+            <button data-quick-action="note"
+              class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><i
+                data-lucide="file-plus-2" class="w-4 h-4 text-primary"></i> Create Note</button>
+            <button data-quick-action="lab"
+              class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><i
+                data-lucide="flask-conical" class="w-4 h-4 text-primary"></i> Order Lab</button>
+            <a href="medication-management.html"
+              class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><i
+                data-lucide="pill" class="w-4 h-4 text-primary"></i> Adjust Medication</a>
+            <button data-quick-action="appointment"
+              class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"><i
+                data-lucide="calendar-plus" class="w-4 h-4 text-primary"></i> Create Appointment</button>
+          </div>
+        </div>
+
+        <!-- Transplant info -->
+        <div class="grid lg:grid-cols-4 gap-4 fade-in fade-in-delay-2">
+          <div class="card p-4">
+            <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="calendar"
+                class="w-3.5 h-3.5"></i> วันที่ปลูกถ่าย</p>
+            <p id="info-transplant-date" class="text-base font-bold text-slate-800 mt-1.5"></p>
+          </div>
+          <div class="card p-4">
+            <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="user-round"
+                class="w-3.5 h-3.5"></i> Donor Type</p>
+            <p id="info-donor-type" class="text-base font-bold text-slate-800 mt-1.5"></p>
+          </div>
+          <div class="card p-4">
+            <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="dna" class="w-3.5 h-3.5"></i>
+              HLA Matching</p>
+            <p id="info-hla" class="text-base font-bold text-slate-800 mt-1.5"></p>
+          </div>
+          <div class="card p-4">
+            <p class="text-xs text-slate-400 flex items-center gap-1.5"><i data-lucide="git-compare-arrows"
+                class="w-3.5 h-3.5"></i> Compatibility</p>
+            <p id="info-compat" class="text-base font-bold text-slate-800 mt-1.5"></p>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card fade-in fade-in-delay-3 overflow-hidden">
+          <div data-tabs data-tabs-target="#tab-panels" class="flex overflow-x-auto border-b border-slate-200 px-2">
+            <button data-tab-btn="overview" class="tab-btn tab-active">Overview</button>
+            <button data-tab-btn="waiting" class="tab-btn">Waiting Status</button>
+            <button data-tab-btn="timeline" class="tab-btn">Timeline</button>
+            <button data-tab-btn="lab" class="tab-btn">Lab</button>
+            <button data-tab-btn="medication" class="tab-btn">Medication</button>
+            <button data-tab-btn="appointment" class="tab-btn">Appointment</button>
+            <button data-tab-btn="chat" class="tab-btn">Chat</button>
+            <button data-tab-btn="followup" class="tab-btn">Follow-up</button>
           </div>
 
-          <!-- Appointment -->
-          <div data-tab-panel="appointment" class="hidden">
-            <div id="appt-next-card" class="rounded-xl border border-blue-100 bg-blue-50 p-4 mb-5"></div>
-            <p class="text-sm font-semibold text-slate-700 mb-2">ประวัตินัดหมายล่าสุด</p>
-            <div id="appt-history" class="divide-y divide-slate-100"></div>
-          </div>
+          <div id="tab-panels" class="p-5">
 
-          <!-- Chat -->
-          <div data-tab-panel="chat" class="hidden">
-            <div class="rounded-xl border border-slate-100 p-4">
-              <div id="chat-preview" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
-              <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-                <p class="text-xs text-slate-400">ตัวอย่างบทสนทนาล่าสุดกับผู้ป่วย</p>
-                <a href="../nurse/chat-system.html" class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">เปิดหน้าแชทเต็มรูปแบบ <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+            <!-- Overview -->
+            <div data-tab-panel="overview">
+              <div id="ov-medical-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+              <div class="mt-4 rounded-xl bg-blue-50 p-4 flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-white text-primary flex items-center justify-center shrink-0"><i
+                      data-lucide="calendar-clock" class="w-5 h-5"></i></div>
+                  <div>
+                    <p class="text-sm font-semibold text-slate-800">นัดหมายครั้งถัดไป</p>
+                    <p id="ov-next-appt" class="text-xs text-slate-500"></p>
+                  </div>
+                </div>
+                <a href="appointment-management.html"
+                  class="text-xs font-semibold text-primary hover:underline">จัดการนัดหมาย</a>
               </div>
             </div>
-          </div>
 
-          <!-- Follow-up -->
-          <div data-tab-panel="followup" class="hidden">
-            <p class="text-sm text-slate-500 mb-4">ประวัติการติดตามผู้ป่วยโดยทีมพยาบาลผู้ประสานงาน</p>
-            <div id="followup-timeline" class="timeline-line space-y-6"></div>
-          </div>
+            <!-- Waiting Status -->
+            <div data-tab-panel="waiting" class="hidden">
+              <div class="rounded-xl border border-slate-100 p-4 mb-5">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Waiting Information</p>
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
+                  <div>
+                    <p class="text-xs text-slate-400">Waiting List No.</p>
+                    <p id="wl-number" class="font-semibold text-slate-800 mt-0.5"></p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-400">Register Date</p>
+                    <p id="wl-register-date" class="font-semibold text-slate-800 mt-0.5"></p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-400">Hospital</p>
+                    <p id="wl-hospital" class="font-semibold text-slate-800 mt-0.5"></p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-400">Current Status</p>
+                    <p id="wl-status" class="font-semibold text-slate-800 mt-0.5"></p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-slate-400">Waiting Duration</p>
+                    <p id="wl-duration" class="font-semibold text-slate-800 mt-0.5"></p>
+                  </div>
+                </div>
+              </div>
+              <p class="text-sm font-semibold text-slate-700 mb-3">Waiting Timeline</p>
+              <div id="waiting-timeline" class="timeline-line space-y-6"></div>
+            </div>
 
+            <!-- Timeline -->
+            <div data-tab-panel="timeline" class="hidden">
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-sm text-slate-500">เหตุการณ์สำคัญล่าสุดในการรักษา</p>
+                <a href="treatment-timeline.html"
+                  class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">ดู Timeline
+                  เต็มรูปแบบ <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+              </div>
+              <div id="mini-timeline" class="timeline-line space-y-6"></div>
+            </div>
+
+            <!-- Lab -->
+            <div data-tab-panel="lab" class="hidden">
+              <div class="mb-5">
+                <p class="text-sm font-semibold text-slate-700 mb-2">แนวโน้มค่า Lab 7 เดือนล่าสุด</p>
+                <div class="h-56"><canvas id="chart-lab-trend"></canvas></div>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="table-modern">
+                  <thead>
+                    <tr>
+                      <th>รายการ</th>
+                      <th>ค่าปัจจุบัน</th>
+                      <th>ค่าก่อนหน้า</th>
+                      <th>ช่วงปกติ</th>
+                      <th>สถานะ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lab-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Medication -->
+            <div data-tab-panel="medication" class="hidden">
+              <div class="overflow-x-auto">
+                <table class="table-modern">
+                  <thead>
+                    <tr>
+                      <th>ชื่อยา</th>
+                      <th>ขนาดยา</th>
+                      <th>ความถี่</th>
+                      <th>วันที่เริ่ม</th>
+                      <th>สถานะ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="med-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Appointment -->
+            <div data-tab-panel="appointment" class="hidden">
+              <div id="appt-next-card" class="rounded-xl border border-blue-100 bg-blue-50 p-4 mb-5"></div>
+              <p class="text-sm font-semibold text-slate-700 mb-2">ประวัตินัดหมายล่าสุด</p>
+              <div id="appt-history" class="divide-y divide-slate-100"></div>
+            </div>
+
+            <!-- Chat -->
+            <div data-tab-panel="chat" class="hidden">
+              <div class="rounded-xl border border-slate-100 p-4">
+                <div id="chat-preview" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                  <p class="text-xs text-slate-400">ตัวอย่างบทสนทนาล่าสุดกับผู้ป่วย</p>
+                  <a href="../nurse/chat-system.html"
+                    class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">เปิดหน้าแชทเต็มรูปแบบ
+                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Follow-up -->
+            <div data-tab-panel="followup" class="hidden">
+              <p class="text-sm text-slate-500 mb-4">ประวัติการติดตามผู้ป่วยโดยทีมพยาบาลผู้ประสานงาน</p>
+              <div id="followup-timeline" class="timeline-line space-y-6"></div>
+            </div>
+
+          </div>
         </div>
-      </div>
 
-    </main>
+      </main>
+    </div>
   </div>
-</div>
 
-<script src="../assets/js/data.js"></script>
-<script src="../assets/js/layout.js"></script>
-<script src="../assets/js/components.js"></script>
-<script src="../assets/js/charts.js"></script>
-<script>
-  StaffLayout.init({ role: "doctor", active: "patients", title: "ข้อมูลผู้ป่วย" });
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/charts.js"></script>
+  <script>
+    StaffLayout.init({ role: "doctor", active: "patients", title: "ข้อมูลผู้ป่วย" });
 
-  const D = window.MOCK_DATA;
-  const p = D.primaryPatient;
+    const D = window.MOCK_DATA;
+    const p = D.primaryPatient;
 
-  const riskBadgeHtml = { low: '<span class="badge badge-green text-[11px]">Low Risk</span>', medium: '<span class="badge badge-amber text-[11px]">Medium Risk</span>', high: '<span class="badge badge-red text-[11px]">High Risk</span>' }[p.risk];
+    const riskBadgeHtml = { low: '<span class="badge badge-green text-[11px]">Low Risk</span>', medium: '<span class="badge badge-amber text-[11px]">Medium Risk</span>', high: '<span class="badge badge-red text-[11px]">High Risk</span>' }[p.risk];
 
-  document.getElementById("patient-avatar").textContent = p.name.slice(0, 2);
-  document.getElementById("patient-name").textContent = p.name;
-  document.getElementById("patient-risk-badge").innerHTML = riskBadgeHtml;
-  document.getElementById("patient-sub").textContent = `HN: ${p.hn}  ·  AN: ${p.an}  ·  อายุ ${p.age} ปี (${p.gender})`;
-  document.getElementById("patient-dob").textContent = `เกิด ${p.dob}`;
-  document.getElementById("patient-blood").textContent = p.blood;
-  document.getElementById("patient-hospital").textContent = p.hospital;
-  document.getElementById("patient-phone").textContent = p.phone;
+    document.getElementById("patient-avatar").textContent = p.name.slice(0, 2);
+    document.getElementById("patient-name").textContent = p.name;
+    document.getElementById("patient-risk-badge").innerHTML = riskBadgeHtml;
+    document.getElementById("patient-sub").textContent = `HN: ${p.hn}  ·  AN: ${p.an}  ·  อายุ ${p.age} ปี (${p.gender})`;
+    document.getElementById("patient-dob").textContent = `เกิด ${p.dob}`;
+    document.getElementById("patient-blood").textContent = p.blood;
+    document.getElementById("patient-hospital").textContent = p.hospital;
+    document.getElementById("patient-phone").textContent = p.phone;
 
-  document.getElementById("info-transplant-date").textContent = p.transplantDate;
-  document.getElementById("info-donor-type").textContent = p.donorType;
-  document.getElementById("info-hla").textContent = p.hla;
-  document.getElementById("info-compat").textContent = p.compatibility;
+    document.getElementById("info-transplant-date").textContent = p.transplantDate;
+    document.getElementById("info-donor-type").textContent = p.donorType;
+    document.getElementById("info-hla").textContent = p.hla;
+    document.getElementById("info-compat").textContent = p.compatibility;
 
-  // Overview — Current Health Status (4 Medical Cards พร้อม Previous Value / Trend Arrow)
-  const creatParam = D.labParams.find((l) => l.key === "creatinine");
-  const egfrParam = D.labParams.find((l) => l.key === "egfr");
-  const tacParam = D.labParams.find((l) => l.key === "tac");
-  document.getElementById("ov-medical-cards").innerHTML = [
-    Components.medicalDataCard({ name: "Creatinine", value: p.creatinine, unit: "mg/dL", previous: creatParam?.previous, status: creatParam?.status || "normal" }),
-    Components.medicalDataCard({ name: "eGFR", value: p.egfr, unit: "mL/min", previous: egfrParam?.previous, status: egfrParam?.status || "normal" }),
-    Components.medicalDataCard({ name: "Tacrolimus Level", value: p.tac, unit: "ng/mL", previous: tacParam?.previous, status: tacParam?.status || "normal" }),
-    Components.medicalDataCard({ name: "Blood Pressure", value: "128/82", unit: "mmHg", previous: "132/85", status: "normal" }),
-  ].join("");
+    // Overview — Current Health Status (4 Medical Cards พร้อม Previous Value / Trend Arrow)
+    const creatParam = D.labParams.find((l) => l.key === "creatinine");
+    const egfrParam = D.labParams.find((l) => l.key === "egfr");
+    const tacParam = D.labParams.find((l) => l.key === "tac");
+    document.getElementById("ov-medical-cards").innerHTML = [
+      Components.medicalDataCard({ name: "Creatinine", value: p.creatinine, unit: "mg/dL", previous: creatParam?.previous, status: creatParam?.status || "normal" }),
+      Components.medicalDataCard({ name: "eGFR", value: p.egfr, unit: "mL/min", previous: egfrParam?.previous, status: egfrParam?.status || "normal" }),
+      Components.medicalDataCard({ name: "Tacrolimus Level", value: p.tac, unit: "ng/mL", previous: tacParam?.previous, status: tacParam?.status || "normal" }),
+      Components.medicalDataCard({ name: "Blood Pressure", value: "128/82", unit: "mmHg", previous: "132/85", status: "normal" }),
+    ].join("");
 
-  const nextAppt = D.appointments.find((a) => a.hn === p.hn);
-  document.getElementById("ov-next-appt").textContent = nextAppt
-    ? `${nextAppt.date} เวลา ${nextAppt.time} น. · ${nextAppt.type} · ${nextAppt.hospital}`
-    : `นัดครั้งถัดไป ${p.nextVisit}`;
+    const nextAppt = D.appointments.find((a) => a.hn === p.hn);
+    document.getElementById("ov-next-appt").textContent = nextAppt
+      ? `${nextAppt.date} เวลา ${nextAppt.time} น. · ${nextAppt.type} · ${nextAppt.hospital}`
+      : `นัดครั้งถัดไป ${p.nextVisit}`;
 
-  // Timeline (mini) — เหตุการณ์ย่อ
-  const miniEvents = [
-    { icon: "syringe", color: "#2563eb", title: "Kidney Transplant", desc: "ผ่าตัดปลูกถ่ายไตสำเร็จ ผู้บริจาค: ญาติผู้บริจาค", date: p.transplantDate },
-    { icon: "stethoscope", color: "#16a34a", title: "OPD ติดตามอาการ", desc: "ตรวจติดตามหลังผ่าตัด อาการคงที่", date: "20 ส.ค. 2569" },
-    { icon: "flask-conical", color: "#0ea5e9", title: "ตรวจ Lab ประจำเดือน", desc: "Creatinine 1.1 mg/dL, eGFR 78", date: p.lastVisit },
-    { icon: "pill", color: "#d97706", title: "ปรับแผนการให้ยา", desc: "ปรับลด Tacrolimus จาก 2.5 mg เหลือ 2 mg", date: "20 ก.ค. 2568" },
-  ];
-  document.getElementById("mini-timeline").innerHTML = miniEvents
-    .map(
-      (e) => `
+    // Timeline (mini) — เหตุการณ์ย่อ
+    const miniEvents = [
+      { icon: "syringe", color: "#2563eb", title: "Kidney Transplant", desc: "ผ่าตัดปลูกถ่ายไตสำเร็จ ผู้บริจาค: ญาติผู้บริจาค", date: p.transplantDate },
+      { icon: "stethoscope", color: "#16a34a", title: "OPD ติดตามอาการ", desc: "ตรวจติดตามหลังผ่าตัด อาการคงที่", date: "20 ส.ค. 2569" },
+      { icon: "flask-conical", color: "#0ea5e9", title: "ตรวจ Lab ประจำเดือน", desc: "Creatinine 1.1 mg/dL, eGFR 78", date: p.lastVisit },
+      { icon: "pill", color: "#d97706", title: "ปรับแผนการให้ยา", desc: "ปรับลด Tacrolimus จาก 2.5 mg เหลือ 2 mg", date: "20 ก.ค. 2568" },
+    ];
+    document.getElementById("mini-timeline").innerHTML = miniEvents
+      .map(
+        (e) => `
     <div class="relative">
       <div class="timeline-node" style="background:${e.color}"><i data-lucide="${e.icon}" class="w-4 h-4"></i></div>
       <p class="text-xs text-slate-400">${e.date}</p>
       <p class="text-sm font-semibold text-slate-800 mt-0.5">${e.title}</p>
       <p class="text-xs text-slate-500 mt-0.5">${e.desc}</p>
     </div>`
-    )
-    .join("");
+      )
+      .join("");
 
-  // Waiting Status tab — ประวัติการรอคิวก่อนได้รับการปลูกถ่าย (เสร็จสิ้นแล้ว)
-  document.getElementById("wl-number").textContent = "WL-2022-0031";
-  document.getElementById("wl-register-date").textContent = "10 มี.ค. 2565";
-  document.getElementById("wl-hospital").textContent = p.hospital;
-  document.getElementById("wl-status").innerHTML = '<span class="badge badge-teal">Completed</span>';
-  document.getElementById("wl-duration").textContent = "10 เดือน (จนถึงวันปลูกถ่าย)";
+    // Waiting Status tab — ประวัติการรอคิวก่อนได้รับการปลูกถ่าย (เสร็จสิ้นแล้ว)
+    document.getElementById("wl-number").textContent = "WL-2022-0031";
+    document.getElementById("wl-register-date").textContent = "10 มี.ค. 2565";
+    document.getElementById("wl-hospital").textContent = p.hospital;
+    document.getElementById("wl-status").innerHTML = '<span class="badge badge-teal">Completed</span>';
+    document.getElementById("wl-duration").textContent = "10 เดือน (จนถึงวันปลูกถ่าย)";
 
-  const waitingEvents = [
-    { icon: "clipboard-list", color: "#64748b", title: "Registered", desc: "ลงทะเบียนเข้าสู่บัญชีรอปลูกถ่ายไต", date: "10 มี.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผ่านการคัดกรองเบื้องต้น" },
-    { icon: "stethoscope", color: "#2563eb", title: "Medical Evaluation", desc: "ประเมินความพร้อมทางการแพทย์โดยทีมสหสาขาวิชาชีพ", date: "02 พ.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผ่านเกณฑ์ ไม่มีข้อห้ามทางการแพทย์" },
-    { icon: "flask-conical", color: "#0ea5e9", title: "Additional Test", desc: "ตรวจ HLA Typing และ Tissue Cross-match เพิ่มเติม", date: "20 ก.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผล HLA พร้อมสำหรับการจับคู่" },
-    { icon: "git-compare-arrows", color: "#d97706", title: "Matching", desc: "พบผู้บริจาคที่เข้ากันได้ (Donor DNR-5518)", date: "05 ธ.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "Match Score 94% · Excellent Match" },
-    { icon: "clipboard-check", color: "#7c3aed", title: "Evaluation", desc: "ประเมินความเหมาะสมขั้นสุดท้ายก่อนผ่าตัด", date: "28 ธ.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผลประเมิน Suitable" },
-    { icon: "check-circle-2", color: "#16a34a", title: "Ready Surgery", desc: "เตรียมความพร้อมก่อนผ่าตัดปลูกถ่ายไตสำเร็จ", date: "16 ม.ค. 2566", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผ่าตัดปลูกถ่ายไตวันที่ 18 ม.ค. 2566" },
-  ];
-  document.getElementById("waiting-timeline").innerHTML = waitingEvents
-    .map(
-      (e) => `
+    const waitingEvents = [
+      { icon: "clipboard-list", color: "#64748b", title: "Registered", desc: "ลงทะเบียนเข้าสู่บัญชีรอปลูกถ่ายไต", date: "10 มี.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผ่านการคัดกรองเบื้องต้น" },
+      { icon: "stethoscope", color: "#2563eb", title: "Medical Evaluation", desc: "ประเมินความพร้อมทางการแพทย์โดยทีมสหสาขาวิชาชีพ", date: "02 พ.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผ่านเกณฑ์ ไม่มีข้อห้ามทางการแพทย์" },
+      { icon: "flask-conical", color: "#0ea5e9", title: "Additional Test", desc: "ตรวจ HLA Typing และ Tissue Cross-match เพิ่มเติม", date: "20 ก.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผล HLA พร้อมสำหรับการจับคู่" },
+      { icon: "git-compare-arrows", color: "#d97706", title: "Matching", desc: "พบผู้บริจาคที่เข้ากันได้ (Donor DNR-5518)", date: "05 ธ.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "Match Score 94% · Excellent Match" },
+      { icon: "clipboard-check", color: "#7c3aed", title: "Evaluation", desc: "ประเมินความเหมาะสมขั้นสุดท้ายก่อนผ่าตัด", date: "28 ธ.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผลประเมิน Suitable" },
+      { icon: "check-circle-2", color: "#16a34a", title: "Ready Surgery", desc: "เตรียมความพร้อมก่อนผ่าตัดปลูกถ่ายไตสำเร็จ", date: "16 ม.ค. 2566", doctor: "นพ.ธนกร วัฒนสิน", remark: "ผ่าตัดปลูกถ่ายไตวันที่ 18 ม.ค. 2566" },
+    ];
+    document.getElementById("waiting-timeline").innerHTML = waitingEvents
+      .map(
+        (e) => `
     <div class="relative">
       <div class="timeline-node" style="background:${e.color}"><i data-lucide="${e.icon}" class="w-4 h-4"></i></div>
       <div class="flex flex-wrap items-center gap-2">
@@ -309,22 +370,22 @@
       <p class="text-xs text-slate-500 mt-0.5">${e.desc}</p>
       <p class="text-[11px] text-slate-400 mt-0.5">โดย ${e.doctor} · ${e.remark}</p>
     </div>`
-    )
-    .join("");
+      )
+      .join("");
 
-  // Lab tab
-  Charts.lineChart(document.getElementById("chart-lab-trend"), {
-    labels: D.labTrend.labels,
-    datasets: [
-      { label: "Creatinine (mg/dL)", data: D.labTrend.creatinine, color: Charts.COLORS.red },
-      { label: "eGFR (mL/min)", data: D.labTrend.egfr, color: Charts.COLORS.teal },
-    ],
-  });
+    // Lab tab
+    Charts.lineChart(document.getElementById("chart-lab-trend"), {
+      labels: D.labTrend.labels,
+      datasets: [
+        { label: "Creatinine (mg/dL)", data: D.labTrend.creatinine, color: Charts.COLORS.red },
+        { label: "eGFR (mL/min)", data: D.labTrend.egfr, color: Charts.COLORS.teal },
+      ],
+    });
 
-  const labStatusBadge = { normal: '<span class="badge badge-green">ปกติ</span>', high: '<span class="badge badge-red">สูงกว่าปกติ</span>', low: '<span class="badge badge-amber">ต่ำกว่าปกติ</span>', na: '<span class="badge badge-slate">ไม่ได้ตรวจ</span>' };
-  document.getElementById("lab-tbody").innerHTML = D.labParams
-    .map(
-      (l) => `
+    const labStatusBadge = { normal: '<span class="badge badge-green">ปกติ</span>', high: '<span class="badge badge-red">สูงกว่าปกติ</span>', low: '<span class="badge badge-amber">ต่ำกว่าปกติ</span>', na: '<span class="badge badge-slate">ไม่ได้ตรวจ</span>' };
+    document.getElementById("lab-tbody").innerHTML = D.labParams
+      .map(
+        (l) => `
     <tr>
       <td class="font-medium text-slate-700">${l.name}</td>
       <td>${l.current} <span class="text-xs text-slate-400">${l.unit}</span></td>
@@ -332,14 +393,14 @@
       <td class="text-slate-400">${l.range}</td>
       <td>${labStatusBadge[l.status]}</td>
     </tr>`
-    )
-    .join("");
+      )
+      .join("");
 
-  // Medication tab
-  const medStatusBadge = { active: '<span class="badge badge-green">ใช้อยู่</span>', stopped: '<span class="badge badge-slate">หยุดแล้ว</span>' };
-  document.getElementById("med-tbody").innerHTML = D.medications
-    .map(
-      (m) => `
+    // Medication tab
+    const medStatusBadge = { active: '<span class="badge badge-green">ใช้อยู่</span>', stopped: '<span class="badge badge-slate">หยุดแล้ว</span>' };
+    document.getElementById("med-tbody").innerHTML = D.medications
+      .map(
+        (m) => `
     <tr>
       <td class="font-medium text-slate-700">${m.drug}</td>
       <td>${m.dose}</td>
@@ -347,12 +408,12 @@
       <td>${m.start}</td>
       <td>${medStatusBadge[m.status]}</td>
     </tr>`
-    )
-    .join("");
+      )
+      .join("");
 
-  // Appointment tab
-  document.getElementById("appt-next-card").innerHTML = nextAppt
-    ? `
+    // Appointment tab
+    document.getElementById("appt-next-card").innerHTML = nextAppt
+      ? `
     <div class="flex items-center justify-between flex-wrap gap-3">
       <div class="flex items-center gap-3">
         <div class="w-11 h-11 rounded-xl bg-white text-primary flex items-center justify-center shrink-0"><i data-lucide="calendar-check-2" class="w-5 h-5"></i></div>
@@ -363,17 +424,17 @@
       </div>
       <span class="badge badge-green">ยืนยันแล้ว</span>
     </div>`
-    : `<p class="text-sm text-slate-500">ไม่มีนัดหมายที่กำลังจะถึง</p>`;
+      : `<p class="text-sm text-slate-500">ไม่มีนัดหมายที่กำลังจะถึง</p>`;
 
-  const apptHistory = [
-    { date: "16 ก.ย. 2569", type: "ติดตามหลังปลูกถ่าย", status: "confirmed" },
-    { date: "02 ก.ย. 2569", type: "ตรวจ Lab ประจำเดือน", status: "confirmed" },
-    { date: "05 ส.ค. 2569", type: "ติดตามหลังปลูกถ่าย", status: "confirmed" },
-    { date: "08 ก.ค. 2569", type: "ตรวจ Lab ประจำเดือน", status: "missed" },
-  ];
-  document.getElementById("appt-history").innerHTML = apptHistory
-    .map(
-      (a) => `
+    const apptHistory = [
+      { date: "16 ก.ย. 2569", type: "ติดตามหลังปลูกถ่าย", status: "confirmed" },
+      { date: "02 ก.ย. 2569", type: "ตรวจ Lab ประจำเดือน", status: "confirmed" },
+      { date: "05 ส.ค. 2569", type: "ติดตามหลังปลูกถ่าย", status: "confirmed" },
+      { date: "08 ก.ค. 2569", type: "ตรวจ Lab ประจำเดือน", status: "missed" },
+    ];
+    document.getElementById("appt-history").innerHTML = apptHistory
+      .map(
+        (a) => `
     <div class="flex items-center justify-between py-2.5">
       <div>
         <p class="text-sm font-medium text-slate-800">${a.date}</p>
@@ -381,52 +442,53 @@
       </div>
       <span class="badge ${a.status === "confirmed" ? "badge-green" : "badge-red"}">${a.status === "confirmed" ? "มาตามนัด" : "ผิดนัด"}</span>
     </div>`
-    )
-    .join("");
+      )
+      .join("");
 
-  // Chat tab — บทสนทนาตัวอย่าง
-  const chatThread = D.chatThreads.find((c) => c.hn === p.hn);
-  const chatMessages = [
-    { from: "patient", text: "สวัสดีค่ะ/ครับคุณหมอ ช่วงนี้รู้สึกเหนื่อยง่ายเล็กน้อย", time: "08:40" },
-    { from: "staff", text: "สวัสดีครับ ทานยาครบตามเวลาไหมครับ และมีอาการบวมหรือไข้ร่วมด้วยหรือเปล่า", time: "08:52" },
-    { from: "patient", text: "ทานยาครบทุกมื้อครับ ไม่มีไข้ ไม่บวมครับ", time: "09:05" },
-    { from: "patient", text: chatThread ? chatThread.lastMsg : "ขอบคุณครับคุณหมอ", time: chatThread ? chatThread.time : "09:32" },
-  ];
-  document.getElementById("chat-preview").innerHTML = chatMessages
-    .map(
-      (m) => `
+    // Chat tab — บทสนทนาตัวอย่าง
+    const chatThread = D.chatThreads.find((c) => c.hn === p.hn);
+    const chatMessages = [
+      { from: "patient", text: "สวัสดีค่ะ/ครับคุณหมอ ช่วงนี้รู้สึกเหนื่อยง่ายเล็กน้อย", time: "08:40" },
+      { from: "staff", text: "สวัสดีครับ ทานยาครบตามเวลาไหมครับ และมีอาการบวมหรือไข้ร่วมด้วยหรือเปล่า", time: "08:52" },
+      { from: "patient", text: "ทานยาครบทุกมื้อครับ ไม่มีไข้ ไม่บวมครับ", time: "09:05" },
+      { from: "patient", text: chatThread ? chatThread.lastMsg : "ขอบคุณครับคุณหมอ", time: chatThread ? chatThread.time : "09:32" },
+    ];
+    document.getElementById("chat-preview").innerHTML = chatMessages
+      .map(
+        (m) => `
     <div class="flex ${m.from === "staff" ? "justify-end" : "justify-start"}">
       <div class="${m.from === "staff" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"} rounded-2xl px-3.5 py-2 max-w-[75%]">
         <p class="text-sm">${m.text}</p>
         <p class="text-[10px] mt-1 ${m.from === "staff" ? "text-blue-100" : "text-slate-400"}">${m.time}</p>
       </div>
     </div>`
-    )
-    .join("");
+      )
+      .join("");
 
-  // Follow-up tab
-  const fuIconMap = { "โทรศัพท์": "phone", "LINE": "message-circle", "นัดหมาย": "calendar-days" };
-  document.getElementById("followup-timeline").innerHTML = D.followupHistory
-    .map((f) => {
-      const color = f.result === "ไม่รับสาย" ? "#dc2626" : f.result === "เลื่อนนัด" ? "#d97706" : "#0f766e";
-      return `
+    // Follow-up tab
+    const fuIconMap = { "โทรศัพท์": "phone", "LINE": "message-circle", "นัดหมาย": "calendar-days" };
+    document.getElementById("followup-timeline").innerHTML = D.followupHistory
+      .map((f) => {
+        const color = f.result === "ไม่รับสาย" ? "#dc2626" : f.result === "เลื่อนนัด" ? "#d97706" : "#0f766e";
+        return `
     <div class="relative">
       <div class="timeline-node" style="background:${color}"><i data-lucide="${fuIconMap[f.type] || "activity"}" class="w-4 h-4"></i></div>
       <p class="text-xs text-slate-400">${f.date} · โดย ${f.by}</p>
       <p class="text-sm font-semibold text-slate-800 mt-0.5">${f.type} — ${f.result}</p>
       <p class="text-xs text-slate-500 mt-0.5">${f.note}</p>
     </div>`;
-    })
-    .join("");
+      })
+      .join("");
 
-  document.querySelector("[data-edit-btn]").addEventListener("click", () => UI.toast("ฟีเจอร์แก้ไขข้อมูลอยู่ระหว่างพัฒนา", "info"));
+    document.querySelector("[data-edit-btn]").addEventListener("click", () => UI.toast("ฟีเจอร์แก้ไขข้อมูลอยู่ระหว่างพัฒนา", "info"));
 
-  const quickActionMsg = { note: "เปิดแบบฟอร์มบันทึก Clinical Note", lab: "สร้างคำสั่งตรวจ Lab ใหม่", appointment: "เปิดแบบฟอร์มสร้างนัดหมายใหม่" };
-  document.querySelectorAll("[data-quick-action]").forEach((btn) => {
-    btn.addEventListener("click", () => UI.toast(quickActionMsg[btn.getAttribute("data-quick-action")] || "อยู่ระหว่างพัฒนา", "info"));
-  });
+    const quickActionMsg = { note: "เปิดแบบฟอร์มบันทึก Clinical Note", lab: "สร้างคำสั่งตรวจ Lab ใหม่", appointment: "เปิดแบบฟอร์มสร้างนัดหมายใหม่" };
+    document.querySelectorAll("[data-quick-action]").forEach((btn) => {
+      btn.addEventListener("click", () => UI.toast(quickActionMsg[btn.getAttribute("data-quick-action")] || "อยู่ระหว่างพัฒนา", "info"));
+    });
 
-  lucide.createIcons();
-</script>
+    lucide.createIcons();
+  </script>
 </body>
+
 </html>

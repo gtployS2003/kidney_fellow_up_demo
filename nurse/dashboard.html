@@ -1,172 +1,192 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>แดชบอร์ดพยาบาล | Kidney Transplant Follow-up System</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
-        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>แดชบอร์ดพยาบาล | Kidney Transplant Follow-up System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
       },
-    },
-  };
-</script>
-<link rel="stylesheet" href="../assets/css/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
 </head>
+
 <body class="font-sans bg-bgapp text-slate-800">
 
-<div class="flex min-h-screen">
-  <div id="app-sidebar"></div>
-  <div class="flex-1 min-w-0 flex flex-col">
-    <div id="app-topbar"></div>
+  <div class="flex min-h-screen">
+    <div id="app-sidebar"></div>
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div id="app-topbar"></div>
 
-    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+      <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
 
-      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
-        <div>
-          <h2 class="text-xl font-bold text-slate-800">Nurse Coordinator Dashboard</h2>
-          <p class="text-sm text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> วันที่ 9 กันยายน 2569</span>
-            <span id="header-task-count" class="flex items-center gap-1.5"><i data-lucide="list-checks" class="w-3.5 h-3.5"></i></span>
-            <span id="header-notif" class="flex items-center gap-1.5 text-red-500 font-medium"><i data-lucide="bell-ring" class="w-3.5 h-3.5"></i></span>
-          </p>
+        <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Nurse Coordinator Dashboard</h2>
+            <p class="text-sm text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> วันที่ 9
+                กันยายน 2569</span>
+              <span id="header-task-count" class="flex items-center gap-1.5"><i data-lucide="list-checks"
+                  class="w-3.5 h-3.5"></i></span>
+              <span id="header-notif" class="flex items-center gap-1.5 text-red-500 font-medium"><i
+                  data-lucide="bell-ring" class="w-3.5 h-3.5"></i></span>
+            </p>
+          </div>
+          <a href="nurse-followup.html"
+            class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i
+              data-lucide="phone-call" class="w-4 h-4"></i> บันทึกการติดตามใหม่</a>
         </div>
-        <a href="nurse-followup.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i data-lucide="phone-call" class="w-4 h-4"></i> บันทึกการติดตามใหม่</a>
-      </div>
 
-      <!-- Summary cards -->
-      <div id="kpi-grid" class="grid grid-cols-2 lg:grid-cols-5 gap-4"></div>
+        <!-- Summary cards -->
+        <div id="kpi-grid" class="grid grid-cols-2 lg:grid-cols-5 gap-4"></div>
 
-      <!-- Today Task Queue -->
-      <div class="card p-5 fade-in">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="list-checks" class="w-4 h-4 text-primary"></i> Today Task Queue</h3>
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2">
-              <div class="progress-track w-24"><div id="task-progress-fill" class="progress-fill bg-green-500"></div></div>
-              <span id="task-progress-label" class="text-xs font-semibold text-slate-500 whitespace-nowrap"></span>
+        <!-- Today Task Queue -->
+        <div class="card p-5 fade-in">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="list-checks"
+                class="w-4 h-4 text-primary"></i> Today Task Queue</h3>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
+                <div class="progress-track w-24">
+                  <div id="task-progress-fill" class="progress-fill bg-green-500"></div>
+                </div>
+                <span id="task-progress-label" class="text-xs font-semibold text-slate-500 whitespace-nowrap"></span>
+              </div>
+              <span id="task-count-badge" class="badge badge-blue"></span>
             </div>
-            <span id="task-count-badge" class="badge badge-blue"></span>
           </div>
+          <div id="task-queue" class="space-y-2.5"></div>
         </div>
-        <div id="task-queue" class="space-y-2.5"></div>
-      </div>
 
-      <!-- Risk overview + Follow-up trend -->
-      <div class="grid lg:grid-cols-3 gap-4">
-        <div class="card p-5 fade-in">
-          <h3 class="font-semibold text-slate-800 text-sm mb-1">Patient Risk Overview</h3>
-          <p class="text-xs text-slate-400 mb-2">สัดส่วนผู้ป่วยตามระดับความเสี่ยง</p>
-          <div class="h-56"><canvas id="chart-risk-overview"></canvas></div>
+        <!-- Risk overview + Follow-up trend -->
+        <div class="grid lg:grid-cols-3 gap-4">
+          <div class="card p-5 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-1">Patient Risk Overview</h3>
+            <p class="text-xs text-slate-400 mb-2">สัดส่วนผู้ป่วยตามระดับความเสี่ยง</p>
+            <div class="h-56"><canvas id="chart-risk-overview"></canvas></div>
+          </div>
+          <div class="card p-5 lg:col-span-2 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-1">Follow-up Trend</h3>
+            <p class="text-xs text-slate-400 mb-2">จำนวนการติดตามผู้ป่วยต่อเดือน</p>
+            <div class="h-56"><canvas id="chart-followup-trend"></canvas></div>
+          </div>
         </div>
-        <div class="card p-5 lg:col-span-2 fade-in">
-          <h3 class="font-semibold text-slate-800 text-sm mb-1">Follow-up Trend</h3>
-          <p class="text-xs text-slate-400 mb-2">จำนวนการติดตามผู้ป่วยต่อเดือน</p>
-          <div class="h-56"><canvas id="chart-followup-trend"></canvas></div>
-        </div>
-      </div>
 
-      <!-- Notification panel + Follow-up queue -->
-      <div class="grid lg:grid-cols-2 gap-4">
-        <div class="card p-5 fade-in">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="bell-ring" class="w-4 h-4 text-red-500"></i> Notification Center</h3>
-            <a href="questionnaire-monitoring.html" class="text-xs font-semibold text-primary hover:underline">ดูทั้งหมด</a>
+        <!-- Notification panel + Follow-up queue -->
+        <div class="grid lg:grid-cols-2 gap-4">
+          <div class="card p-5 fade-in">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="bell-ring"
+                  class="w-4 h-4 text-red-500"></i> Notification Center</h3>
+              <a href="questionnaire-monitoring.html"
+                class="text-xs font-semibold text-primary hover:underline">ดูทั้งหมด</a>
+            </div>
+            <div id="notif-panel" class="space-y-2"></div>
           </div>
-          <div id="notif-panel" class="space-y-2"></div>
+          <div class="card p-5 fade-in">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-slate-800 text-sm">Patient Follow-up Queue</h3>
+              <a href="patient-management.html"
+                class="text-xs font-semibold text-primary hover:underline">ดูผู้ป่วยทั้งหมด</a>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="table-modern">
+                <thead>
+                  <tr>
+                    <th>HN</th>
+                    <th>ชื่อผู้ป่วย</th>
+                    <th>สถานะ</th>
+                    <th>วันนัด</th>
+                    <th>Last Contact</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="followup-queue-body"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <div class="card p-5 fade-in">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-slate-800 text-sm">Patient Follow-up Queue</h3>
-            <a href="patient-management.html" class="text-xs font-semibold text-primary hover:underline">ดูผู้ป่วยทั้งหมด</a>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="table-modern">
-              <thead>
-                <tr><th>HN</th><th>ชื่อผู้ป่วย</th><th>สถานะ</th><th>วันนัด</th><th>Last Contact</th><th>Action</th></tr>
-              </thead>
-              <tbody id="followup-queue-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
 
-    </main>
+      </main>
+    </div>
   </div>
-</div>
 
-<script src="../assets/js/data.js"></script>
-<script src="../assets/js/layout.js"></script>
-<script src="../assets/js/components.js"></script>
-<script src="../assets/js/charts.js"></script>
-<script>
-  StaffLayout.init({ role: "nurse", active: "dashboard", title: "แดชบอร์ดพยาบาล" });
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/charts.js"></script>
+  <script>
+    StaffLayout.init({ role: "nurse", active: "dashboard", title: "แดชบอร์ดพยาบาล" });
 
-  const D = window.MOCK_DATA;
-  document.getElementById("header-task-count").innerHTML += `${D.nurseTasks.length} งานวันนี้`;
-  document.getElementById("header-notif").innerHTML += `${D.notifications.length} แจ้งเตือนใหม่`;
+    const D = window.MOCK_DATA;
+    document.getElementById("header-task-count").innerHTML += `${D.nurseTasks.length} งานวันนี้`;
+    document.getElementById("header-notif").innerHTML += `${D.notifications.length} แจ้งเตือนใหม่`;
 
-  // Section 1: Summary cards
-  document.getElementById("kpi-grid").innerHTML = [
-    { icon: "calendar-check-2", title: "นัดวันนี้", value: "32", gradient: "gradient-primary" },
-    { icon: "phone-call", title: "รอติดตาม", value: "15", iconBg: "bg-blue-50 text-primary" },
-    { icon: "clipboard-x", title: "ยังไม่ตอบแบบสอบถาม", value: "8", iconBg: "bg-amber-50 text-amber-600" },
-    { icon: "flask-conical", title: "ยังไม่ส่งผลตรวจ", value: "6", iconBg: "bg-red-50 text-red-600" },
-    { icon: "alert-octagon", title: "High Risk Patient", value: "5", gradient: "gradient-danger" },
-  ]
-    .map((c, i) => `<div class="fade-in fade-in-delay-${Math.min(i + 1, 4)} ${i === 4 ? "col-span-2 lg:col-span-1" : ""}">${Components.statCard(c)}</div>`)
-    .join("");
+    // Section 1: Summary cards
+    document.getElementById("kpi-grid").innerHTML = [
+      { icon: "calendar-check-2", title: "นัดวันนี้", value: "32", iconBg: "bg-blue-50 text-primary" },
+      { icon: "phone-call", title: "รอติดตาม", value: "15", iconBg: "bg-amber-50 text-amber-600" },
+      { icon: "clipboard-x", title: "ยังไม่ตอบแบบสอบถาม", value: "8", iconBg: "bg-amber-50 text-amber-600" },
+      { icon: "flask-conical", title: "ยังไม่ส่งผลตรวจ", value: "6", iconBg: "bg-amber-50 text-amber-600" },
+      { icon: "alert-octagon", title: "High Risk Patient", value: "5", iconBg: "bg-red-50 text-red-600" },
+    ]
+      .map((c, i) => `<div class="fade-in fade-in-delay-${Math.min(i + 1, 4)} ${i === 4 ? "col-span-2 lg:col-span-1" : ""}">${Components.statCard(c)}</div>`)
+      .join("");
 
-  // Section 2: Today Task Queue + Task Completion Indicator
-  document.getElementById("task-count-badge").textContent = `${D.nurseTasks.length} งาน`;
-  const tasksDone = D.nurseTasks.filter((t) => t.status === "done").length;
-  document.getElementById("task-progress-label").textContent = `${tasksDone}/${D.nurseTasks.length} Completed`;
-  document.getElementById("task-progress-fill").style.width = `${Math.round((tasksDone / D.nurseTasks.length) * 100)}%`;
-  document.getElementById("task-queue").innerHTML = D.nurseTasks
-    .map((t) => Components.taskQueueCard({ time: t.time, patient: t.patient, hn: t.hn, task: t.task, priority: t.priority, href: "nurse-followup.html", done: t.status === "done" }))
-    .join("");
+    // Section 2: Today Task Queue + Task Completion Indicator
+    document.getElementById("task-count-badge").textContent = `${D.nurseTasks.length} งาน`;
+    const tasksDone = D.nurseTasks.filter((t) => t.status === "done").length;
+    document.getElementById("task-progress-label").textContent = `${tasksDone}/${D.nurseTasks.length} Completed`;
+    document.getElementById("task-progress-fill").style.width = `${Math.round((tasksDone / D.nurseTasks.length) * 100)}%`;
+    document.getElementById("task-queue").innerHTML = D.nurseTasks
+      .map((t) => Components.taskQueueCard({ time: t.time, patient: t.patient, hn: t.hn, task: t.task, priority: t.priority, href: "nurse-followup.html", done: t.status === "done" }))
+      .join("");
 
-  // Section 3: Patient Risk Overview
-  const riskCounts = { low: D.patients.filter((p) => p.risk === "low").length, medium: D.patients.filter((p) => p.risk === "medium").length, high: D.patients.filter((p) => p.risk === "high").length };
-  Charts.doughnutChart(document.getElementById("chart-risk-overview"), {
-    labels: ["Low Risk", "Medium Risk", "High Risk"],
-    data: [riskCounts.low, riskCounts.medium, riskCounts.high],
-    colors: ["#22c55e", "#f59e0b", "#ef4444"],
-  });
+    // Section 3: Patient Risk Overview
+    const riskCounts = { low: D.patients.filter((p) => p.risk === "low").length, medium: D.patients.filter((p) => p.risk === "medium").length, high: D.patients.filter((p) => p.risk === "high").length };
+    Charts.doughnutChart(document.getElementById("chart-risk-overview"), {
+      labels: ["Low Risk", "Medium Risk", "High Risk"],
+      data: [riskCounts.low, riskCounts.medium, riskCounts.high],
+      colors: ["#22c55e", "#f59e0b", "#ef4444"],
+    });
 
-  // Section 3: Follow-up Trend
-  Charts.lineChart(document.getElementById("chart-followup-trend"), {
-    labels: ["เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย."],
-    datasets: [{ label: "จำนวน Follow-up", data: [58, 64, 61, 70, 75, 82], color: "#7c3aed", fill: true, fillColor: "rgba(124,58,237,.14)" }],
-  });
+    // Section 3: Follow-up Trend
+    Charts.lineChart(document.getElementById("chart-followup-trend"), {
+      labels: ["เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย."],
+      datasets: [{ label: "จำนวน Follow-up", data: [58, 64, 61, 70, 75, 82], color: "#7c3aed", fill: true, fillColor: "rgba(124,58,237,.14)" }],
+    });
 
-  // Notification panel
-  const notifTypeIcon = { danger: "alert-octagon", warning: "clock", info: "info" };
-  const notifTypeLevel = { danger: "critical", warning: "warning", info: "normal" };
-  document.getElementById("notif-panel").innerHTML = D.notifications
-    .map((n) =>
-      Components.alertCard({
-        level: notifTypeLevel[n.type] || "warning",
-        title: n.title,
-        desc: n.desc,
-        time: n.time,
-        action: { label: "ดู", href: "questionnaire-monitoring.html" },
-      })
-    )
-    .join("");
+    // Notification panel
+    const notifTypeIcon = { danger: "alert-octagon", warning: "clock", info: "info" };
+    const notifTypeLevel = { danger: "critical", warning: "warning", info: "normal" };
+    document.getElementById("notif-panel").innerHTML = D.notifications
+      .map((n) =>
+        Components.alertCard({
+          level: notifTypeLevel[n.type] || "warning",
+          title: n.title,
+          desc: n.desc,
+          time: n.time,
+          action: { label: "ดู", href: "questionnaire-monitoring.html" },
+        })
+      )
+      .join("");
 
-  const lastContactMap = { "HN-102345": "07 ก.ย. 2569", "HN-102346": "05 ก.ย. 2569", "HN-102347": "02 ก.ย. 2569", "HN-102348": "01 ก.ย. 2569", "HN-102350": "31 ส.ค. 2569", "HN-102353": "28 ส.ค. 2569" };
-  const statusBadge = { confirmed: '<span class="badge badge-green">ยืนยันแล้ว</span>', pending: '<span class="badge badge-amber">รอยืนยัน</span>', missed: '<span class="badge badge-red">ผิดนัด</span>' };
+    const lastContactMap = { "HN-102345": "07 ก.ย. 2569", "HN-102346": "05 ก.ย. 2569", "HN-102347": "02 ก.ย. 2569", "HN-102348": "01 ก.ย. 2569", "HN-102350": "31 ส.ค. 2569", "HN-102353": "28 ส.ค. 2569" };
+    const statusBadge = { confirmed: '<span class="badge badge-green">ยืนยันแล้ว</span>', pending: '<span class="badge badge-amber">รอยืนยัน</span>', missed: '<span class="badge badge-red">ผิดนัด</span>' };
 
-  document.getElementById("followup-queue-body").innerHTML = D.appointments
-    .map(
-      (a) => `
+    document.getElementById("followup-queue-body").innerHTML = D.appointments
+      .map(
+        (a) => `
     <tr>
       <td class="font-medium text-slate-700">${a.hn}</td>
       <td>${a.patient}</td>
@@ -180,10 +200,11 @@
         </div>
       </td>
     </tr>`
-    )
-    .join("");
+      )
+      .join("");
 
-  lucide.createIcons();
-</script>
+    lucide.createIcons();
+  </script>
 </body>
+
 </html>
