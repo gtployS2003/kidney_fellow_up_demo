@@ -150,11 +150,24 @@
         { icon: "flask-conical", title: "Creatinine ล่าสุด", value: latestDone ? `${latestDone.creatinine} mg/dL` : "-", iconBg: "bg-blue-50 text-primary" },
         { icon: "activity", title: "eGFR ล่าสุด", value: latestDone ? `${latestDone.egfr}` : "-", iconBg: "bg-teal-50" },
         { icon: "heart-pulse", title: "ความดันโลหิตล่าสุด", value: latestDone ? latestDone.bp : "-", iconBg: "bg-amber-50 text-amber-600" },
-        { icon: "shield-check", title: "ภาวะแทรกซ้อน", value: latestDone ? latestDone.complication : "-", iconBg: "bg-green-50 text-green-600" },
-        { icon: "pill", title: "Medication", value: latestDone ? latestDone.medication : "-", iconBg: "bg-purple-50 text-purple-600" },
-        { icon: "smile", title: "Quality of Life", value: latestDone ? latestDone.qualityOfLife : "-", iconBg: "bg-blue-50 text-primary" },
       ]
         .map((c) => Components.statCard(c))
+        .join("") +
+      [
+        { icon: "shield-check", title: "ภาวะแทรกซ้อน", value: latestDone ? latestDone.complication : "-", iconBg: "bg-green-100 text-green-600" },
+        { icon: "pill", title: "Medication", value: latestDone ? latestDone.medication : "-", iconBg: "bg-purple-100 text-purple-600" },
+        { icon: "smile", title: "Quality of Life", value: latestDone ? latestDone.qualityOfLife : "-", iconBg: "bg-blue-100 text-primary" },
+      ]
+        .map(
+          (c) => `
+        <div class="card p-4 flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg ${c.iconBg} flex items-center justify-center shrink-0"><i data-lucide="${c.icon}" class="w-5 h-5"></i></div>
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-slate-800 leading-snug">${c.value}</p>
+            <p class="text-xs text-slate-400 mt-0.5">${c.title}</p>
+          </div>
+        </div>`
+        )
         .join("");
 
       document.getElementById("followup-timeline").innerHTML = Components.timeline(

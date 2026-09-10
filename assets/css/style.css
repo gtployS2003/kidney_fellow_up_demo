@@ -48,14 +48,6 @@ body {
   color: var(--text-primary);
 }
 
-/* ---------- Gradient theme (use sparingly: headers, hero cards, CTAs) ---------- */
-.gradient-primary { background: var(--gradient-primary); }
-.gradient-header { background: var(--gradient-header); }
-.gradient-success { background: var(--gradient-success); }
-.gradient-warning { background: var(--gradient-warning); }
-.gradient-danger { background: var(--gradient-danger); }
-.gradient-nurse { background: var(--gradient-nurse); }
-
 .gradient-mesh {
   position: relative;
   isolation: isolate;
@@ -198,6 +190,15 @@ body {
   -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 8px 32px -8px rgba(15, 23, 42, .1);
 }
+
+/* ---------- Gradient theme (use sparingly: headers, hero cards, CTAs) ---------- */
+/* ต้องอยู่หลัง .card เสมอ เพราะ specificity เท่ากัน (0,1,0) — ถ้าอยู่ก่อน .card จะถูก background ของ .card ทับจนกลายเป็นการ์ดสีขาวล้วน (bug ที่เจอใน stat card gradient) */
+.gradient-primary { background: var(--gradient-primary); }
+.gradient-header { background: var(--gradient-header); }
+.gradient-success { background: var(--gradient-success); }
+.gradient-warning { background: var(--gradient-warning); }
+.gradient-danger { background: var(--gradient-danger); }
+.gradient-nurse { background: var(--gradient-nurse); }
 
 /* Card with a colored gradient surface (stat/profile/status/notification cards) */
 .card-gradient {
@@ -426,55 +427,66 @@ body {
   color: #fff;
 }
 
-#app-sidebar .nav-item,
-#mobile-sidebar .nav-item {
+/* หมายเหตุ: ใช้ .app-sidebar-shell (ไม่ใช่ #app-sidebar) เพราะ StaffLayout.init แทนที่ div#app-sidebar
+   ด้วย outerHTML ทั้งก้อน ทำให้ id="app-sidebar" หายไปจาก DOM ทันที — ถ้าอ้าง id เดิมกฎนี้จะไม่มีผลเลย
+   (สาเหตุที่ผ่านมาทำให้ตัวอักษร/ไอคอนใน sidebar กลายเป็นสีเข้มเริ่มต้นของ body แทนสีขาว) */
+.app-sidebar-shell .nav-item {
   display: flex;
   align-items: center;
   gap: .8rem;
   padding: .62rem .85rem;
   border-radius: .7rem;
-  color: rgba(255, 255, 255, .68);
+  color: #fff;
   font-size: .85rem;
   font-weight: 500;
   border-left: 3px solid transparent;
   transition: background .15s ease, color .15s ease, transform .15s ease;
 }
 
-#app-sidebar .nav-item:hover,
-#mobile-sidebar .nav-item:hover {
-  background: rgba(255, 255, 255, .08);
+.app-sidebar-shell .nav-item:hover {
+  background: rgba(255, 255, 255, .1);
   color: #fff;
   transform: translateX(2px);
 }
 
-#app-sidebar .nav-item.active,
-#mobile-sidebar .nav-item.active {
-  background: rgba(255, 255, 255, .16);
+.app-sidebar-shell .nav-item.active {
+  background: rgba(255, 255, 255, .18);
   color: #fff;
   border-left-color: #fff;
   font-weight: 700;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
 }
 
-#app-sidebar .nav-item .nav-icon,
-#mobile-sidebar .nav-item .nav-icon {
+.app-sidebar-shell .nav-item .nav-icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-}
-
-#app-sidebar .nav-submenu a {
-  color: rgba(255, 255, 255, .6);
-}
-
-#app-sidebar .nav-submenu a:hover {
   color: #fff;
 }
 
-#app-sidebar .nav-submenu a.active {
+.app-sidebar-shell .sidebar-chevron {
+  color: #fff;
+}
+
+.app-sidebar-shell .nav-submenu {
+  border-left: 1px solid rgba(255, 255, 255, .14);
+  margin-left: .55rem;
+}
+
+.app-sidebar-shell .nav-submenu a {
+  color: rgba(255, 255, 255, .78);
+  display: block;
+}
+
+.app-sidebar-shell .nav-submenu a:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, .08);
+}
+
+.app-sidebar-shell .nav-submenu a.active {
   color: #fff;
   font-weight: 700;
-  background: rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .14);
 }
 
 /* Tablet: collapse to icon-only rail */
@@ -815,16 +827,18 @@ body {
 }
 
 /* ---------- Topbar ---------- */
-#app-topbar .topbar-search {
+/* หมายเหตุ: ไม่ใช้ #app-topbar เพราะ StaffLayout.init แทนที่ div#app-topbar ด้วย outerHTML
+   ทำให้ id นี้หายไปจาก DOM ทันที (header ที่ใส่แทนไม่มี id="app-topbar") กฎที่อ้าง id เดิมจึงไม่มีผล */
+.topbar-search {
   transition: all .15s ease;
 }
 
 @media (max-width: 767px) {
-  #app-topbar .topbar-search-wrap {
+  .topbar-search-wrap {
     display: none;
   }
 
-  #app-topbar .topbar-search-wrap.search-open {
+  .topbar-search-wrap.search-open {
     display: block;
     position: absolute;
     left: .75rem;
@@ -835,7 +849,7 @@ body {
     z-index: 20;
   }
 
-  #app-topbar .topbar-search-wrap.search-open .topbar-search {
+  .topbar-search-wrap.search-open .topbar-search {
     background: var(--card-background);
     box-shadow: 0 8px 20px -6px rgba(15, 23, 42, .18);
   }

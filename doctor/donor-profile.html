@@ -263,7 +263,11 @@
 
   // Laboratory tab
   const panel = D.donorLabPanels[donor.id] || [];
-  const cardsFor = (group) => panel.filter((p) => p.group === group).map((p) => Components.medicalDataCard({ name: p.name, value: p.value, unit: p.unit, range: p.range, status: p.status })).join("");
+  const renderLabCard = (p) =>
+    p.name === "HLA Typing"
+      ? `<div class="medical-data-card status-${p.status}"><p class="text-sm font-semibold text-slate-800">${p.name}</p><p class="text-sm font-bold text-slate-800 mt-1.5 break-all">${p.value}</p></div>`
+      : Components.medicalDataCard({ name: p.name, value: p.value, unit: p.unit, range: p.range, status: p.status });
+  const cardsFor = (group) => panel.filter((p) => p.group === group).map(renderLabCard).join("");
   document.getElementById("lab-general-cards").innerHTML = cardsFor("general") || Components.emptyState({ icon: "flask-conical", title: "ยังไม่มีผลตรวจ Lab" });
   document.getElementById("lab-compat-cards").innerHTML = cardsFor("compatibility");
 
