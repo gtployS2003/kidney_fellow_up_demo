@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>สถานะรอปลูกถ่ายไต | Kidney Transplant LIFF</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="liff-body font-sans">
+<div class="liff-shell">
+  <div id="liff-header"></div>
+
+  <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
+
+    <!-- Summary card -->
+    <div class="card p-5 fade-in" style="background:linear-gradient(135deg,#eff6ff,#f0fdfa);">
+      <div class="flex items-center justify-between">
+        <span id="wl-status-badge" class="badge badge-amber"><i data-lucide="clock" class="w-3 h-3"></i> กำลังรอคิว</span>
+        <span id="wl-blood-badge" class="badge badge-blue"></span>
+      </div>
+      <div class="mt-4">
+        <p class="text-xs text-slate-500">ระยะเวลารอคอย</p>
+        <p class="text-3xl font-extrabold text-primary mt-1" id="wl-duration"></p>
+      </div>
+      <div class="h-px bg-slate-200/70 my-4"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <p class="text-[11px] text-slate-500 flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> วันที่ขึ้นทะเบียน</p>
+          <p class="text-sm font-semibold text-slate-800 mt-0.5" id="wl-register-date"></p>
+        </div>
+        <div>
+          <p class="text-[11px] text-slate-500 flex items-center gap-1"><i data-lucide="hospital" class="w-3.5 h-3.5"></i> โรงพยาบาล</p>
+          <p class="text-sm font-semibold text-slate-800 mt-0.5" id="wl-hospital"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patient identity -->
+    <div class="rounded-xl bg-blue-50 border border-blue-100 p-3.5 flex items-center gap-3 fade-in fade-in-delay-1">
+      <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center font-bold text-sm text-primary shrink-0" id="wl-avatar"></div>
+      <div class="min-w-0">
+        <p class="text-sm font-semibold text-slate-800" id="wl-name"></p>
+        <p class="text-xs text-slate-500" id="wl-hn"></p>
+      </div>
+    </div>
+
+    <!-- LINE notification card: แจ้งเมื่อมีการเปลี่ยนสถานะ -->
+    <div id="wl-notify-card" class="fade-in fade-in-delay-1"></div>
+
+    <!-- Stepper -->
+    <div class="fade-in fade-in-delay-2">
+      <p class="text-sm font-bold text-slate-700 mb-3">ขั้นตอนการรอปลูกถ่ายไต</p>
+      <div id="wl-steps" class="timeline-line space-y-6"></div>
+    </div>
+
+    <!-- Encouragement -->
+    <div class="rounded-xl bg-teal-50 border border-teal-100 p-4 flex items-start gap-2.5 fade-in fade-in-delay-3">
+      <i data-lucide="heart-handshake" class="w-5 h-5 shrink-0 mt-0.5" style="color:#0f766e"></i>
+      <div class="min-w-0">
+        <p class="text-xs font-semibold" style="color:#0f766e">ให้กำลังใจ</p>
+        <p class="text-xs text-teal-800 mt-0.5 leading-relaxed">กรุณาดูแลสุขภาพให้แข็งแรงและมาตรวจตามนัดสม่ำเสมอระหว่างรอคิว ทีมงานจะติดต่อท่านทันทีเมื่อมีผู้บริจาคที่เข้ากันได้</p>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="liff-bottomnav"></div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/liff-layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  LiffLayout.init({ variant: "plain", title: "สถานะรอปลูกถ่ายไต", backHref: "home.html" });
+
+  // ดึงข้อมูลผู้ป่วยจาก MOCK_DATA.waitingList (single source of truth เดียวกับฝั่งแพทย์/พยาบาล — ไม่ hardcode ซ้ำ)
+  const D = window.MOCK_DATA;
+  const wl = D.waitingList.find((w) => w.hn === "HN-990211") || D.waitingList[0];
+
+  document.getElementById("wl-status-badge").innerHTML = `<i data-lucide="clock" class="w-3 h-3"></i> ${wl.stage === "ready" ? "พร้อมผ่าตัด" : "กำลังรอคิว"}`;
+  document.getElementById("wl-blood-badge").textContent = `กรุ๊ปเลือด ${wl.blood}`;
+  document.getElementById("wl-duration").textContent = `รอมาแล้ว ${wl.duration}`;
+  document.getElementById("wl-register-date").textContent = wl.registerDate;
+  document.getElementById("wl-hospital").textContent = wl.hospital;
+  document.getElementById("wl-avatar").textContent = wl.name.slice(0, 2);
+  document.getElementById("wl-name").textContent = wl.name;
+  document.getElementById("wl-hn").textContent = wl.hn;
+
+  // LINE Notification Card — แสดงเมื่อสถานะการรอคอยของผู้ป่วยมีความเปลี่ยนแปลง
+  const notifByStage = {
+    matching: { title: "พบผู้บริจาคที่เข้ากันได้", desc: "ระบบพบผู้บริจาคที่มีความเข้ากันได้กับท่าน ทีมแพทย์กำลังตรวจสอบความเหมาะสมเพิ่มเติม" },
+    evaluation: { title: "นัดตรวจประเมินความเหมาะสม", desc: "กรุณามาโรงพยาบาลตามนัดเพื่อตรวจร่างกายและประเมินความพร้อมก่อนผ่าตัด" },
+    ready: { title: "พร้อมผ่าตัดปลูกถ่ายไต", desc: "ทีมแพทย์จะติดต่อนัดหมายวันผ่าตัดในเร็วๆ นี้ กรุณาเตรียมตัวให้พร้อม" },
+  }[wl.stage];
+  if (notifByStage) {
+    document.getElementById("wl-notify-card").innerHTML = `
+      <div class="rounded-xl bg-white border border-slate-200 shadow-sm p-3.5 flex items-start gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center shrink-0"><i data-lucide="bell" class="w-4 h-4"></i></div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-xs font-bold text-slate-800">แจ้งเตือนจาก LINE</p>
+            <span class="text-[10px] text-slate-400 shrink-0">เพิ่งอัปเดต</span>
+          </div>
+          <p class="text-xs font-semibold text-slate-700 mt-0.5">${notifByStage.title}</p>
+          <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">${notifByStage.desc}</p>
+        </div>
+      </div>`;
+  }
+
+  // Stepper — สร้างจาก wl.stage จริง (ไม่ hardcode step ปัจจุบัน) เรียงตาม pipeline เดียวกับฝั่งแพทย์
+  const STAGE_ORDER = ["registered", "investigation", "matching", "evaluation", "ready", "completed"];
+  const STEP_DEFS = [
+    { key: "registered", label: "ขึ้นทะเบียนรอปลูกถ่ายไต", desc: "ลงทะเบียนเข้าสู่บัญชีรอคอยเรียบร้อย", icon: "clipboard-check" },
+    { key: "matching", label: "จับคู่ผู้บริจาค", desc: "ระบบกำลังค้นหาผู้บริจาคที่เข้ากันได้กับท่าน", icon: "users" },
+    { key: "evaluation", label: "ประเมินความเหมาะสม", desc: "แพทย์ตรวจร่างกายและประเมินก่อนผ่าตัด", icon: "stethoscope" },
+    { key: "ready", label: "พร้อมผ่าตัด", desc: "นัดหมายวันผ่าตัดปลูกถ่ายไต", icon: "check-circle-2" },
+  ];
+  const currentIdx = STAGE_ORDER.indexOf(wl.stage);
+  const STEPS = STEP_DEFS.map((s) => {
+    const idx = STAGE_ORDER.indexOf(s.key);
+    const state = idx < currentIdx ? "done" : idx === currentIdx ? "current" : "todo";
+    return { ...s, state };
+  });
+
+  const stateStyle = {
+    done: { bg: "#16a34a", card: "border-green-100 bg-green-50/50", label: "text-slate-800", desc: "text-slate-500" },
+    current: { bg: "#2563eb", card: "border-primary bg-blue-50 shadow-sm", label: "text-primary", desc: "text-blue-700" },
+    todo: { bg: "#cbd5e1", card: "border-slate-100 bg-slate-50/60", label: "text-slate-400", desc: "text-slate-400" },
+  };
+
+  document.getElementById("wl-steps").innerHTML = STEPS.map((s) => {
+    const st = stateStyle[s.state];
+    return `
+    <div class="relative">
+      <div class="timeline-node" style="background:${st.bg}">
+        <i data-lucide="${s.state === "done" ? "check" : s.icon}" class="w-4 h-4"></i>
+      </div>
+      <div class="rounded-xl border p-4 ${st.card}">
+        <div class="flex items-center gap-2">
+          <p class="text-sm font-bold ${st.label}">${s.label}</p>
+          ${s.state === "current" ? '<span class="badge badge-blue">กำลังดำเนินการ</span>' : ""}
+          ${s.state === "done" ? '<span class="badge badge-green">เสร็จสิ้น</span>' : ""}
+        </div>
+        <p class="text-xs mt-1 ${st.desc}">${s.desc}</p>
+      </div>
+    </div>`;
+  }).join("");
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

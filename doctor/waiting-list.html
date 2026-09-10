@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>รายชื่อรอปลูกถ่ายไต | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Kidney Transplant Waiting List</h2>
+          <p class="text-sm text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5"></i> อัปเดตล่าสุด 09 ก.ย. 2569 · 09:00 น.</span>
+            <span id="header-total" class="flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i></span>
+          </p>
+        </div>
+        <a href="kidney-matching.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i data-lucide="git-compare-arrows" class="w-4 h-4"></i> จับคู่ผู้บริจาค</a>
+      </div>
+
+      <!-- Summary cards -->
+      <div id="kpi-cards" class="grid grid-cols-2 lg:grid-cols-5 gap-4"></div>
+
+      <!-- Waiting Status Pipeline (Kanban) -->
+      <div class="fade-in">
+        <h3 class="text-sm font-bold text-slate-700 mb-2 flex items-center gap-2"><i data-lucide="kanban" class="w-4 h-4 text-primary"></i> Waiting Status Pipeline</h3>
+        <div id="pipeline-board"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="card p-5 fade-in">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="list-ordered" class="w-4 h-4 text-primary"></i> รายชื่อผู้ป่วยรอปลูกถ่ายไตทั้งหมด</h3>
+          <span id="row-count" class="badge badge-blue"></span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="table-modern">
+            <thead>
+              <tr>
+                <th>HN</th>
+                <th>ชื่อผู้ป่วย</th>
+                <th>อายุ</th>
+                <th>กรุ๊ปเลือด</th>
+                <th>วันลงทะเบียน</th>
+                <th>ระยะเวลารอ</th>
+                <th>Priority</th>
+                <th>สถานะ</th>
+                <th class="text-right">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="waiting-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "waitinglist", title: "รายชื่อรอปลูกถ่ายไต" });
+
+  const D = window.MOCK_DATA;
+  const list = D.waitingList;
+
+  document.getElementById("header-total").innerHTML += `ผู้ป่วยรอทั้งหมด ${list.length} ราย`;
+
+  const STAGES = [
+    { key: "registered", label: "Registered" },
+    { key: "investigation", label: "Investigation" },
+    { key: "matching", label: "Matching" },
+    { key: "evaluation", label: "Evaluation" },
+    { key: "ready", label: "Ready Surgery" },
+    { key: "completed", label: "Completed" },
+  ];
+
+  const statusMeta = {
+    registered: { label: "Registered", badge: "badge-slate", icon: "clipboard-list" },
+    investigation: { label: "Investigation", badge: "badge-blue", icon: "flask-conical" },
+    matching: { label: "Matching", badge: "badge-amber", icon: "git-compare-arrows" },
+    evaluation: { label: "Evaluation", badge: "badge-amber", icon: "clipboard-check" },
+    ready: { label: "Ready Surgery", badge: "badge-green", icon: "check-circle-2" },
+    completed: { label: "Completed", badge: "badge-teal", icon: "badge-check" },
+  };
+
+  const counts = list.reduce((acc, p) => ((acc[p.stage] = (acc[p.stage] || 0) + 1), acc), {});
+  const longWaiting = list.filter((p) => p.duration.includes("ปี") && parseInt(p.duration) >= 3).length;
+
+  const kpis = [
+    { icon: "users", title: "Waiting Patients", value: list.length, iconBg: "bg-blue-50 text-primary" },
+    { icon: "user-plus", title: "New Registered", value: counts.registered || 0, iconBg: "bg-teal-50" },
+    { icon: "git-compare-arrows", title: "Matching Process", value: counts.matching || 0, gradient: "gradient-primary" },
+    { icon: "check-circle-2", title: "Ready for Surgery", value: counts.ready || 0, gradient: "gradient-success" },
+    { icon: "hourglass", title: "Long Waiting (> 3 ปี)", value: longWaiting, gradient: "gradient-danger" },
+  ];
+
+  document.getElementById("kpi-cards").innerHTML = kpis
+    .map((k, i) => `<div class="fade-in fade-in-delay-${Math.min(i + 1, 4)} ${i === 4 ? "col-span-2 lg:col-span-1" : ""}">${Components.statCard(k)}</div>`)
+    .join("");
+
+  // Kanban pipeline board
+  document.getElementById("pipeline-board").innerHTML = Components.statusPipeline({
+    columns: STAGES,
+    items: list,
+    cardRenderer: (p) => `
+      <a href="kidney-matching.html" class="kanban-card block">
+        <div class="flex items-center justify-between gap-2 mb-1">
+          <p class="text-sm font-semibold text-slate-800 truncate">${p.name}</p>
+          ${Components.priorityBadge(p.priority)}
+        </div>
+        <p class="text-xs text-slate-500">${p.hn} · <span class="font-medium">${p.blood}</span></p>
+        <p class="text-[11px] text-slate-400 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> รอมาแล้ว ${p.duration}</p>
+      </a>`,
+  });
+
+  document.getElementById("row-count").textContent = `${list.length} รายการ`;
+
+  document.getElementById("waiting-tbody").innerHTML = list
+    .map((p) => {
+      const s = statusMeta[p.stage] || statusMeta.registered;
+      return `
+      <tr>
+        <td class="font-medium text-slate-700">${p.hn}</td>
+        <td>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">${p.name.slice(0, 2)}</div>
+            <span class="font-medium text-slate-800">${p.name}</span>
+          </div>
+        </td>
+        <td>${p.age} ปี</td>
+        <td><span class="badge badge-slate">${p.blood}</span></td>
+        <td class="text-slate-500">${p.registerDate}</td>
+        <td class="text-slate-500">${p.duration}</td>
+        <td>${Components.priorityBadge(p.priority)}</td>
+        <td><span class="badge ${s.badge}"><i data-lucide="${s.icon}" class="w-3 h-3"></i> ${s.label}</span></td>
+        <td class="text-right">
+          <div class="flex justify-end gap-2">
+            <a href="kidney-matching.html" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 transition">View Detail</a>
+            <button data-update-status="${p.hn}" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-primary hover:bg-primary-dark text-white transition">Update Status</button>
+          </div>
+        </td>
+      </tr>`;
+    })
+    .join("");
+
+  document.querySelectorAll("[data-update-status]").forEach((btn) => {
+    btn.addEventListener("click", () => UI.toast(`อัปเดตสถานะของ ${btn.getAttribute("data-update-status")} เรียบร้อยแล้ว`, "success"));
+  });
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

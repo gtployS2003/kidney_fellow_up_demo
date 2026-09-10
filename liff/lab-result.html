@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>ผลตรวจของฉัน | Kidney Transplant LIFF</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+<script src="../assets/js/charts.js"></script>
+</head>
+<body class="liff-body font-sans">
+<div class="liff-shell">
+  <div id="liff-header"></div>
+
+  <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
+
+    <p class="text-sm font-bold text-slate-700 fade-in">ผลตรวจล่าสุด</p>
+    <div id="stat-cards" class="space-y-3 fade-in fade-in-delay-1"></div>
+
+    <div class="card p-4 fade-in fade-in-delay-2">
+      <div class="flex items-center justify-between mb-1">
+        <p class="text-sm font-bold text-slate-700">แนวโน้มค่า Creatinine และ eGFR</p>
+      </div>
+      <p class="text-[11px] text-slate-400 mb-2">ย้อนหลัง 7 เดือน</p>
+      <div style="height:220px;"><canvas id="labChart"></canvas></div>
+    </div>
+
+    <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5 flex items-start gap-2.5 fade-in fade-in-delay-3">
+      <i data-lucide="info" class="w-4.5 h-4.5 text-slate-400 shrink-0 mt-0.5"></i>
+      <p class="text-xs text-slate-500">หากมีข้อสงสัยเกี่ยวกับผลตรวจ สามารถสอบถามผ่านหน้าแชทกับทีมพยาบาลได้ตลอดเวลา</p>
+    </div>
+
+  </main>
+
+  <div id="liff-bottomnav"></div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/liff-layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  LiffLayout.init({ variant: "plain", active: "health", title: "ผลตรวจของฉัน", backHref: "home.html" });
+
+  const params = window.MOCK_DATA.labParams;
+  const trend = window.MOCK_DATA.labTrend;
+
+  const featureKeys = ["creatinine", "egfr", "tac", "bp"];
+  const featureMeta = {
+    creatinine: { icon: "droplets", color: "text-primary", bg: "bg-blue-50" },
+    egfr: { icon: "activity", color: "text-teal", bg: "bg-teal-50" },
+    tac: { icon: "flask-conical", color: "text-purple-600", bg: "bg-purple-50" },
+    bp: { icon: "heart-pulse", color: "text-rose-600", bg: "bg-rose-50" },
+  };
+
+  function statCard(p) {
+    const meta = featureMeta[p.key] || { icon: "flask-conical", color: "text-slate-600", bg: "bg-slate-50" };
+    const isNumeric = typeof p.current === "number" && typeof p.previous === "number";
+    const diff = isNumeric ? +(p.current - p.previous).toFixed(2) : 0;
+    const up = diff > 0;
+    const flat = !isNumeric || diff === 0;
+    const statusBadge = p.status === "high" ? '<span class="badge badge-red">สูงกว่าปกติ</span>' : p.status === "na" ? '<span class="badge badge-slate">ไม่ระบุ</span>' : '<span class="badge badge-green">ปกติ</span>';
+    return `
+    <div class="card p-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-12 rounded-xl ${meta.bg} ${meta.color} flex items-center justify-center shrink-0"><i data-lucide="${meta.icon}" class="w-6 h-6"></i></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-semibold text-slate-700">${p.name}</p>
+            ${statusBadge}
+          </div>
+          <div class="flex items-baseline gap-1.5 mt-0.5">
+            <span class="text-2xl font-bold text-slate-800">${p.current}</span>
+            <span class="text-xs text-slate-400">${p.unit}</span>
+            ${flat ? "" : `<span class="text-xs font-semibold ${up ? "text-red-500" : "text-green-600"} flex items-center gap-0.5"><i data-lucide="${up ? "arrow-up" : "arrow-down"}" class="w-3 h-3"></i>${Math.abs(diff)}</span>`}
+          </div>
+          <p class="text-[11px] text-slate-400 mt-0.5">ค่าปกติ: ${p.range}</p>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const featured = featureKeys.map((k) => params.find((p) => p.key === k)).filter(Boolean);
+  document.getElementById("stat-cards").innerHTML = featured.map(statCard).join("");
+
+  const ctx = document.getElementById("labChart").getContext("2d");
+  Charts.lineChart(ctx, {
+    labels: trend.labels,
+    datasets: [
+      { label: "Creatinine (mg/dL)", data: trend.creatinine, color: Charts.COLORS.primary },
+      { label: "eGFR (mL/min)", data: trend.egfr, color: Charts.COLORS.teal },
+    ],
+  });
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

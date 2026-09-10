@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>คลังความรู้ | Kidney Transplant LIFF</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="liff-body font-sans">
+<div class="liff-shell">
+  <div id="liff-header"></div>
+
+  <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
+
+    <div class="rounded-xl bg-blue-50 border border-blue-100 p-3.5 flex items-center gap-2.5 fade-in">
+      <i data-lucide="lightbulb" class="w-4.5 h-4.5 text-primary shrink-0"></i>
+      <p class="text-xs text-blue-800">บทความความรู้จากทีมแพทย์และพยาบาล เพื่อช่วยให้ท่านดูแลตัวเองได้ดียิ่งขึ้น</p>
+    </div>
+
+    <div id="article-list" class="space-y-3"></div>
+
+  </main>
+
+  <div id="liff-bottomnav"></div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/liff-layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  LiffLayout.init({ variant: "plain", title: "คลังความรู้", backHref: "home.html" });
+
+  const articles = window.MOCK_DATA.knowledgeArticles;
+
+  document.getElementById("article-list").innerHTML = articles
+    .map((a, i) => `<div class="fade-in fade-in-delay-${Math.min(i + 1, 4)}">${Components.articleCard({ title: a.title, summary: a.summary, cover: a.cover, category: a.category })}</div>`)
+    .join("");
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

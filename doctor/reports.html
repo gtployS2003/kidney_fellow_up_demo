@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>รายงานภาพรวม | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">รายงานภาพรวม (Analytics &amp; Reports)</h2>
+          <p class="text-sm text-slate-500 mt-0.5">สรุปตัวชี้วัดสำคัญของโครงการปลูกถ่ายไตในรูปแบบภาพรวม</p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btn-export-excel" class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-green-600"></i> Export Excel</button>
+          <button id="btn-export-pdf" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i data-lucide="file-down" class="w-4 h-4"></i> Export PDF</button>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="card p-4 fade-in flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-slate-600 flex items-center gap-1.5"><i data-lucide="calendar-range" class="w-4 h-4 text-slate-400"></i> ช่วงเวลารายงาน:</span>
+        <div id="period-chips" class="flex gap-2">
+          <button class="chip-btn active px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200" data-period="month">รายเดือน</button>
+          <button class="chip-btn px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-500" data-period="quarter">รายไตรมาส</button>
+          <button class="chip-btn px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-500" data-period="year">รายปี</button>
+        </div>
+        <div class="ml-auto flex items-center gap-2 text-xs text-slate-400"><i data-lucide="clock" class="w-3.5 h-3.5"></i> อัปเดตล่าสุด: 09 ก.ย. 2569 09:00</div>
+      </div>
+
+      <!-- KPI strip -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="card card-hover p-4 fade-in fade-in-delay-1">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 text-primary flex items-center justify-center"><i data-lucide="users" class="w-5 h-5"></i></div>
+            <span class="badge badge-green"><i data-lucide="trending-up" class="w-3 h-3"></i> +6.4%</span>
+          </div>
+          <p class="text-2xl font-bold text-slate-800 mt-3">248</p>
+          <p class="text-xs text-slate-500 mt-0.5">ผู้ป่วยสะสมทั้งหมด</p>
+        </div>
+        <div class="card card-hover p-4 fade-in fade-in-delay-1">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background:#f0fdfa;color:#0f766e"><i data-lucide="activity" class="w-5 h-5"></i></div>
+          <p class="text-2xl font-bold text-slate-800 mt-3">88%</p>
+          <p class="text-xs text-slate-500 mt-0.5">Survival Rate เฉลี่ย</p>
+        </div>
+        <div class="card card-hover p-4 fade-in fade-in-delay-2">
+          <div class="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center"><i data-lucide="shield-alert" class="w-5 h-5"></i></div>
+          <p class="text-2xl font-bold text-slate-800 mt-3">7%</p>
+          <p class="text-xs text-slate-500 mt-0.5">Rejection Rate เฉลี่ย</p>
+        </div>
+        <div class="card card-hover p-4 fade-in fade-in-delay-2">
+          <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i data-lucide="pill" class="w-5 h-5"></i></div>
+          <p id="kpi-compliance" class="text-2xl font-bold text-slate-800 mt-3">-</p>
+          <p class="text-xs text-slate-500 mt-0.5">Medication Compliance เฉลี่ย</p>
+        </div>
+      </div>
+
+      <!-- Charts grid -->
+      <div class="grid lg:grid-cols-3 gap-4">
+        <div class="card p-5 lg:col-span-2 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm">จำนวนผู้ป่วยรายเดือน (Patient Count)</h3>
+          <p class="text-xs text-slate-400 mb-2">จำนวนผู้ป่วยที่เข้ารับการติดตามรายเดือน</p>
+          <div class="h-64"><canvas id="chart-patient-count"></canvas></div>
+        </div>
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm">Survival Rate</h3>
+          <p class="text-xs text-slate-400 mb-2">อัตรารอดชีวิตสะสมของผู้ป่วยปลูกถ่ายไต</p>
+          <div class="h-56"><canvas id="chart-survival"></canvas></div>
+        </div>
+
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm">ผู้ป่วยใหม่ (New Patient Trend)</h3>
+          <p class="text-xs text-slate-400 mb-2">แนวโน้มผู้ป่วยลงทะเบียนใหม่รายเดือน</p>
+          <div class="h-56"><canvas id="chart-new-patient"></canvas></div>
+        </div>
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm">Rejection Rate vs Readmission</h3>
+          <p class="text-xs text-slate-400 mb-2">เปรียบเทียบอัตราการเกิดภาวะปฏิเสธและการกลับเข้ารักษาซ้ำ</p>
+          <div class="h-56"><canvas id="chart-rejection-readmission"></canvas></div>
+        </div>
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm">Medication Compliance</h3>
+          <p class="text-xs text-slate-400 mb-2">ร้อยละความร่วมมือการใช้ยารายผู้ป่วย (ตัวอย่าง)</p>
+          <div class="h-56"><canvas id="chart-compliance"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Waiting List Report -->
+      <div class="fade-in">
+        <h3 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2"><i data-lucide="list-ordered" class="w-4 h-4 text-primary"></i> Waiting List Report</h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div class="card card-hover p-4">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 text-primary flex items-center justify-center"><i data-lucide="hourglass" class="w-5 h-5"></i></div>
+            <p id="wl-avg-duration" class="text-2xl font-bold text-slate-800 mt-3">-</p>
+            <p class="text-xs text-slate-500 mt-0.5">Average Waiting Time</p>
+          </div>
+          <div class="card card-hover p-4">
+            <div class="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center"><i data-lucide="badge-check" class="w-5 h-5"></i></div>
+            <p id="wl-success" class="text-2xl font-bold text-slate-800 mt-3">-</p>
+            <p class="text-xs text-slate-500 mt-0.5">Successful Transplant</p>
+          </div>
+          <div class="card card-hover p-4">
+            <div class="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center"><i data-lucide="x-circle" class="w-5 h-5"></i></div>
+            <p id="wl-rejected" class="text-2xl font-bold text-slate-800 mt-3">-</p>
+            <p class="text-xs text-slate-500 mt-0.5">Rejected Match</p>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-4">
+          <div class="card p-5">
+            <h3 class="font-semibold text-slate-800 text-sm">Waiting Duration Distribution</h3>
+            <p class="text-xs text-slate-400 mb-2">จำนวนผู้ป่วยแบ่งตามช่วงระยะเวลารอ</p>
+            <div class="h-56"><canvas id="chart-wl-duration"></canvas></div>
+          </div>
+          <div class="card p-5">
+            <h3 class="font-semibold text-slate-800 text-sm">Waiting Status Overview</h3>
+            <p class="text-xs text-slate-400 mb-2">สัดส่วนผู้ป่วยตาม Pipeline Stage</p>
+            <div class="h-56"><canvas id="chart-wl-status"></canvas></div>
+          </div>
+          <div class="card p-5">
+            <h3 class="font-semibold text-slate-800 text-sm">Matching Success Rate</h3>
+            <p class="text-xs text-slate-400 mb-2">อัตราการจับคู่สำเร็จรายเดือน</p>
+            <div class="h-56"><canvas id="chart-wl-success-rate"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "reports", title: "รายงานภาพรวม" });
+
+  const D = window.MOCK_DATA;
+  const months = ["ต.ค.", "พ.ย.", "ธ.ค.", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย."];
+
+  Charts.barChart(document.getElementById("chart-patient-count"), {
+    labels: months,
+    data: [186, 191, 197, 204, 209, 214, 219, 224, 230, 236, 241, 248],
+    color: Charts.COLORS.primary,
+  });
+
+  Charts.doughnutChart(document.getElementById("chart-survival"), {
+    labels: ["รอดชีวิต", "อื่น ๆ"],
+    data: [88, 12],
+    colors: [Charts.COLORS.teal, "#e2e8f0"],
+  });
+
+  Charts.lineChart(document.getElementById("chart-new-patient"), {
+    labels: months,
+    datasets: [{ label: "ผู้ป่วยใหม่", data: [4, 5, 6, 7, 5, 5, 6, 5, 6, 6, 5, 7], color: Charts.COLORS.teal, fill: true, fillColor: Charts.COLORS.tealSoft }],
+  });
+
+  Charts.barChart(document.getElementById("chart-rejection-readmission"), {
+    labels: ["Rejection Rate", "Readmission Rate"],
+    data: [7, 11],
+    color: [Charts.COLORS.red, Charts.COLORS.amber],
+  });
+
+  const complianceAvg = Math.round(D.compliance.reduce((sum, c) => sum + c.percent, 0) / D.compliance.length);
+  document.getElementById("kpi-compliance").textContent = complianceAvg + "%";
+
+  Charts.barChart(document.getElementById("chart-compliance"), {
+    labels: D.compliance.map((c) => c.name.split(" ").slice(-1)[0]),
+    data: D.compliance.map((c) => c.percent),
+    color: Charts.COLORS.amber,
+  });
+
+  // Waiting List Report
+  const wl = D.waitingList;
+  function durationInMonths(d) {
+    const yearM = d.match(/(\d+)\s*ปี/);
+    const monthM = d.match(/(\d+)\s*เดือน/);
+    return (yearM ? +yearM[1] * 12 : 0) + (monthM ? +monthM[1] : 0);
+  }
+  const avgMonths = Math.round(wl.reduce((s, p) => s + durationInMonths(p.duration), 0) / wl.length);
+  document.getElementById("wl-avg-duration").textContent = `${Math.floor(avgMonths / 12)} ปี ${avgMonths % 12} เดือน`;
+  document.getElementById("wl-success").textContent = "186 ราย";
+  document.getElementById("wl-rejected").textContent = "24 ราย";
+
+  const buckets = [
+    { label: "< 1 ปี", test: (m) => m < 12 },
+    { label: "1-2 ปี", test: (m) => m >= 12 && m < 24 },
+    { label: "2-3 ปี", test: (m) => m >= 24 && m < 36 },
+    { label: "> 3 ปี", test: (m) => m >= 36 },
+  ];
+  const bucketCounts = buckets.map((b) => wl.filter((p) => b.test(durationInMonths(p.duration))).length);
+  Charts.barChart(document.getElementById("chart-wl-duration"), {
+    labels: buckets.map((b) => b.label),
+    data: bucketCounts,
+    color: Charts.COLORS.primary,
+  });
+
+  const stageLabels = { registered: "Registered", investigation: "Investigation", matching: "Matching", evaluation: "Evaluation", ready: "Ready Surgery", completed: "Completed" };
+  const stageCounts = Object.keys(stageLabels).map((k) => wl.filter((p) => p.stage === k).length);
+  Charts.doughnutChart(document.getElementById("chart-wl-status"), {
+    labels: Object.values(stageLabels),
+    data: stageCounts,
+    colors: ["#94a3b8", "#0ea5e9", "#d97706", "#f59e0b", "#16a34a", "#0f766e"],
+  });
+
+  Charts.lineChart(document.getElementById("chart-wl-success-rate"), {
+    labels: months,
+    datasets: [{ label: "Matching Success Rate (%)", data: [58, 62, 65, 68, 71, 69, 73, 75, 74, 78, 80, 82], color: Charts.COLORS.teal, fill: true, fillColor: Charts.COLORS.tealSoft }],
+  });
+
+  document.querySelectorAll("#period-chips [data-period]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#period-chips [data-period]").forEach((b) => {
+        b.classList.remove("active");
+        b.classList.add("text-slate-500");
+      });
+      btn.classList.add("active");
+      btn.classList.remove("text-slate-500");
+      UI.toast("อัปเดตช่วงเวลารายงานเรียบร้อย", "info");
+    });
+  });
+
+  document.getElementById("btn-export-excel").addEventListener("click", () => UI.toast("กำลังส่งออกไฟล์ Excel...", "info"));
+  document.getElementById("btn-export-pdf").addEventListener("click", () => UI.toast("กำลังส่งออกไฟล์ PDF...", "info"));
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

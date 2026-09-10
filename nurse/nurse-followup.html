@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>บันทึกการติดตามผู้ป่วย | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-5 max-w-[1600px] w-full mx-auto">
+
+      <div class="fade-in">
+        <h2 class="text-xl font-bold text-slate-800">Patient Follow-up</h2>
+        <p class="text-sm text-slate-500 mt-0.5">บันทึกและติดตามผลการติดต่อผู้ป่วยหลังปลูกถ่ายไต</p>
+      </div>
+
+      <!-- Patient Profile Card -->
+      <div id="patient-profile-card" class="card p-5 fade-in"></div>
+
+      <div class="grid lg:grid-cols-3 gap-5">
+        <!-- Form -->
+        <div class="card p-5 lg:col-span-1 fade-in h-fit">
+          <h3 class="font-semibold text-slate-800 text-sm mb-4">บันทึกการติดตามใหม่</h3>
+          <form id="followup-form" class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">วันที่ติดตาม (Date)</label>
+              <input type="date" value="2569-09-09" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-2">ช่องทางการติดต่อ (Contact Method)</label>
+              <div class="grid grid-cols-3 gap-2">
+                <label class="chip-btn active flex flex-col items-center gap-1 border border-slate-200 rounded-lg py-2.5 cursor-pointer text-xs"><input type="radio" name="ctype" class="hidden" checked /><i data-lucide="phone" class="w-4 h-4"></i>โทรศัพท์</label>
+                <label class="chip-btn flex flex-col items-center gap-1 border border-slate-200 rounded-lg py-2.5 cursor-pointer text-xs text-slate-600"><input type="radio" name="ctype" class="hidden" /><i data-lucide="message-circle" class="w-4 h-4"></i>LINE</label>
+                <label class="chip-btn flex flex-col items-center gap-1 border border-slate-200 rounded-lg py-2.5 cursor-pointer text-xs text-slate-600"><input type="radio" name="ctype" class="hidden" /><i data-lucide="hospital" class="w-4 h-4"></i>Visit</label>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">ผลการติดตาม (Contact Result)</label>
+              <select class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200">
+                <option>ติดต่อสำเร็จ (Contact Success)</option>
+                <option>โทรไม่ติด (No Answer)</option>
+                <option>ส่งข้อความ (Message Sent)</option>
+                <option>นัดใหม่ (Rescheduled)</option>
+                <option>ให้คำแนะนำ (Advice Given)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">รายละเอียดเพิ่มเติม</label>
+              <textarea rows="3" placeholder="บันทึกรายละเอียดการติดตาม อาการ หรือคำแนะนำที่ให้..." class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none resize-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">แนบไฟล์ (Attachment)</label>
+              <label class="flex items-center justify-center gap-2 border border-dashed border-slate-300 rounded-lg py-3 text-xs text-slate-500 cursor-pointer hover:bg-slate-50 transition">
+                <i data-lucide="paperclip" class="w-4 h-4"></i> <span id="attachment-label">แนบรูปภาพหรือเอกสาร</span>
+                <input id="attachment-input" type="file" class="hidden" />
+              </label>
+            </div>
+            <button type="submit" class="w-full py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-semibold transition flex items-center justify-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> บันทึกการติดตาม</button>
+          </form>
+        </div>
+
+        <!-- History timeline -->
+        <div class="card p-5 lg:col-span-2 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm mb-4">ประวัติการติดตาม (History)</h3>
+          <div id="followup-history"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "nurse", active: "followup", title: "บันทึกการติดตามผู้ป่วย" });
+
+  const D = window.MOCK_DATA;
+  const p = D.primaryPatient;
+
+  // Patient Profile Card
+  const riskBadgeHtml = { low: '<span class="badge badge-green">Low Risk</span>', medium: '<span class="badge badge-amber">Medium Risk</span>', high: '<span class="badge badge-red">High Risk</span>' }[p.risk];
+  document.getElementById("patient-profile-card").innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0">${p.name.slice(0, 2)}</div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="font-bold text-slate-800">${p.name}</p>
+            ${riskBadgeHtml}
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">${p.hn} · ติดตามหลังปลูกถ่ายไต</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-5 text-xs">
+        <div><p class="text-slate-400">Transplant Date</p><p class="font-semibold text-slate-700 mt-0.5">${p.transplantDate}</p></div>
+        <div><p class="text-slate-400">Last Visit</p><p class="font-semibold text-slate-700 mt-0.5">${p.lastVisit}</p></div>
+      </div>
+    </div>`;
+
+  document.querySelectorAll('input[name="ctype"]').forEach((r) => {
+    r.addEventListener("change", () => {
+      document.querySelectorAll('input[name="ctype"]').forEach((x) => x.closest("label").classList.remove("active"));
+      r.closest("label").classList.add("active");
+    });
+  });
+
+  document.getElementById("attachment-input").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    document.getElementById("attachment-label").textContent = file ? file.name : "แนบรูปภาพหรือเอกสาร";
+  });
+
+  // Follow-up History Timeline (ใช้ Components.timeline)
+  const resultColor = { "ติดต่อสำเร็จ": "#16a34a", "ให้คำแนะนำ": "#2563eb", "เลื่อนนัด": "#d97706", "ไม่รับสาย": "#dc2626" };
+  const typeIcon = { "โทรศัพท์": "phone", LINE: "message-circle", นัดหมาย: "calendar" };
+  document.getElementById("followup-history").innerHTML = Components.timeline(
+    D.followupHistory.map((f) => {
+      const colorKey = Object.keys(resultColor).find((k) => f.result.includes(k)) || "ติดต่อสำเร็จ";
+      return { icon: typeIcon[f.type] || "phone", color: resultColor[colorKey], title: `${f.result} · ${f.type}`, date: f.date, desc: `${f.note} · บันทึกโดย ${f.by}`, state: "done" };
+    })
+  );
+
+  document.getElementById("followup-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    UI.toast("บันทึกการติดตามผู้ป่วยสำเร็จ");
+  });
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

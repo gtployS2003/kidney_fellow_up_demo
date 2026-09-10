@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ศูนย์การแจ้งเตือน | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">ศูนย์การแจ้งเตือน</h2>
+          <p class="text-sm text-slate-500 mt-0.5">รวมการแจ้งเตือนผลตรวจผิดปกติ การใช้ยา และการนัดหมายของผู้ป่วยทั้งหมด</p>
+        </div>
+        <button id="btn-mark-all-read" class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="check-check" class="w-4 h-4"></i> ทำเครื่องหมายว่าอ่านแล้วทั้งหมด</button>
+      </div>
+
+      <!-- KPI -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="card card-hover p-4 fade-in fade-in-delay-1">
+          <div class="flex items-center justify-between">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 text-primary flex items-center justify-center"><i data-lucide="bell" class="w-5 h-5"></i></div>
+          </div>
+          <p id="kpi-all" class="text-2xl font-bold text-slate-800 mt-3">-</p>
+          <p class="text-xs text-slate-500 mt-0.5">การแจ้งเตือนทั้งหมด</p>
+        </div>
+        <div class="card card-hover p-4 fade-in fade-in-delay-1">
+          <div class="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center"><i data-lucide="siren" class="w-5 h-5"></i></div>
+          <p id="kpi-critical" class="text-2xl font-bold text-slate-800 mt-3">-</p>
+          <p class="text-xs text-slate-500 mt-0.5">ระดับวิกฤต</p>
+        </div>
+        <div class="card card-hover p-4 fade-in fade-in-delay-2">
+          <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i data-lucide="alert-triangle" class="w-5 h-5"></i></div>
+          <p id="kpi-medium" class="text-2xl font-bold text-slate-800 mt-3">-</p>
+          <p class="text-xs text-slate-500 mt-0.5">ระดับปานกลาง</p>
+        </div>
+        <div class="card card-hover p-4 fade-in fade-in-delay-2">
+          <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+          <p id="kpi-read" class="text-2xl font-bold text-slate-800 mt-3">-</p>
+          <p class="text-xs text-slate-500 mt-0.5">อ่านแล้ว</p>
+        </div>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="flex items-center gap-2 fade-in flex-wrap">
+        <span class="text-xs font-medium text-slate-500 mr-1">แสดง:</span>
+        <button data-filter="all" class="filter-chip chip-btn active px-3.5 py-1.5 rounded-full text-xs font-semibold border border-primary">ทั้งหมด</button>
+        <button data-filter="critical" class="filter-chip chip-btn px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">Critical</button>
+        <button data-filter="medium" class="filter-chip chip-btn px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">Warning</button>
+        <button data-filter="low" class="filter-chip chip-btn px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">Information</button>
+        <button data-filter="read" class="filter-chip chip-btn px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">อ่านแล้ว</button>
+      </div>
+
+      <!-- Grouped notification list -->
+      <div id="notif-groups" class="space-y-5"></div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "alert", title: "ศูนย์การแจ้งเตือน" });
+
+  const D = window.MOCK_DATA;
+
+  const CATEGORY_META = {
+    "Creatinine สูง": { icon: "flask-conical", color: "red" },
+    "eGFR ลดลง": { icon: "trending-down", color: "red" },
+    "Tacrolimus สูง": { icon: "arrow-up-circle", color: "amber" },
+    "Tacrolimus ต่ำ": { icon: "arrow-down-circle", color: "amber" },
+    "Miss Medication": { icon: "pill", color: "amber" },
+    "Miss Appointment": { icon: "calendar-x-2", color: "red" },
+    "อื่นๆ": { icon: "info", color: "blue" },
+  };
+
+  const colorClasses = {
+    red: { border: "border-red-100", bg: "bg-red-50", icon: "text-red-600", iconBg: "bg-red-100" },
+    amber: { border: "border-amber-100", bg: "bg-amber-50", icon: "text-amber-600", iconBg: "bg-amber-100" },
+    blue: { border: "border-blue-100", bg: "bg-blue-50", icon: "text-primary", iconBg: "bg-blue-100" },
+  };
+
+  function categorizeNotifTitle(title) {
+    if (title.includes("Creatinine")) return "Creatinine สูง";
+    if (title.includes("eGFR")) return "eGFR ลดลง";
+    if (title.includes("Tacrolimus") && title.includes("ต่ำ")) return "Tacrolimus ต่ำ";
+    if (title.includes("Tacrolimus")) return "Tacrolimus สูง";
+    if (title.includes("ผิดนัด")) return "Miss Appointment";
+    if (title.includes("ยา")) return "Miss Medication";
+    return "อื่นๆ";
+  }
+
+  // รวมข้อมูลจาก alerts + notifications ให้เป็นโครงสร้างเดียวกัน
+  const items = [];
+  D.alerts.forEach((a, i) => {
+    items.push({
+      category: a.type,
+      patient: a.patient,
+      hn: a.hn,
+      detail: a.value,
+      time: a.time,
+      level: a.level === "high" ? "critical" : "medium",
+      read: i % 4 === 3,
+    });
+  });
+  D.notifications.forEach((n, i) => {
+    items.push({
+      category: categorizeNotifTitle(n.title),
+      patient: null,
+      hn: null,
+      detail: n.desc,
+      time: n.time,
+      level: n.type === "danger" ? "critical" : n.type === "warning" ? "medium" : "low",
+      read: i % 3 === 2,
+    });
+  });
+
+  // KPI
+  document.getElementById("kpi-all").textContent = items.length;
+  document.getElementById("kpi-critical").textContent = items.filter((x) => x.level === "critical").length;
+  document.getElementById("kpi-medium").textContent = items.filter((x) => x.level === "medium").length;
+  document.getElementById("kpi-read").textContent = items.filter((x) => x.read).length;
+
+  let currentFilter = "all";
+
+  function matchesFilter(item) {
+    if (currentFilter === "all") return true;
+    if (currentFilter === "read") return item.read;
+    return item.level === currentFilter;
+  }
+
+  // แบ่งเป็น 3 กลุ่มตามระดับ: Critical / Warning / Information
+  const TIER_META = {
+    critical: { title: "Critical", icon: "siren", color: "red" },
+    medium: { title: "Warning", icon: "alert-triangle", color: "amber" },
+    low: { title: "Information", icon: "info", color: "blue" },
+  };
+
+  function levelBadge(level) {
+    if (level === "critical") return `<span class="badge badge-red">Critical</span>`;
+    if (level === "medium") return `<span class="badge badge-amber">Warning</span>`;
+    return `<span class="badge badge-blue">Information</span>`;
+  }
+
+  function render() {
+    let html = "";
+
+    ["critical", "medium", "low"].forEach((tier) => {
+      const group = items.filter((it) => it.level === tier && matchesFilter(it));
+      if (!group.length) return;
+      const meta = TIER_META[tier];
+      const c = colorClasses[meta.color];
+      html += `
+        <div class="card p-5 fade-in">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-9 h-9 rounded-lg ${c.iconBg} ${c.icon} flex items-center justify-center"><i data-lucide="${meta.icon}" class="w-4.5 h-4.5"></i></div>
+            <h3 class="font-semibold text-slate-800 text-sm">${meta.title}</h3>
+            <span class="badge badge-slate">${group.length} รายการ</span>
+          </div>
+          <div class="space-y-2.5">
+            ${group
+              .map(
+                (it) => `
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border ${c.border} ${c.bg} ${it.read ? "opacity-60" : ""}">
+                <div class="flex items-start gap-3 min-w-0">
+                  <i data-lucide="${it.read ? "mail-open" : "mail"}" class="w-4 h-4 mt-0.5 shrink-0 ${c.icon}"></i>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-slate-800">${it.category} <span class="font-normal text-slate-500">· ${it.patient ? it.patient : "ระบบแจ้งเตือน"}${it.hn ? ` · ${it.hn}` : ""}</span></p>
+                    <p class="text-xs text-slate-600 mt-0.5">${it.detail}</p>
+                    <p class="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">${levelBadge(it.level)} <span>·</span> ${it.time} ${it.read ? "· อ่านแล้ว" : ""}</p>
+                  </div>
+                </div>
+                <a href="patient-summary.html" class="shrink-0 self-start sm:self-center px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-primary hover:bg-blue-50 transition whitespace-nowrap">ดูรายละเอียดผู้ป่วย</a>
+              </div>`
+              )
+              .join("")}
+          </div>
+        </div>`;
+    });
+
+    document.getElementById("notif-groups").innerHTML =
+      html || `<div class="card p-10 text-center text-sm text-slate-400 fade-in">ไม่พบการแจ้งเตือนตามเงื่อนไขที่เลือก</div>`;
+    lucide.createIcons();
+  }
+
+  document.querySelectorAll(".filter-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentFilter = btn.getAttribute("data-filter");
+      document.querySelectorAll(".filter-chip").forEach((b) => {
+        b.classList.remove("active", "border-primary");
+        b.classList.add("border-slate-200", "bg-white", "text-slate-600");
+      });
+      btn.classList.add("active", "border-primary");
+      btn.classList.remove("border-slate-200", "bg-white", "text-slate-600");
+      render();
+    });
+  });
+
+  document.getElementById("btn-mark-all-read").addEventListener("click", () => {
+    items.forEach((it) => (it.read = true));
+    document.getElementById("kpi-read").textContent = items.filter((x) => x.read).length;
+    UI.toast("ทำเครื่องหมายว่าอ่านแล้วทั้งหมด", "success");
+    render();
+  });
+
+  render();
+  lucide.createIcons();
+</script>
+</body>
+</html>

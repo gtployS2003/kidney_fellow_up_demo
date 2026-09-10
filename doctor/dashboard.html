@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>แดชบอร์ดแพทย์ | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Kidney Transplant Center Dashboard</h2>
+          <p class="text-sm text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5"></i> อัปเดตล่าสุด 09 ก.ย. 2569 · 09:00 น.</span>
+            <span class="flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i> ผู้ป่วยทั้งหมด 1,245 ราย</span>
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <button class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="download" class="w-4 h-4"></i> ส่งออกรายงาน</button>
+          <a href="patient-registration.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i data-lucide="plus" class="w-4 h-4"></i> เพิ่มผู้ป่วยใหม่</a>
+        </div>
+      </div>
+
+      <!-- Section 1: Patient Overview Cards -->
+      <div id="kpi-grid" class="grid grid-cols-2 lg:grid-cols-5 gap-4"></div>
+
+      <!-- Section 2: Clinical Alert Dashboard -->
+      <div class="card p-5 fade-in">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="bell-ring" class="w-4 h-4 text-red-500"></i> Clinical Alert</h3>
+          <a href="notifications.html" class="text-xs font-semibold text-primary hover:underline">ดูทั้งหมด</a>
+        </div>
+        <div id="alert-list" class="space-y-2"></div>
+      </div>
+
+      <!-- Section 3: Patient Follow-up Analytics -->
+      <div class="fade-in">
+        <h3 class="text-sm font-bold text-slate-700 mb-2">Patient Follow-up Analytics</h3>
+        <div class="grid lg:grid-cols-3 gap-4">
+          <div class="card p-5 fade-in">
+            <div class="flex items-center justify-between mb-1">
+              <div>
+                <h3 class="font-semibold text-slate-800 text-sm">Follow-up Trend</h3>
+                <p class="text-xs text-slate-400">6 เดือนย้อนหลัง</p>
+              </div>
+              <span class="badge badge-green"><i data-lucide="trending-up" class="w-3 h-3"></i> +6.4%</span>
+            </div>
+            <div class="h-56 mt-2"><canvas id="chart-patient-trend"></canvas></div>
+          </div>
+          <div class="card p-5 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-1">Medication Compliance</h3>
+            <p class="text-xs text-slate-400 mb-2">ค่าเฉลี่ยรายกลุ่มความเสี่ยง (%)</p>
+            <div class="h-56"><canvas id="chart-med-compliance"></canvas></div>
+          </div>
+          <div class="card p-5 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-1">Transplant Outcome</h3>
+            <p class="text-xs text-slate-400 mb-2">Stable / Rejection / Readmission</p>
+            <div class="h-56"><canvas id="chart-outcome"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Today's Patient Queue -->
+      <div class="card p-5 fade-in">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="list-checks" class="w-4 h-4 text-primary"></i> Today's Patient Queue</h3>
+          <a href="appointment-management.html" class="text-xs font-semibold text-primary hover:underline">จัดการนัดหมาย</a>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="table-modern">
+            <thead>
+              <tr><th>Time</th><th>HN</th><th>Patient</th><th>Purpose</th><th>Risk</th><th>Status</th><th class="text-right">Action</th></tr>
+            </thead>
+            <tbody id="queue-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Waiting list + High risk patients -->
+      <div class="grid lg:grid-cols-3 gap-4">
+        <!-- Waiting List Summary widget -->
+        <div class="card p-5 lg:col-span-2 fade-in">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="list-ordered" class="w-4 h-4 text-primary"></i> Waiting List Summary</h3>
+            <a href="waiting-list.html" class="text-xs font-semibold text-primary hover:underline">ดูทั้งหมด</a>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="rounded-xl bg-slate-50 p-4 text-center">
+              <p class="text-2xl font-bold text-slate-800">245</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Waiting</p>
+            </div>
+            <div class="rounded-xl bg-amber-50 p-4 text-center">
+              <p class="text-2xl font-bold text-amber-700">32</p>
+              <p class="text-[11px] text-amber-700/80 mt-0.5">Matching</p>
+            </div>
+            <div class="rounded-xl bg-green-50 p-4 text-center">
+              <p class="text-2xl font-bold text-green-700">8</p>
+              <p class="text-[11px] text-green-700/80 mt-0.5">Ready Surgery</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- High risk patients -->
+        <div class="card p-5 fade-in">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-slate-800 text-sm">ผู้ป่วยความเสี่ยงสูง</h3>
+            <a href="patient-management.html" class="text-xs font-semibold text-primary hover:underline">ดูรายชื่อผู้ป่วย</a>
+          </div>
+          <div id="high-risk-patients" class="space-y-2"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "dashboard", title: "แดชบอร์ดแพทย์" });
+
+  // Rate ระดับความเสี่ยงตามข้อมูลผู้ป่วย
+  const D = window.MOCK_DATA;
+
+  document.getElementById("kpi-grid").innerHTML = [
+    { icon: "users", title: "ผู้ป่วยทั้งหมด", value: "1,245", trend: "12% จากเดือนก่อน", iconBg: "bg-blue-50 text-primary" },
+    { icon: "calendar-check-2", title: "ติดตามวันนี้", value: "32", trend: "4 ราย", gradient: "gradient-primary" },
+    { icon: "calendar-x-2", title: "ผิดนัด", value: "12", trend: "3 ราย", trendDirection: "down", iconBg: "bg-amber-50 text-amber-600" },
+    { icon: "flask-conical", title: "Lab ผิดปกติ", value: "8", iconBg: "bg-red-50 text-red-600" },
+    { icon: "siren", title: "Urgent Case ต้องเฝ้าระวัง", value: "5", gradient: "gradient-danger" },
+  ]
+    .map((c, i) => `<div class="fade-in fade-in-delay-${Math.min(i + 1, 4)} ${i === 4 ? "col-span-2 lg:col-span-1" : ""}">${Components.statCard(c)}</div>`)
+    .join("");
+
+  Charts.lineChart(document.getElementById("chart-patient-trend"), {
+    labels: ["เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย."],
+    datasets: [{ label: "ผู้ป่วยติดตามสะสม", data: [228, 233, 237, 241, 244, 248], color: Charts.COLORS.primary, fill: true, fillColor: Charts.COLORS.primarySoft }],
+  });
+
+  Charts.barChart(document.getElementById("chart-med-compliance"), {
+    labels: ["Low Risk", "Medium Risk", "High Risk"],
+    data: [95, 87, 70],
+    color: ["#22c55e", "#f59e0b", "#ef4444"],
+  });
+
+  Charts.doughnutChart(document.getElementById("chart-outcome"), {
+    labels: ["Stable", "Rejection", "Readmission"],
+    data: [82, 7, 11],
+    colors: [Charts.COLORS.teal, Charts.COLORS.red, Charts.COLORS.amber],
+  });
+
+  const alertLevelMap = { high: "critical", medium: "warning" };
+  document.getElementById("alert-list").innerHTML = D.alerts
+    .map((a) =>
+      Components.alertCard({
+        level: alertLevelMap[a.level] || "warning",
+        title: `${a.type} <span class="font-normal text-slate-500">· ${a.patient}</span>`,
+        desc: `HN: ${a.hn} · ${a.value}`,
+        time: a.time,
+        action: { label: "View Patient", href: "patient-summary.html" },
+      })
+    )
+    .join("");
+
+  // Section 4: Today's Patient Queue — เรียงตามเวลานัดหมาย
+  const riskByHn = Object.fromEntries(D.patients.map((p) => [p.hn, p.risk]));
+  const riskBadgeQueue = { low: '<span class="badge badge-green">Low</span>', medium: '<span class="badge badge-amber">Medium</span>', high: '<span class="badge badge-red">High</span>' };
+  const queueStatus = { confirmed: '<span class="badge badge-green">Normal</span>', pending: '<span class="badge badge-amber">Warning</span>', missed: '<span class="badge badge-red">Urgent</span>' };
+  document.getElementById("queue-tbody").innerHTML = D.appointments
+    .slice()
+    .sort((a, b) => a.time.localeCompare(b.time))
+    .map((a) => {
+      const risk = riskByHn[a.hn] || "low";
+      return `
+    <tr>
+      <td class="font-medium text-slate-700">${a.time}</td>
+      <td class="text-slate-500">${a.hn}</td>
+      <td class="font-medium text-slate-800">${a.patient}</td>
+      <td>${a.type}</td>
+      <td>${riskBadgeQueue[risk]}</td>
+      <td>${queueStatus[a.status]}</td>
+      <td class="text-right"><a href="patient-summary.html" class="text-xs font-semibold text-primary hover:underline">View</a></td>
+    </tr>`;
+    })
+    .join("");
+
+  document.getElementById("high-risk-patients").innerHTML = D.patients
+    .filter((p) => p.risk === "high")
+    .map((p) =>
+      Components.patientCard({
+        name: p.name,
+        hn: p.hn,
+        risk: p.risk,
+        status: `eGFR ${p.egfr} · Cr ${p.creatinine}`,
+        href: "patient-summary.html",
+        avatarBg: "bg-red-100 text-red-700",
+      })
+    )
+    .join("");
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

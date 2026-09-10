@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>นัดหมายของฉัน | Kidney Transplant LIFF</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="liff-body font-sans">
+<div class="liff-shell">
+  <div id="liff-header"></div>
+
+  <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
+
+    <!-- Next appointment - highlighted card -->
+    <div id="next-appt" class="fade-in"></div>
+
+    <!-- Action buttons -->
+    <div class="grid grid-cols-2 gap-3 fade-in fade-in-delay-1">
+      <button id="btn-confirm" class="liff-tap col-span-2 py-3.5 rounded-xl bg-green-600 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
+        <i data-lucide="check-circle-2" class="w-5 h-5"></i> ยืนยันนัด
+      </button>
+      <button data-open-modal="modal-reschedule" class="liff-tap col-span-2 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-bold flex items-center justify-center gap-2">
+        <i data-lucide="calendar-clock" class="w-5 h-5 text-amber-600"></i> ขอเลื่อนนัด
+      </button>
+    </div>
+
+    <!-- Map placeholder -->
+    <div class="fade-in fade-in-delay-2">
+      <p class="text-sm font-bold text-slate-700 mb-2">แผนที่โรงพยาบาล</p>
+      <div class="card overflow-hidden">
+        <div class="relative h-32 flex items-center justify-center" style="background:repeating-linear-gradient(45deg,#eff6ff,#eff6ff 10px,#f0fdfa 10px,#f0fdfa 20px);">
+          <div class="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center shadow-md"><i data-lucide="map-pin" class="w-5 h-5"></i></div>
+        </div>
+        <button id="btn-open-map" class="liff-tap w-full py-3 text-sm font-semibold text-primary flex items-center justify-center gap-1.5 border-t border-slate-100">
+          <i data-lucide="navigation" class="w-4 h-4"></i> เปิด Google Map
+        </button>
+      </div>
+    </div>
+
+    <!-- Appointment history (Timeline) -->
+    <div class="fade-in fade-in-delay-2">
+      <p class="text-sm font-bold text-slate-700 mb-2">ประวัตินัดหมาย</p>
+      <div id="other-appts"></div>
+    </div>
+
+  </main>
+
+  <div id="liff-bottomnav"></div>
+</div>
+
+<!-- Modal: Reschedule -->
+<div id="modal-reschedule" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <h3 class="font-bold text-slate-800 text-base">ขอเลื่อนนัดหมาย</h3>
+      <button data-close-modal="modal-reschedule" class="p-1.5 rounded-lg hover:bg-slate-100 liff-tap"><i data-lucide="x" class="w-5 h-5 text-slate-500"></i></button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-1.5">เลือกวันที่ต้องการนัดใหม่</label>
+        <input type="date" class="w-full px-3.5 py-3 text-sm rounded-xl border border-slate-200" />
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-1.5">เหตุผลที่ขอเลื่อน</label>
+        <textarea rows="3" placeholder="เช่น ติดธุระ, เดินทางไม่สะดวก..." class="w-full px-3.5 py-3 text-sm rounded-xl border border-slate-200 resize-none"></textarea>
+      </div>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 flex gap-2">
+      <button data-close-modal="modal-reschedule" class="liff-tap flex-1 py-3 text-sm font-bold rounded-xl border border-slate-200 text-slate-600">ยกเลิก</button>
+      <button id="btn-submit-reschedule" class="liff-tap flex-1 py-3 text-sm font-bold rounded-xl bg-primary text-white">ส่งคำขอ</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/liff-layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  LiffLayout.init({ variant: "plain", active: "appointment", title: "นัดหมายของฉัน", backHref: "home.html" });
+
+  const patient = window.MOCK_DATA.primaryPatient;
+  const appts = window.MOCK_DATA.appointments;
+  const featured = appts.find((a) => a.hn === patient.hn) || appts[0];
+  const rest = appts.filter((a) => a.id !== featured.id).map((a) => ({ ...a, patient: patient.name, hn: patient.hn }));
+
+  const statusMap = {
+    confirmed: { label: "ยืนยันแล้ว", cls: "badge-green" },
+    pending: { label: "รอยืนยัน", cls: "badge-amber" },
+    missed: { label: "ผิดนัด", cls: "badge-red" },
+  };
+
+  document.getElementById("next-appt").innerHTML = `
+    <div class="card p-5 shadow-md" style="background:linear-gradient(135deg,#eff6ff,#f0fdfa);">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold text-primary uppercase tracking-wide">นัดหมายถัดไป</span>
+        <span class="badge ${(statusMap[featured.status] || statusMap.confirmed).cls}">${(statusMap[featured.status] || statusMap.confirmed).label}</span>
+      </div>
+      <div class="flex items-center gap-3.5">
+        <div class="w-16 h-16 rounded-2xl bg-primary text-white flex flex-col items-center justify-center shrink-0 shadow-sm">
+          <span class="text-[11px] leading-none">${featured.date.split(" ").slice(1).join(" ")}</span>
+          <span class="text-xl font-bold leading-none mt-1">${featured.date.split(" ")[0]}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-base font-bold text-slate-800">${featured.type}</p>
+          <p class="text-sm text-slate-600 mt-1 flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4 text-slate-400"></i> เวลา ${featured.time} น.</p>
+          <p class="text-sm text-slate-600 mt-0.5 flex items-center gap-1.5"><i data-lucide="stethoscope" class="w-4 h-4 text-slate-400"></i> ${featured.doctor}</p>
+          <p class="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5"><i data-lucide="hospital" class="w-4 h-4 text-slate-400"></i> ${featured.hospital}</p>
+        </div>
+      </div>
+    </div>`;
+
+  const historyIcon = { confirmed: "calendar-check", pending: "calendar-clock", missed: "calendar-x" };
+  const historyColor = { confirmed: "#16a34a", pending: "#d97706", missed: "#dc2626" };
+  const historyStatusLabel = { confirmed: "ยืนยันนัดแล้ว", pending: "รอยืนยัน", missed: "ผิดนัด" };
+
+  document.getElementById("other-appts").innerHTML = rest.length
+    ? Components.timeline(
+        rest.map((a) => ({
+          icon: historyIcon[a.status] || "calendar",
+          color: historyColor[a.status] || historyColor.confirmed,
+          title: a.type,
+          date: `${a.date} · ${a.time} น.`,
+          desc: `${historyStatusLabel[a.status] || ""} · ${a.hospital}`,
+        }))
+      )
+    : `<p class="text-sm text-slate-400 text-center py-4">ไม่มีนัดหมายอื่น</p>`;
+
+  document.getElementById("btn-confirm").addEventListener("click", () => {
+    UI.toast("ยืนยันนัดหมายเรียบร้อยแล้ว");
+  });
+  document.getElementById("btn-open-map").addEventListener("click", () => {
+    UI.toast("เปิดแผนที่นำทาง", "info");
+  });
+  document.getElementById("btn-submit-reschedule").addEventListener("click", () => {
+    UI.closeModal("modal-reschedule");
+    UI.toast("ส่งคำขอเลื่อนนัดแล้ว รอเจ้าหน้าที่ยืนยัน");
+  });
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

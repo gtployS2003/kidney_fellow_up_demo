@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Timeline การรักษา | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1200px] w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Timeline การรักษา</h2>
+          <p class="text-sm text-slate-500 mt-0.5">นายสมชาย ใจดี · HN-102345 · เหตุการณ์ทางการรักษาทั้งหมดตามลำดับเวลา</p>
+        </div>
+        <a href="patient-summary.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> กลับไปข้อมูลผู้ป่วย</a>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="card p-4 fade-in fade-in-delay-1">
+        <div id="filter-chips" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="card p-6 lg:p-8 fade-in fade-in-delay-2">
+        <div id="timeline-container" class="timeline-line space-y-8"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Event detail modal (content populated dynamically) -->
+<div id="modal-event-detail" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg modal-panel">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div id="modal-icon-wrap" class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"><i id="modal-icon" data-lucide="activity" class="w-5 h-5"></i></div>
+        <div>
+          <h3 id="modal-title" class="font-semibold text-slate-800"></h3>
+          <p id="modal-date" class="text-xs text-slate-400"></p>
+        </div>
+      </div>
+      <button data-close-modal="modal-event-detail" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div>
+        <p class="text-xs font-semibold text-slate-500 mb-1">แพทย์ผู้บันทึก</p>
+        <p id="modal-doctor" class="text-sm text-slate-700"></p>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 mb-1">รายละเอียด</p>
+        <p id="modal-detail" class="text-sm text-slate-700 leading-relaxed"></p>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 mb-2">ไฟล์แนบ</p>
+        <div id="modal-files" class="flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-close-modal="modal-event-detail" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "timeline", title: "Timeline การรักษา" });
+
+  // ข้อมูลจำลอง Timeline การรักษา (เฉพาะหน้านี้)
+  const EVENTS = [
+    { id: "e1", type: "transplant", typeLabel: "ปลูกถ่ายไต", icon: "syringe", color: "#2563eb", date: "18 ม.ค. 2566", title: "ผ่าตัดปลูกถ่ายไต (Kidney Transplant)", doctor: "นพ.ธนกร วัฒนสิน", detail: "ผ่าตัดปลูกถ่ายไตจากผู้บริจาคที่มีชีวิต (Living Related Donor) ที่ รพ.ศิริราช ผลการผ่าตัดเรียบร้อยดี ไตเริ่มทำงานทันทีหลังผ่าตัด (Immediate graft function) ไม่มีภาวะแทรกซ้อนระหว่างผ่าตัด", files: [{ name: "ใบรายงานผ่าตัด.pdf", size: "1.2 MB" }, { name: "ผล-Crossmatch.pdf", size: "340 KB" }] },
+    { id: "e2", type: "admit", typeLabel: "Admit", icon: "bed-double", color: "#7c3aed", date: "16 ม.ค. 2566", title: "รับเข้ารักษาตัวเตรียมผ่าตัด", doctor: "นพ.ธนกร วัฒนสิน", detail: "รับผู้ป่วย Admit เข้าหอผู้ป่วยศัลยกรรม เพื่อเตรียมความพร้อมก่อนผ่าตัดปลูกถ่ายไต ตรวจร่างกายและผล Lab ก่อนผ่าตัดอยู่ในเกณฑ์ปกติ", files: [{ name: "แบบประเมินก่อนผ่าตัด.pdf", size: "580 KB" }] },
+    { id: "e3", type: "opd", typeLabel: "OPD", icon: "stethoscope", color: "#16a34a", date: "01 ก.พ. 2566", title: "OPD ติดตามอาการหลังผ่าตัด 2 สัปดาห์", doctor: "นพ.ธนกร วัฒนสิน", detail: "ผู้ป่วยมาตามนัดติดตามอาการหลังผ่าตัด แผลผ่าตัดแห้งดี ไม่มีไข้ ไม่มีภาวะแทรกซ้อน สัญญาณชีพปกติ นัดติดตามต่อเนื่อง", files: [{ name: "บันทึกการตรวจ-OPD.pdf", size: "210 KB" }] },
+    { id: "e4", type: "lab", typeLabel: "Lab", icon: "flask-conical", color: "#0284c7", date: "15 มี.ค. 2566", title: "ตรวจ Lab ติดตามการทำงานของไต", doctor: "นพ.ธนกร วัฒนสิน", detail: "ผล Creatinine 1.3 mg/dL, eGFR 66 mL/min/1.73m² อยู่ในเกณฑ์ดี แนวโน้มค่าไตดีขึ้นต่อเนื่องเมื่อเทียบกับเดือนก่อน", files: [{ name: "ผลตรวจ-Lab-มีค66.pdf", size: "150 KB" }] },
+    { id: "e5", type: "medication", typeLabel: "ปรับยา", icon: "pill", color: "#d97706", date: "20 ก.ค. 2566", title: "ปรับแผนการให้ยากดภูมิคุ้มกัน", doctor: "นพ.ธนกร วัฒนสิน", detail: "ปรับลดขนาดยา Tacrolimus จาก 2.5 mg เหลือ 2 mg ต่อมื้อ เนื่องจากระดับยาในเลือดสูงกว่าช่วงเป้าหมายเล็กน้อย นัดตรวจระดับยาซ้ำใน 2 สัปดาห์", files: [{ name: "คำสั่งปรับยา.pdf", size: "95 KB" }] },
+    { id: "e6", type: "infection", typeLabel: "ติดเชื้อ", icon: "thermometer", color: "#dc2626", date: "02 พ.ย. 2566", title: "ภาวะติดเชื้อทางเดินปัสสาวะ (UTI)", doctor: "นพ.ธนกร วัฒนสิน", detail: "ผู้ป่วยมาด้วยอาการไข้ ปัสสาวะแสบขัด ตรวจพบเม็ดเลือดขาวในปัสสาวะสูง วินิจฉัยภาวะติดเชื้อทางเดินปัสสาวะ เริ่มยาปฏิชีวนะและนัดติดตามอาการใกล้ชิด", files: [{ name: "ผล-Urine-Culture.pdf", size: "180 KB" }, { name: "ใบสั่งยาปฏิชีวนะ.pdf", size: "88 KB" }] },
+    { id: "e7", type: "rejection", typeLabel: "ภาวะปฏิเสธ", icon: "alert-triangle", color: "#b91c1c", date: "10 ธ.ค. 2566", title: "เฝ้าระวังภาวะปฏิเสธอวัยวะเฉียบพลัน", doctor: "นพ.ธนกร วัฒนสิน", detail: "ค่า Creatinine สูงขึ้นผิดปกติจาก 1.3 เป็น 1.9 mg/dL ภายใน 1 สัปดาห์ สงสัยภาวะ Acute Rejection ส่งตรวจชิ้นเนื้อไต (Biopsy) เพื่อยืนยันการวินิจฉัยและวางแผนการรักษาต่อ", files: [{ name: "ผล-Kidney-Biopsy.pdf", size: "420 KB" }] },
+    { id: "e8", type: "admit", typeLabel: "Readmission", icon: "repeat", color: "#7c3aed", date: "12 ธ.ค. 2566", title: "รับเข้ารักษาซ้ำ (Readmission) เพื่อรักษาภาวะปฏิเสธ", doctor: "นพ.ธนกร วัฒนสิน", detail: "รับผู้ป่วย Admit ซ้ำเพื่อให้ยา Pulse Steroid รักษาภาวะปฏิเสธอวัยวะเฉียบพลัน ติดตามค่าไตทุกวัน อาการตอบสนองต่อการรักษาดี", files: [{ name: "สรุปการรักษาระหว่าง-Admit.pdf", size: "310 KB" }] },
+    { id: "e9", type: "surgery", typeLabel: "ผ่าตัด", icon: "scissors", color: "#9333ea", date: "05 ม.ค. 2567", title: "ผ่าตัดนำท่อ Ureteral Stent ออก", doctor: "นพ.ธนกร วัฒนสิน", detail: "ผ่าตัดเล็กเพื่อนำท่อ Double J Stent ที่คาไว้ตั้งแต่ผ่าตัดปลูกถ่ายไตออก ผู้ป่วยฟื้นตัวดี ไม่มีภาวะแทรกซ้อนหลังหัตถการ", files: [{ name: "ใบรายงานหัตถการ.pdf", size: "140 KB" }] },
+    { id: "e10", type: "opd", typeLabel: "OPD", icon: "stethoscope", color: "#16a34a", date: "02 ก.ย. 2569", title: "OPD ติดตามอาการประจำเดือน", doctor: "นพ.ธนกร วัฒนสิน", detail: "ผู้ป่วยมาตามนัดตรวจติดตามประจำ อาการทั่วไปคงที่ ค่า Creatinine 1.1 mg/dL eGFR 78 mL/min/1.73m² อยู่ในเกณฑ์ปกติดี นัดติดตามครั้งถัดไป 16 ก.ย. 2569", files: [{ name: "บันทึกการตรวจ-กย69.pdf", size: "175 KB" }] },
+  ];
+
+  const CHIPS = [
+    { key: "all", label: "ทั้งหมด" },
+    { key: "transplant", label: "ปลูกถ่ายไต" },
+    { key: "admit", label: "Admit" },
+    { key: "opd", label: "OPD" },
+    { key: "lab", label: "Lab" },
+    { key: "medication", label: "ปรับยา" },
+    { key: "infection", label: "ติดเชื้อ" },
+    { key: "rejection", label: "ภาวะปฏิเสธ" },
+    { key: "surgery", label: "ผ่าตัด" },
+  ];
+
+  document.getElementById("filter-chips").innerHTML = CHIPS.map(
+    (c) => `<button data-chip="${c.key}" class="chip-btn px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 text-slate-600 hover:border-primary hover:text-primary ${c.key === "all" ? "active" : ""}">${c.label}</button>`
+  ).join("");
+
+  function renderTimeline(filterKey) {
+    const list = filterKey === "all" ? EVENTS : EVENTS.filter((e) => e.type === filterKey);
+    document.getElementById("timeline-container").innerHTML = list
+      .map(
+        (e) => `
+      <div class="relative cursor-pointer group" data-event-card="${e.id}">
+        <div class="timeline-node" style="background:${e.color}"><i data-lucide="${e.icon}" class="w-4 h-4"></i></div>
+        <div class="rounded-xl border border-slate-100 p-4 group-hover:border-primary group-hover:shadow-sm transition">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-400">${e.date}</span>
+              <span class="badge badge-slate" style="background:${e.color}1a;color:${e.color}">${e.typeLabel}</span>
+            </div>
+            <span class="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition flex items-center gap-1">ดูรายละเอียด <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></span>
+          </div>
+          <p class="text-sm font-semibold text-slate-800 mt-2">${e.title}</p>
+          <p class="text-xs text-slate-500 mt-1 line-clamp-2">${e.detail}</p>
+        </div>
+      </div>`
+      )
+      .join("") || `<p class="text-sm text-slate-400 text-center py-10">ไม่พบเหตุการณ์ในหมวดหมู่นี้</p>`;
+
+    document.querySelectorAll("[data-event-card]").forEach((card) => {
+      card.addEventListener("click", () => showEventDetail(card.getAttribute("data-event-card")));
+    });
+    lucide.createIcons();
+  }
+
+  function showEventDetail(id) {
+    const e = EVENTS.find((ev) => ev.id === id);
+    if (!e) return;
+    document.getElementById("modal-icon-wrap").style.background = e.color + "1a";
+    document.getElementById("modal-icon-wrap").style.color = e.color;
+    document.getElementById("modal-icon").setAttribute("data-lucide", e.icon);
+    document.getElementById("modal-title").textContent = e.title;
+    document.getElementById("modal-date").textContent = `${e.date} · ${e.typeLabel}`;
+    document.getElementById("modal-doctor").textContent = e.doctor;
+    document.getElementById("modal-detail").textContent = e.detail;
+    document.getElementById("modal-files").innerHTML = e.files
+      .map((f) => `<span class="chip-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-600"><i data-lucide="paperclip" class="w-3.5 h-3.5"></i> ${f.name} <span class="text-slate-400">(${f.size})</span></span>`)
+      .join("");
+    lucide.createIcons();
+    UI.openModal("modal-event-detail");
+  }
+
+  document.getElementById("filter-chips").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-chip]");
+    if (!btn) return;
+    document.querySelectorAll("#filter-chips .chip-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderTimeline(btn.getAttribute("data-chip"));
+  });
+
+  renderTimeline("all");
+  lucide.createIcons();
+</script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ประเมินความเหมาะสมของไต | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-4xl w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Kidney Suitability Assessment</h2>
+          <p class="text-sm text-slate-500 mt-0.5">สรุปผลการประเมินความเหมาะสมก่อนยืนยันเข้าสู่กระบวนการผ่าตัด</p>
+        </div>
+        <a href="kidney-matching.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> กลับหน้าจับคู่</a>
+      </div>
+
+      <!-- Summary card -->
+      <div class="card fade-in overflow-hidden">
+        <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/60">
+          <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-primary"></i> ข้อมูลสรุปสำหรับการประเมิน</h3>
+        </div>
+        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+          <div class="p-5" id="summary-donor"></div>
+          <div class="p-5" id="summary-patient"></div>
+        </div>
+      </div>
+
+      <!-- Assessment form -->
+      <form id="suitability-form" class="card p-5 space-y-6 fade-in">
+        <div>
+          <h3 class="font-semibold text-slate-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="clipboard-check" class="w-4 h-4 text-primary"></i> ผลการประเมิน</h3>
+          <div class="grid sm:grid-cols-3 gap-3" id="assessment-options"></div>
+        </div>
+
+        <div id="reason-section" class="hidden">
+          <h3 class="font-semibold text-slate-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="list-checks" class="w-4 h-4 text-amber-600"></i> Risk Checklist (เลือกได้มากกว่า 1 ข้อ)</h3>
+          <div id="risk-checklist" class="grid sm:grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Assessment Summary</label>
+          <textarea rows="3" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" placeholder="สรุปผลการประเมินความเหมาะสมโดยรวม..."></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Recommendation</label>
+          <textarea rows="3" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" placeholder="คำแนะนำสำหรับขั้นตอนถัดไป..."></textarea>
+        </div>
+
+        <div class="flex flex-wrap justify-end gap-2 pt-2 border-t border-slate-100">
+          <a href="kidney-matching.html" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">ยกเลิก</a>
+          <button type="submit" data-action="save" class="px-4 py-2 text-sm rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Save Assessment</button>
+          <button type="submit" data-action="reject" class="px-4 py-2 text-sm rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-medium flex items-center gap-2"><i data-lucide="x-circle" class="w-4 h-4"></i> Reject Match</button>
+          <button type="submit" data-action="approve" class="px-5 py-2 text-sm rounded-lg bg-primary hover:bg-primary-dark text-white font-medium flex items-center gap-2"><i data-lucide="check" class="w-4 h-4"></i> Approve Match</button>
+        </div>
+      </form>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "suitability", title: "ประเมินความเหมาะสมของไต" });
+
+  const D = window.MOCK_DATA;
+  const donor = D.donors[0];
+  const patient = D.waitingList[0];
+
+  document.getElementById("summary-donor").innerHTML = `
+    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">ผู้บริจาค (Donor)</p>
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center" style="color:#0f766e"><i data-lucide="heart-handshake" class="w-5 h-5"></i></div>
+      <div>
+        <p class="font-bold text-slate-800">${donor.id}</p>
+        <p class="text-xs text-slate-500">${donor.type}</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 text-xs text-slate-500">
+      <p>อายุ/เพศ: <span class="text-slate-700 font-medium">${donor.age} ปี · ${donor.gender}</span></p>
+      <p>กรุ๊ปเลือด: <span class="text-slate-700 font-medium">${donor.blood}</span></p>
+      <p>HLA: <span class="text-slate-700 font-medium">${donor.hla}</span></p>
+      <p>Crossmatch: <span class="text-slate-700 font-medium">${donor.crossmatch}</span></p>
+      <p>PRA: <span class="text-slate-700 font-medium">${donor.pra}</span></p>
+      <p>Cold Ischemic: <span class="text-slate-700 font-medium">${donor.coldIschemic}</span></p>
+    </div>`;
+
+  document.getElementById("summary-patient").innerHTML = `
+    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">ผู้ป่วยที่กำลังประเมิน</p>
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">${patient.name.slice(0, 2)}</div>
+      <div>
+        <p class="font-bold text-slate-800">${patient.name}</p>
+        <p class="text-xs text-slate-500">${patient.hn}</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 text-xs text-slate-500">
+      <p>กรุ๊ปเลือด: <span class="text-slate-700 font-medium">${patient.blood}</span></p>
+      <p>สถานะ: <span class="text-slate-700 font-medium">${patient.stage}</span></p>
+      <p>วันที่ลงทะเบียน: <span class="text-slate-700 font-medium">${patient.registerDate}</span></p>
+      <p>รอคิวมาแล้ว: <span class="text-slate-700 font-medium">${patient.duration}</span></p>
+    </div>`;
+
+  // Assessment result cards (reusable Clinical Assessment Card component)
+  document.getElementById("assessment-options").innerHTML = [
+    { value: "suitable", title: "Suitable", desc: "เหมาะสมสำหรับการปลูกถ่าย" },
+    { value: "risk", title: "Suitable with Risk", desc: "เหมาะสมแต่มีความเสี่ยง", iconName: "alert-triangle" },
+    { value: "not-suitable", title: "Not Suitable", desc: "ไม่เหมาะสมสำหรับการปลูกถ่าย" },
+  ]
+    .map((c) => Components.clinicalAssessmentCard(c))
+    .join("");
+
+  // Risk checklist — 8 รายการตามเกณฑ์ทางคลินิก
+  const RISK_ITEMS = [
+    "Blood Group Mismatch",
+    "HLA Failure",
+    "Positive Crossmatch",
+    "Poor Kidney Quality",
+    "Long Cold Ischemic Time",
+    "Donor Infection",
+    "Recipient Infection",
+    "Medical Contraindication",
+  ];
+  document.getElementById("risk-checklist").innerHTML = RISK_ITEMS.map(
+    (label) => `
+    <label class="flex items-center gap-2.5 text-sm rounded-lg border border-slate-200 p-3 cursor-pointer hover:bg-slate-50">
+      <input type="checkbox" value="${label}" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" /> ${label}
+    </label>`
+  ).join("");
+
+  const cards = document.querySelectorAll(".assessment-card");
+  const reasonSection = document.getElementById("reason-section");
+  cards.forEach((card) => {
+    card.addEventListener("click", () => {
+      cards.forEach((c) => c.classList.remove("selected"));
+      card.classList.add("selected");
+      card.querySelector("input").checked = true;
+      const val = card.getAttribute("data-value");
+      reasonSection.classList.toggle("hidden", val === "suitable");
+    });
+  });
+
+  const actionMsg = {
+    save: { text: "บันทึกผลการประเมินเป็นฉบับร่างเรียบร้อยแล้ว", type: "info", redirect: false },
+    approve: { text: "อนุมัติการจับคู่เรียบร้อยแล้ว เตรียมเข้าสู่ขั้นตอนผ่าตัด", type: "success", redirect: true },
+    reject: { text: "ปฏิเสธการจับคู่เรียบร้อยแล้ว", type: "error", redirect: true },
+  };
+  document.querySelectorAll("#suitability-form button[data-action]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const action = btn.getAttribute("data-action");
+      if (action !== "save" && !document.querySelector('input[name="assessment"]:checked')) {
+        UI.toast("กรุณาเลือกผลการประเมินก่อนดำเนินการ", "error");
+        return;
+      }
+      const m = actionMsg[action];
+      UI.toast(m.text, m.type);
+      if (m.redirect) setTimeout(() => (window.location.href = "kidney-matching.html"), 800);
+    });
+  });
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

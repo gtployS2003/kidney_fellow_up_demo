@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ติดตามแบบสอบถาม | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-5 max-w-[1600px] w-full mx-auto">
+
+      <div class="fade-in">
+        <h2 class="text-xl font-bold text-slate-800">ติดตามแบบสอบถามอาการผู้ป่วย</h2>
+        <p class="text-sm text-slate-500 mt-0.5">สถานะการตอบแบบสอบถามอาการหลังปลูกถ่ายไตของผู้ป่วยแต่ละราย</p>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div class="card p-4 fade-in fade-in-delay-1">
+          <div class="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+          <p class="text-2xl font-bold text-slate-800 mt-3" id="cnt-completed">-</p>
+          <p class="text-xs text-slate-500 mt-0.5">Completed</p>
+        </div>
+        <div class="card p-4 fade-in fade-in-delay-2">
+          <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center"><i data-lucide="clock" class="w-5 h-5"></i></div>
+          <p class="text-2xl font-bold text-slate-800 mt-3" id="cnt-pending">-</p>
+          <p class="text-xs text-slate-500 mt-0.5">Pending</p>
+        </div>
+        <div class="card p-4 fade-in fade-in-delay-3">
+          <div class="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center"><i data-lucide="alert-octagon" class="w-5 h-5"></i></div>
+          <p class="text-2xl font-bold text-slate-800 mt-3" id="cnt-highrisk">-</p>
+          <p class="text-xs text-slate-500 mt-0.5">High Risk</p>
+        </div>
+      </div>
+
+      <div class="card p-5 fade-in">
+        <div class="overflow-x-auto">
+          <table class="table-modern">
+            <thead><tr><th>Patient</th><th>HN</th><th>Date</th><th>Status</th><th>Risk</th><th>Action</th></tr></thead>
+            <tbody id="quest-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Abnormal Response Panel -->
+      <div class="card p-5 fade-in">
+        <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="alert-octagon" class="w-4 h-4 text-red-500"></i> Abnormal Response Panel</h3>
+        <div id="abnormal-panel" class="space-y-3"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "nurse", active: "questionnaire", title: "ติดตามแบบสอบถาม" });
+
+  const D = window.MOCK_DATA;
+  const statusMap = {
+    completed: '<span class="badge badge-green"><i data-lucide="check" class="w-3 h-3"></i> Completed</span>',
+    pending: '<span class="badge badge-amber"><i data-lucide="clock" class="w-3 h-3"></i> Pending</span>',
+    highrisk: '<span class="badge badge-red"><i data-lucide="alert-triangle" class="w-3 h-3"></i> High Risk</span>',
+  };
+  const riskBadge = { low: '<span class="badge badge-green">Low</span>', medium: '<span class="badge badge-amber">Medium</span>', high: '<span class="badge badge-red">High</span>' };
+
+  document.getElementById("cnt-completed").textContent = D.questionnaireStatus.filter((q) => q.status === "completed").length;
+  document.getElementById("cnt-pending").textContent = D.questionnaireStatus.filter((q) => q.status === "pending").length;
+  document.getElementById("cnt-highrisk").textContent = D.questionnaireStatus.filter((q) => q.status === "highrisk").length;
+
+  document.getElementById("quest-body").innerHTML = D.questionnaireStatus
+    .map(
+      (q) => `
+    <tr>
+      <td class="font-medium text-slate-700">${q.name}</td>
+      <td class="text-slate-500">${q.hn}</td>
+      <td class="text-slate-500">${q.date}</td>
+      <td>${statusMap[q.status]}</td>
+      <td>${riskBadge[q.risk]}</td>
+      <td>
+        <div class="flex items-center gap-1.5">
+          <a href="../doctor/patient-summary.html" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="ดูรายละเอียด"><i data-lucide="eye" class="w-4 h-4"></i></a>
+          <a href="nurse-followup.html" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="ติดตาม"><i data-lucide="phone-call" class="w-4 h-4"></i></a>
+        </div>
+      </td>
+    </tr>`
+    )
+    .join("");
+
+  // Abnormal Response Panel — ผู้ป่วยที่ตอบแบบสอบถามพบอาการผิดปกติ
+  const abnormal = D.questionnaireStatus.filter((q) => q.symptoms && q.symptoms.length);
+  document.getElementById("abnormal-panel").innerHTML =
+    abnormal
+      .map(
+        (q) => `
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-red-100 bg-red-50/60">
+      <div class="flex items-start gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xs font-bold shrink-0">${q.name.slice(0, 2)}</div>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold text-slate-800">${q.name} <span class="font-normal text-slate-500">· ${q.hn}</span></p>
+          <div class="flex flex-wrap gap-1.5 mt-1.5">
+            ${q.symptoms.map((s) => `<span class="badge badge-red">${s}</span>`).join("")}
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1.5">ตอบแบบสอบถามเมื่อ ${q.date}</p>
+        </div>
+      </div>
+      <button data-notify-doctor="${q.hn}" class="shrink-0 self-start sm:self-center flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-xs font-semibold transition"><i data-lucide="send" class="w-3.5 h-3.5"></i> Notify Doctor</button>
+    </div>`
+      )
+      .join("") || `<p class="text-sm text-slate-400 text-center py-8">ไม่พบผู้ป่วยที่ตอบแบบสอบถามผิดปกติ</p>`;
+
+  document.querySelectorAll("[data-notify-doctor]").forEach((btn) => {
+    btn.addEventListener("click", () => UI.toast(`แจ้งเตือนแพทย์สำหรับ ${btn.getAttribute("data-notify-doctor")} เรียบร้อยแล้ว`, "success"));
+  });
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

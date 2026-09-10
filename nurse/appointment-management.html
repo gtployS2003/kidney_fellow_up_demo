@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>จัดการนัดหมาย | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-5 max-w-[1600px] w-full mx-auto">
+
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">จัดการนัดหมาย</h2>
+          <p class="text-sm text-slate-500 mt-0.5">ตารางนัดหมายผู้ป่วยปลูกถ่ายไต เดือนกันยายน 2569</p>
+        </div>
+        <button data-open-modal="modal-create-appt" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i data-lucide="calendar-plus" class="w-4 h-4"></i> สร้างนัดหมายใหม่</button>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-4">
+        <!-- Calendar -->
+        <div class="card p-5 fade-in">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-slate-800 text-sm" id="calendar-title">กันยายน 2569</h3>
+            <div class="flex gap-1">
+              <button class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="chevron-left" class="w-4 h-4 text-slate-400"></i></button>
+              <button class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i></button>
+            </div>
+          </div>
+          <div class="flex gap-1.5 mb-3" id="calendar-view-tabs">
+            <button data-view="day" class="chip-btn px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 text-slate-600">Day</button>
+            <button data-view="week" class="chip-btn px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 text-slate-600">Week</button>
+            <button data-view="month" class="chip-btn active px-3 py-1 rounded-full text-xs font-semibold border border-primary">Month</button>
+          </div>
+
+          <!-- Month view -->
+          <div id="view-month">
+            <div class="grid grid-cols-7 gap-1 text-center text-[11px] text-slate-400 mb-1">
+              <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
+            </div>
+            <div id="mini-calendar" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
+            <div class="flex items-center gap-3 mt-3 text-[11px] text-slate-500">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary inline-block"></span> มีนัด</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span> วันนี้</span>
+            </div>
+          </div>
+
+          <!-- Week view -->
+          <div id="view-week" class="hidden">
+            <div id="week-strip" class="grid grid-cols-7 gap-1.5 text-center text-sm"></div>
+          </div>
+
+          <!-- Day view -->
+          <div id="view-day" class="hidden text-center py-6">
+            <p class="text-3xl font-bold text-primary">9</p>
+            <p class="text-xs text-slate-500 mt-1">วันอังคาร กันยายน 2569</p>
+            <p class="text-xs text-slate-400 mt-2" id="day-view-count"></p>
+          </div>
+        </div>
+
+        <!-- Today summary -->
+        <div class="card p-5 lg:col-span-2 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm mb-3">สรุปนัดหมายวันนี้ (9 ก.ย. 2569)</h3>
+          <div id="today-summary" class="space-y-2.5"></div>
+        </div>
+      </div>
+
+      <div class="card p-5 fade-in">
+        <div class="overflow-x-auto">
+          <table class="table-modern">
+            <thead><tr><th>Patient</th><th>Date</th><th>Time</th><th>ประเภทนัด</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="appt-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Create Appointment -->
+<div id="modal-create-appt" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg modal-panel">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800">สร้างนัดหมายใหม่</h3>
+      <button data-close-modal="modal-create-appt" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="p-5 space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">ผู้ป่วย</label>
+        <select id="create-appt-patient" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs font-medium text-slate-600 mb-1">วันที่</label><input type="date" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200" /></div>
+        <div><label class="block text-xs font-medium text-slate-600 mb-1">เวลา</label><input type="time" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200" /></div>
+      </div>
+      <div><label class="block text-xs font-medium text-slate-600 mb-1">ประเภทนัด</label>
+        <select class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200"><option>ติดตามหลังปลูกถ่าย</option><option>ตรวจ Lab ประจำเดือน</option><option>เฝ้าระวังภาวะปฏิเสธ</option></select>
+      </div>
+      <div><label class="block text-xs font-medium text-slate-600 mb-1">แพทย์</label><input type="text" value="นพ.ธนกร วัฒนสิน" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200" /></div>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-close-modal="modal-create-appt" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">ยกเลิก</button>
+      <button id="btn-save-appt" class="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary-dark">บันทึกนัดหมาย</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Reschedule -->
+<div id="modal-reschedule" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md modal-panel">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800">เลื่อนนัดหมาย</h3>
+      <button data-close-modal="modal-reschedule" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="p-5 space-y-3">
+      <div><label class="block text-xs font-medium text-slate-600 mb-1">วันที่นัดใหม่</label><input type="date" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200" /></div>
+      <div><label class="block text-xs font-medium text-slate-600 mb-1">เวลานัดใหม่</label><input type="time" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200" /></div>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-close-modal="modal-reschedule" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">ยกเลิก</button>
+      <button id="btn-save-reschedule" class="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary-dark">ยืนยันเลื่อนนัด</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Cancel -->
+<div id="modal-cancel-appt" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-sm modal-panel">
+    <div class="p-5 text-center">
+      <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3"><i data-lucide="calendar-x-2" class="w-6 h-6"></i></div>
+      <h3 class="font-semibold text-slate-800">ยืนยันยกเลิกนัดหมาย?</h3>
+      <p class="text-sm text-slate-500 mt-1">การยกเลิกนัดหมายจะแจ้งเตือนไปยังผู้ป่วยทันที</p>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-close-modal="modal-cancel-appt" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">ปิด</button>
+      <button id="btn-confirm-cancel" class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700">ยกเลิกนัดหมาย</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "nurse", active: "appointment", title: "จัดการนัดหมาย" });
+
+  const D = window.MOCK_DATA;
+  const statusBadge = { confirmed: '<span class="badge badge-green">ยืนยันแล้ว</span>', pending: '<span class="badge badge-amber">รอยืนยัน</span>', missed: '<span class="badge badge-red">ผิดนัด</span>' };
+
+  // Mini calendar (Sep 2569 starts Monday -> using 0=Sun offset; 1 ก.ย. 2569 is a Tuesday)
+  const daysInMonth = 30, startOffset = 2, todayDate = 9;
+  const apptDays = new Set(D.appointments.map((a) => parseInt(a.date)));
+  let cal = "";
+  for (let i = 0; i < startOffset; i++) cal += `<span></span>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === todayDate;
+    const hasAppt = apptDays.has(d);
+    cal += `<div class="py-1.5 rounded-lg relative ${isToday ? "bg-primary text-white font-bold" : "text-slate-600 hover:bg-slate-50"}">
+      ${d}
+      ${hasAppt && !isToday ? '<span class="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary"></span>' : ""}
+    </div>`;
+  }
+  document.getElementById("mini-calendar").innerHTML = cal;
+
+  document.getElementById("today-summary").innerHTML = D.appointments
+    .filter((a) => a.date === "09 ก.ย. 2569")
+    .map(
+      (a) => `
+    <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">${a.time}</div>
+        <div><p class="text-sm font-medium text-slate-800">${a.patient}</p><p class="text-xs text-slate-500">${a.hn} · ${a.type}</p></div>
+      </div>
+      ${statusBadge[a.status]}
+    </div>`
+    )
+    .join("") || `<p class="text-sm text-slate-400">ไม่มีนัดหมายวันนี้</p>`;
+
+  document.getElementById("appt-body").innerHTML = D.appointments
+    .map(
+      (a) => `
+    <tr>
+      <td class="font-medium text-slate-700">${a.patient}<br/><span class="text-xs text-slate-400 font-normal">${a.hn}</span></td>
+      <td>${a.date}</td><td>${a.time}</td><td>${a.type}</td><td>${statusBadge[a.status]}</td>
+      <td>
+        <div class="flex items-center gap-1.5">
+          ${a.status === "pending" ? `<button data-confirm="${a.id}" class="p-1.5 rounded-lg hover:bg-slate-100 text-green-600" title="ยืนยันนัดหมาย"><i data-lucide="check-circle-2" class="w-4 h-4"></i></button>` : ""}
+          <button data-line-reminder="${a.id}" class="p-1.5 rounded-lg hover:bg-slate-100 text-teal-600" title="ส่งแจ้งเตือนทาง LINE"><i data-lucide="send" class="w-4 h-4"></i></button>
+          <button data-open-modal="modal-reschedule" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="เลื่อนนัด"><i data-lucide="calendar-clock" class="w-4 h-4"></i></button>
+          <button data-open-modal="modal-cancel-appt" class="p-1.5 rounded-lg hover:bg-slate-100 text-red-500" title="ยกเลิก"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
+        </div>
+      </td>
+    </tr>`
+    )
+    .join("");
+
+  document.querySelectorAll("[data-confirm]").forEach((btn) => {
+    btn.addEventListener("click", () => UI.toast("ยืนยันนัดหมายเรียบร้อยแล้ว", "success"));
+  });
+  document.querySelectorAll("[data-line-reminder]").forEach((btn) => {
+    btn.addEventListener("click", () => UI.toast("ส่งการแจ้งเตือนทาง LINE เรียบร้อยแล้ว", "success"));
+  });
+
+  // View toggle: Day / Week / Month
+  const daysShort = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+  function renderWeekStrip() {
+    // สัปดาห์ของวันที่ 9 (อังคาร) คือ 7-13 ก.ย. 2569 (เริ่มอาทิตย์ที่ 7)
+    const weekStart = 7;
+    let html = "";
+    for (let i = 0; i < 7; i++) {
+      const d = weekStart + i;
+      const isToday = d === todayDate;
+      const count = D.appointments.filter((a) => parseInt(a.date) === d).length;
+      html += `
+      <div class="rounded-lg p-2 ${isToday ? "bg-primary text-white" : "bg-slate-50 text-slate-700"}">
+        <p class="text-[10px] ${isToday ? "text-blue-100" : "text-slate-400"}">${daysShort[i]}</p>
+        <p class="font-bold mt-0.5">${d}</p>
+        ${count ? `<p class="text-[10px] mt-1 ${isToday ? "text-blue-100" : "text-primary"}">${count} นัด</p>` : ""}
+      </div>`;
+    }
+    document.getElementById("week-strip").innerHTML = html;
+  }
+  renderWeekStrip();
+  document.getElementById("day-view-count").textContent = `${D.appointments.filter((a) => a.date === "09 ก.ย. 2569").length} นัดหมายวันนี้`;
+
+  document.querySelectorAll("#calendar-view-tabs [data-view]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#calendar-view-tabs [data-view]").forEach((b) => {
+        b.classList.remove("active", "border-primary");
+        b.classList.add("border-slate-200");
+      });
+      btn.classList.add("active", "border-primary");
+      btn.classList.remove("border-slate-200");
+      const view = btn.getAttribute("data-view");
+      document.getElementById("view-month").classList.toggle("hidden", view !== "month");
+      document.getElementById("view-week").classList.toggle("hidden", view !== "week");
+      document.getElementById("view-day").classList.toggle("hidden", view !== "day");
+    });
+  });
+
+  document.getElementById("create-appt-patient").innerHTML = D.patients.map((p) => `<option>${p.name} (${p.hn})</option>`).join("");
+
+  document.getElementById("btn-save-appt").addEventListener("click", () => {
+    UI.closeModal("modal-create-appt");
+    UI.toast("สร้างนัดหมายใหม่สำเร็จ");
+  });
+  document.getElementById("btn-save-reschedule").addEventListener("click", () => {
+    UI.closeModal("modal-reschedule");
+    UI.toast("เลื่อนนัดหมายสำเร็จ", "info");
+  });
+  document.getElementById("btn-confirm-cancel").addEventListener("click", () => {
+    UI.closeModal("modal-cancel-appt");
+    UI.toast("ยกเลิกนัดหมายเรียบร้อยแล้ว", "error");
+  });
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

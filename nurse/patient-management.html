@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ผู้ป่วยในความดูแล | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-5 max-w-[1600px] w-full mx-auto">
+
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Patient Follow-up List</h2>
+          <p class="text-sm text-slate-500 mt-0.5">รายชื่อผู้ป่วยปลูกถ่ายไตที่อยู่ในการติดตามของทีมพยาบาล</p>
+        </div>
+      </div>
+
+      <!-- Search + Filter -->
+      <div class="card p-4 fade-in">
+        <div class="flex flex-col lg:flex-row gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input id="search-input" type="text" placeholder="ค้นหาชื่อผู้ป่วย หรือ HN..." class="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+          </div>
+          <select id="filter-followup" class="px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-600"><option value="">Follow-up Status ทั้งหมด</option><option value="ติดตามปกติ">ติดตามปกติ</option><option value="เฝ้าระวังใกล้ชิด">เฝ้าระวังใกล้ชิด</option></select>
+          <select id="filter-risk" class="px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-600"><option value="">Risk Level ทั้งหมด</option><option value="low">Low Risk</option><option value="medium">Medium Risk</option><option value="high">High Risk</option></select>
+          <select id="filter-contact" class="px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-600"><option value="">Last Contact ทั้งหมด</option><option value="recent">ติดต่อภายใน 7 วัน</option><option value="stale">ยังไม่ติดต่อเกิน 7 วัน</option></select>
+          <input id="filter-appt-date" type="date" class="px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-50 text-slate-600" title="Appointment Date" />
+        </div>
+      </div>
+
+      <div class="card p-5 fade-in">
+        <div class="overflow-x-auto">
+          <table class="table-modern">
+            <thead><tr><th>HN</th><th>Patient</th><th>Risk</th><th>Last Contact</th><th>Next Appointment</th><th>Questionnaire</th><th>Medication</th><th>Action</th></tr></thead>
+            <tbody id="patients-body"></tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between mt-4 text-sm text-slate-500">
+          <p>แสดง 1-12 จาก 12 รายการ</p>
+          <div class="flex items-center gap-1">
+            <button class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <button class="px-3 py-1.5 rounded-lg bg-primary text-white">1</button>
+            <button class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "nurse", active: "patients", title: "ผู้ป่วยในความดูแล" });
+
+  const D = window.MOCK_DATA;
+  const riskBadge = { low: '<span class="badge badge-green">Low Risk</span>', medium: '<span class="badge badge-amber">Medium Risk</span>', high: '<span class="badge badge-red">High Risk</span>' };
+  const questStatusBadge = { completed: '<span class="badge badge-green">Completed</span>', pending: '<span class="badge badge-amber">Pending</span>', highrisk: '<span class="badge badge-red">Abnormal</span>' };
+  const lastContactMap = { "HN-102345": "07 ก.ย. 2569", "HN-102346": "05 ก.ย. 2569", "HN-102347": "02 ก.ย. 2569", "HN-102348": "01 ก.ย. 2569", "HN-102350": "31 ส.ค. 2569", "HN-102353": "28 ส.ค. 2569" };
+
+  function medicationBadge(hn) {
+    const c = D.compliance.find((x) => x.hn === hn);
+    if (!c) return '<span class="badge badge-slate">N/A</span>';
+    if (c.percent >= 90) return `<span class="badge badge-green">${c.percent}%</span>`;
+    if (c.percent >= 70) return `<span class="badge badge-amber">${c.percent}%</span>`;
+    return `<span class="badge badge-red">${c.percent}%</span>`;
+  }
+
+  function renderPatients(list) {
+    if (!list.length) {
+      document.getElementById("patients-body").innerHTML = `<tr><td colspan="8">${Components.emptyState({ icon: "search-x", title: "ไม่พบผู้ป่วยที่ตรงกับเงื่อนไข", desc: "ลองปรับคำค้นหาหรือตัวกรองใหม่อีกครั้ง" })}</td></tr>`;
+      lucide.createIcons();
+      return;
+    }
+    document.getElementById("patients-body").innerHTML = list
+      .map((p) => {
+        const nextAppt = D.appointments.find((a) => a.hn === p.hn);
+        const quest = D.questionnaireStatus.find((q) => q.hn === p.hn);
+        return `
+      <tr>
+        <td class="font-medium text-slate-700">${p.hn}</td>
+        <td>
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold shrink-0">${p.name.slice(0, 2)}</span>
+            <div>
+              <p class="font-medium text-slate-800">${p.name}</p>
+              <p class="text-xs text-slate-400">${p.age} ปี</p>
+            </div>
+          </div>
+        </td>
+        <td>${riskBadge[p.risk]}</td>
+        <td class="text-slate-500">${lastContactMap[p.hn] || "-"}</td>
+        <td class="text-slate-500">${nextAppt ? `${nextAppt.date} · ${nextAppt.time}` : "-"}</td>
+        <td>${quest ? questStatusBadge[quest.status] : '<span class="badge badge-slate">N/A</span>'}</td>
+        <td>${medicationBadge(p.hn)}</td>
+        <td>
+          <div class="flex items-center gap-1.5">
+            <a href="../doctor/patient-summary.html" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="ดูรายละเอียด"><i data-lucide="eye" class="w-4 h-4"></i></a>
+            <a href="nurse-followup.html" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="บันทึกติดตาม"><i data-lucide="phone-call" class="w-4 h-4"></i></a>
+            <a href="chat-system.html" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="แชท"><i data-lucide="message-circle" class="w-4 h-4"></i></a>
+          </div>
+        </td>
+      </tr>`;
+      })
+      .join("");
+    lucide.createIcons();
+  }
+
+  function applyFilters() {
+    const q = document.getElementById("search-input").value.trim().toLowerCase();
+    const followup = document.getElementById("filter-followup").value;
+    const risk = document.getElementById("filter-risk").value;
+    const contact = document.getElementById("filter-contact").value;
+    const filtered = D.patients.filter((p) => {
+      if (q && !p.name.toLowerCase().includes(q) && !p.hn.toLowerCase().includes(q)) return false;
+      if (followup && p.status !== followup) return false;
+      if (risk && p.risk !== risk) return false;
+      if (contact) {
+        const isRecent = !!lastContactMap[p.hn];
+        if (contact === "recent" && !isRecent) return false;
+        if (contact === "stale" && isRecent) return false;
+      }
+      return true;
+    });
+    renderPatients(filtered);
+  }
+
+  ["search-input", "filter-followup", "filter-risk", "filter-contact"].forEach((id) => {
+    document.getElementById(id).addEventListener("input", applyFilters);
+    document.getElementById(id).addEventListener("change", applyFilters);
+  });
+
+  renderPatients(D.patients);
+</script>
+</body>
+</html>

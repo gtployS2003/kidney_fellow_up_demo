@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(date -j -f \"%Y-%m-%d\" \"2026-09-01\" \"+%A\")",
+      "Bash(python3 -c \"import datetime; print\\(datetime.date\\(2026,9,1\\).strftime\\('%A'\\)\\)\")",
+      "Bash(mkdir -p /tmp/kt_shots)",
+      "Bash(jobs)",
+      "Bash(git add *)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp/kt_shots"
+    ]
+  }
+}

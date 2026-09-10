@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>จัดการผู้ป่วย | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">จัดการผู้ป่วย</h2>
+          <p class="text-sm text-slate-500 mt-0.5">รายชื่อผู้ป่วยปลูกถ่ายไตทั้งหมดในความดูแล</p>
+        </div>
+        <a href="patient-registration.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition shadow-sm shadow-blue-200">
+          <i data-lucide="plus" class="w-4 h-4"></i> เพิ่มผู้ป่วยใหม่
+        </a>
+      </div>
+
+      <!-- Filters -->
+      <div class="card p-4 fade-in fade-in-delay-1">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div class="md:col-span-2 relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input id="search-input" type="text" placeholder="ค้นหาชื่อผู้ป่วย หรือ HN..." class="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+          </div>
+          <select class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white text-slate-600">
+            <option>โรงพยาบาลทั้งหมด</option>
+            <option>รพ.ศิริราช</option>
+            <option>รพ.รามาธิบดี</option>
+            <option>รพ.จุฬาลงกรณ์</option>
+          </select>
+          <select class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white text-slate-600">
+            <option>สถานะทั้งหมด</option>
+            <option>ติดตามปกติ</option>
+            <option>เฝ้าระวังใกล้ชิด</option>
+          </select>
+          <select class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white text-slate-600">
+            <option>Risk ทั้งหมด</option>
+            <option>Low Risk</option>
+            <option>Medium Risk</option>
+            <option>High Risk</option>
+          </select>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+          <span class="text-xs font-medium text-slate-500 flex items-center gap-1.5"><i data-lucide="filter" class="w-3.5 h-3.5"></i> ปลูกถ่ายปี:</span>
+          <select class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white text-slate-600">
+            <option>ทั้งหมด</option>
+            <option>2564</option>
+            <option>2565</option>
+            <option>2566</option>
+            <option>2567</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card fade-in fade-in-delay-2 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <h3 class="font-semibold text-slate-800 text-sm">รายชื่อผู้ป่วย</h3>
+          <span id="row-count" class="text-xs text-slate-400"></span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="table-modern">
+            <thead>
+              <tr>
+                <th>HN</th>
+                <th>ชื่อ-สกุล</th>
+                <th>อายุ</th>
+                <th>กรุ๊ปเลือด</th>
+                <th>วันที่ปลูกถ่าย</th>
+                <th>สถานะ</th>
+                <th>Risk</th>
+                <th>ตรวจล่าสุด</th>
+                <th class="text-right">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="patient-tbody"></tbody>
+          </table>
+        </div>
+        <!-- Pagination (display only) -->
+        <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-t border-slate-100">
+          <p class="text-xs text-slate-500">แสดง 1-12 จาก 12 รายการ</p>
+          <div class="flex items-center gap-1.5">
+            <button class="w-8 h-8 rounded-lg border border-slate-200 text-slate-400 flex items-center justify-center" disabled><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <button class="w-8 h-8 rounded-lg bg-primary text-white text-sm font-semibold flex items-center justify-center">1</button>
+            <button class="w-8 h-8 rounded-lg border border-slate-200 text-slate-400 flex items-center justify-center" disabled><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "patients", title: "จัดการผู้ป่วย" });
+
+  const D = window.MOCK_DATA;
+  const riskBadge = { low: '<span class="badge badge-green">Low Risk</span>', medium: '<span class="badge badge-amber">Medium Risk</span>', high: '<span class="badge badge-red">High Risk</span>' };
+  const statusBadge = { "ติดตามปกติ": '<span class="badge badge-green">ติดตามปกติ</span>', "เฝ้าระวังใกล้ชิด": '<span class="badge badge-red">เฝ้าระวังใกล้ชิด</span>' };
+
+  function renderPatients(list) {
+    if (!list.length) {
+      document.getElementById("patient-tbody").innerHTML = `<tr><td colspan="9">${Components.emptyState({ icon: "search-x", title: "ไม่พบผู้ป่วยที่ตรงกับเงื่อนไข", desc: "ลองปรับคำค้นหาใหม่อีกครั้ง" })}</td></tr>`;
+      document.getElementById("row-count").textContent = "0 รายการ";
+      lucide.createIcons();
+      return;
+    }
+    document.getElementById("patient-tbody").innerHTML = list
+      .map(
+        (p) => `
+      <tr>
+        <td class="font-medium text-slate-700">${p.hn}</td>
+        <td>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-blue-100 text-primary flex items-center justify-center text-[11px] font-bold shrink-0">${p.name.slice(0, 2)}</div>
+            <div>
+              <p class="font-medium text-slate-800">${p.name}</p>
+              <p class="text-xs text-slate-400">${p.hospital}</p>
+            </div>
+          </div>
+        </td>
+        <td>${p.age} ปี</td>
+        <td>${p.blood}</td>
+        <td>${p.transplantDate}</td>
+        <td>${statusBadge[p.status] || `<span class="badge badge-slate">${p.status}</span>`}</td>
+        <td>${riskBadge[p.risk]}</td>
+        <td class="text-slate-500">${p.lastVisit}</td>
+        <td class="text-right">
+          <div class="flex items-center justify-end gap-1.5">
+            <a href="patient-summary.html" title="ดูรายละเอียด" class="w-8 h-8 rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-primary hover:text-primary text-slate-500 flex items-center justify-center transition"><i data-lucide="eye" class="w-4 h-4"></i></a>
+            <button title="แก้ไขข้อมูล" data-edit-hn="${p.hn}" class="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 flex items-center justify-center transition"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+          </div>
+        </td>
+      </tr>`
+      )
+      .join("");
+    document.getElementById("row-count").textContent = `${list.length} รายการ`;
+    lucide.createIcons();
+    document.querySelectorAll("[data-edit-hn]").forEach((btn) => {
+      btn.addEventListener("click", () => UI.toast("ฟีเจอร์แก้ไขข้อมูลอยู่ระหว่างพัฒนา", "info"));
+    });
+  }
+
+  renderPatients(D.patients);
+
+  document.getElementById("search-input").addEventListener("input", (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    const filtered = D.patients.filter((p) => p.name.toLowerCase().includes(q) || p.hn.toLowerCase().includes(q));
+    renderPatients(filtered);
+  });
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

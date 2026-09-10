@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>จัดการยากดภูมิคุ้มกัน | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1600px] w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">จัดการยากดภูมิคุ้มกัน</h2>
+          <p class="text-sm text-slate-500 mt-0.5">นายสมชาย ใจดี · HN-102345 · แผนการรักษาปัจจุบัน</p>
+        </div>
+        <div class="flex gap-2">
+          <button data-open-modal="modal-add-med" class="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-medium transition"><i data-lucide="plus" class="w-4 h-4"></i> เพิ่มยาใหม่</button>
+        </div>
+      </div>
+
+      <!-- Current medication table -->
+      <div class="card p-5 fade-in">
+        <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="pill" class="w-4 h-4 text-primary"></i> รายการยาปัจจุบัน</h3>
+        <div class="overflow-x-auto">
+          <table class="table-modern">
+            <thead>
+              <tr>
+                <th>ชื่อยา</th>
+                <th>ขนาดยา</th>
+                <th>ความถี่</th>
+                <th>วันเริ่มยา</th>
+                <th>สถานะ</th>
+                <th class="text-right">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="med-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Dose change history timeline -->
+      <div class="card p-5 fade-in">
+        <h3 class="font-semibold text-slate-800 text-sm mb-5 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-primary"></i> ประวัติการปรับเปลี่ยนขนาดยา (Dose Change History)</h3>
+        <div id="dose-timeline" class="timeline-line space-y-6 pb-1"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Add medication -->
+<div id="modal-add-med" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg modal-panel">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800">เพิ่มยาใหม่</h3>
+      <button data-close-modal="modal-add-med" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">ชื่อยา</label>
+        <input type="text" placeholder="เช่น Tacrolimus (Prograf)" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">ขนาดยา</label>
+          <input type="text" placeholder="เช่น 2 mg" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">ความถี่</label>
+          <input type="text" placeholder="เช่น เช้า-เย็น หลังอาหาร" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">วันที่เริ่มยา</label>
+        <input type="date" value="2026-09-09" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+      </div>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-close-modal="modal-add-med" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">ยกเลิก</button>
+      <button id="btn-save-add-med" class="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary-dark">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Change dose -->
+<div id="modal-change-dose" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg modal-panel">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800">ปรับขนาดยา</h3>
+      <button data-close-modal="modal-change-dose" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div class="rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
+        <p class="text-slate-500 text-xs">ยาที่เลือก</p>
+        <p id="change-dose-drug-name" class="font-semibold text-slate-800">-</p>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">ขนาดยาเดิม</label>
+          <input id="change-dose-old" type="text" disabled class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 bg-slate-100 text-slate-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">ขนาดยาใหม่</label>
+          <input id="change-dose-new" type="text" placeholder="เช่น 1.5 mg" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">เหตุผลการปรับยา</label>
+        <textarea rows="2" placeholder="เช่น ระดับยาในเลือดสูงกว่าเกณฑ์" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition"></textarea>
+      </div>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-close-modal="modal-change-dose" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">ยกเลิก</button>
+      <button id="btn-save-change-dose" class="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary-dark">บันทึกการปรับยา</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Change medication -->
+<div id="modal-change-med" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg modal-panel">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800">เปลี่ยนยา</h3>
+      <button data-close-modal="modal-change-med" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div class="rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
+        <p class="text-slate-500 text-xs">ยาเดิม</p>
+        <p id="change-med-old-name" class="font-semibold text-slate-800">-</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">ยาใหม่ที่ต้องการเปลี่ยน</label>
+        <input id="change-med-new-name" type="text" placeholder="เช่น Cyclosporine" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">ขนาดยา</label>
+          <input type="text" placeholder="เช่น 100 mg" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">ความถี่</label>
+          <input type="text" placeholder="เช่น วันละ 2 ครั้ง" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">เหตุผลการเปลี่ยนยา</label>
+        <textarea rows="2" placeholder="เช่น แพ้ยาเดิม / ไม่ตอบสนองต่อการรักษา" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition"></textarea>
+      </div>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-close-modal="modal-change-med" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">ยกเลิก</button>
+      <button id="btn-save-change-med" class="px-4 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary-dark">บันทึกการเปลี่ยนยา</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Stop drug -->
+<div id="modal-stop-drug" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-md modal-panel">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <h3 class="font-semibold text-slate-800">ยืนยันการหยุดยา</h3>
+      <button data-close-modal="modal-stop-drug" class="p-1.5 rounded-lg hover:bg-slate-100"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="p-5 space-y-3">
+      <div class="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-100 p-3">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+        <p class="text-sm text-amber-800">ต้องการหยุดยา <span id="stop-drug-name" class="font-semibold">-</span> ใช่หรือไม่? การกระทำนี้จะถูกบันทึกในประวัติการรักษา</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">เหตุผลการหยุดยา</label>
+        <textarea rows="2" placeholder="เช่น ครบระยะเวลาการรักษา" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition"></textarea>
+      </div>
+    </div>
+    <div class="px-5 py-4 border-t border-slate-100 flex justify-end gap-2">
+      <button data-close-modal="modal-stop-drug" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">ยกเลิก</button>
+      <button id="btn-confirm-stop-drug" class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700">ยืนยันหยุดยา</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "medication", title: "จัดการยากดภูมิคุ้มกัน" });
+
+  const D = window.MOCK_DATA;
+  const meds = D.medications.slice();
+
+  function renderMeds() {
+    document.getElementById("med-tbody").innerHTML = meds
+      .map(
+        (m, i) => `
+      <tr>
+        <td class="font-medium text-slate-800">${m.drug}</td>
+        <td>${m.dose}</td>
+        <td>${m.frequency}</td>
+        <td>${m.start}</td>
+        <td><span class="badge ${m.status === "active" ? "badge-green" : "badge-slate"}">${m.status === "active" ? "กำลังใช้ยา" : "หยุดยาแล้ว"}</span></td>
+        <td class="text-right whitespace-nowrap">
+          ${
+            m.status === "active"
+              ? `<button data-change-dose="${i}" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 mr-1.5"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 inline -mt-0.5"></i> ปรับขนาดยา</button>
+                 <button data-change-med="${i}" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 mr-1.5"><i data-lucide="repeat" class="w-3.5 h-3.5 inline -mt-0.5"></i> เปลี่ยนยา</button>
+                 <button data-stop-drug="${i}" class="px-2.5 py-1.5 rounded-lg border border-red-200 text-xs font-medium text-red-600 hover:bg-red-50"><i data-lucide="circle-x" class="w-3.5 h-3.5 inline -mt-0.5"></i> หยุดยา</button>`
+              : `<span class="text-xs text-slate-400">ไม่มีการดำเนินการ</span>`
+          }
+        </td>
+      </tr>`
+      )
+      .join("");
+    lucide.createIcons();
+
+    document.querySelectorAll("[data-change-dose]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const m = meds[+btn.getAttribute("data-change-dose")];
+        document.getElementById("change-dose-drug-name").textContent = m.drug;
+        document.getElementById("change-dose-old").value = m.dose;
+        document.getElementById("change-dose-new").value = "";
+        UI.openModal("modal-change-dose");
+      });
+    });
+    document.querySelectorAll("[data-stop-drug]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const m = meds[+btn.getAttribute("data-stop-drug")];
+        document.getElementById("stop-drug-name").textContent = m.drug;
+        UI.openModal("modal-stop-drug");
+      });
+    });
+    document.querySelectorAll("[data-change-med]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const m = meds[+btn.getAttribute("data-change-med")];
+        document.getElementById("change-med-old-name").textContent = `${m.drug} · ${m.dose}`;
+        document.getElementById("change-med-new-name").value = "";
+        UI.openModal("modal-change-med");
+      });
+    });
+  }
+  renderMeds();
+
+  document.getElementById("btn-save-add-med").addEventListener("click", () => {
+    UI.closeModal("modal-add-med");
+    UI.toast("เพิ่มยาใหม่เรียบร้อยแล้ว", "success");
+  });
+  document.getElementById("btn-save-change-dose").addEventListener("click", () => {
+    UI.closeModal("modal-change-dose");
+    UI.toast("บันทึกการปรับขนาดยาเรียบร้อยแล้ว", "success");
+  });
+  document.getElementById("btn-confirm-stop-drug").addEventListener("click", () => {
+    UI.closeModal("modal-stop-drug");
+    UI.toast("บันทึกการหยุดยาเรียบร้อยแล้ว", "info");
+  });
+  document.getElementById("btn-save-change-med").addEventListener("click", () => {
+    UI.closeModal("modal-change-med");
+    UI.toast("บันทึกการเปลี่ยนยาเรียบร้อยแล้ว", "success");
+  });
+
+  // Dose history timeline
+  const nodeIcon = { เริ่ม: "play-circle", ปรับ: "sliders-horizontal", หยุด: "circle-x" };
+  function pickIcon(change) {
+    if (change.includes("เริ่ม")) return { icon: "play-circle", bg: "#0f766e" };
+    if (change.includes("หยุด")) return { icon: "circle-x", bg: "#dc2626" };
+    return { icon: "sliders-horizontal", bg: "#2563eb" };
+  }
+  document.getElementById("dose-timeline").innerHTML = D.doseHistory
+    .map((h) => {
+      const meta = pickIcon(h.change);
+      return `
+      <div class="relative">
+        <div class="timeline-node" style="background:${meta.bg}"><i data-lucide="${meta.icon}" class="w-4 h-4"></i></div>
+        <div class="flex flex-wrap items-center gap-2">
+          <p class="text-sm font-semibold text-slate-800">${h.drug}</p>
+          <span class="text-xs text-slate-400">${h.date}</span>
+        </div>
+        <p class="text-sm text-slate-600 mt-0.5">${h.change}</p>
+        <p class="text-xs text-slate-400 mt-0.5">โดย ${h.doctor}</p>
+      </div>`;
+    })
+    .join("");
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

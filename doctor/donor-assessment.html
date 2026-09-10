@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Committee Review | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-4xl w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Committee Review — Donor Suitability</h2>
+          <p class="text-sm text-slate-500 mt-0.5">สรุปผลความเหมาะสมโดยรวมของผู้บริจาค (Approved / Rejected) ก่อนเข้าสู่บัญชีผู้บริจาคพร้อมจับคู่</p>
+        </div>
+        <a href="donor-dashboard.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> กลับแดชบอร์ดผู้บริจาค</a>
+      </div>
+
+      <!-- Donor selector -->
+      <div class="card p-4 fade-in flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-slate-600 flex items-center gap-1.5"><i data-lucide="heart-handshake" class="w-4 h-4 text-slate-400"></i> เลือกผู้บริจาค:</span>
+        <select id="donor-select" class="px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white min-w-[220px]"></select>
+      </div>
+
+      <!-- Summary card -->
+      <div class="card fade-in overflow-hidden">
+        <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/60">
+          <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-primary"></i> ข้อมูลสรุปสำหรับการประเมิน</h3>
+        </div>
+        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+          <div class="p-5" id="summary-donor"></div>
+          <div class="p-5" id="summary-eval"></div>
+        </div>
+      </div>
+
+      <!-- Assessment form -->
+      <form id="assessment-form" class="card p-5 space-y-6 fade-in">
+        <div>
+          <h3 class="font-semibold text-slate-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="clipboard-check" class="w-4 h-4 text-primary"></i> ผลการประเมินความเหมาะสม</h3>
+          <div class="grid sm:grid-cols-3 gap-3" id="assessment-options"></div>
+        </div>
+
+        <div id="reason-section" class="hidden">
+          <h3 class="font-semibold text-slate-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="list-checks" class="w-4 h-4 text-amber-600"></i> Risk Checklist (เลือกได้มากกว่า 1 ข้อ)</h3>
+          <div id="risk-checklist" class="grid sm:grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Assessment Summary</label>
+          <textarea id="f-note" rows="3" class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" placeholder="สรุปผลการประเมินความเหมาะสมโดยรวม..."></textarea>
+        </div>
+
+        <div class="flex flex-wrap justify-end gap-2 pt-2 border-t border-slate-100">
+          <a href="donor-dashboard.html" class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">ยกเลิก</a>
+          <button type="submit" data-action="save" class="px-4 py-2 text-sm rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Save Assessment</button>
+          <button type="submit" data-action="reject" class="px-4 py-2 text-sm rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-medium flex items-center gap-2"><i data-lucide="x-circle" class="w-4 h-4"></i> Reject Donor</button>
+          <button type="submit" data-action="approve" class="px-5 py-2 text-sm rounded-lg bg-primary hover:bg-primary-dark text-white font-medium flex items-center gap-2"><i data-lucide="check" class="w-4 h-4"></i> Approve Donor</button>
+        </div>
+      </form>
+
+      <!-- Assessment history -->
+      <div class="card p-5 fade-in">
+        <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-primary"></i> ประวัติการสรุปผลความเหมาะสมทั้งหมด</h3>
+        <div class="overflow-x-auto">
+          <table class="table-modern">
+            <thead><tr><th>Donor ID</th><th>ชื่อผู้บริจาค</th><th>วันที่</th><th>แพทย์ผู้ประเมิน</th><th>ผลการประเมิน</th><th>เหตุผล</th></tr></thead>
+            <tbody id="assessment-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "donor-assessment", title: "สรุปผลความเหมาะสมผู้บริจาค" });
+
+  const D = window.MOCK_DATA;
+  const donors = D.donors;
+
+  const params = new URLSearchParams(window.location.search);
+  const initialId = params.get("id") && donors.some((d) => d.id === params.get("id")) ? params.get("id") : donors[0].id;
+
+  document.getElementById("donor-select").innerHTML = donors.map((d) => `<option value="${d.id}">${d.id} · ${d.name}</option>`).join("");
+  document.getElementById("donor-select").value = initialId;
+
+  document.getElementById("assessment-options").innerHTML = [
+    { value: "suitable", title: "Suitable", desc: "เหมาะสมสำหรับการเป็นผู้บริจาค" },
+    { value: "risk", title: "Suitable with Risk", desc: "เหมาะสมแต่มีความเสี่ยง", iconName: "alert-triangle" },
+    { value: "not-suitable", title: "Not Suitable", desc: "ไม่เหมาะสมสำหรับการบริจาค" },
+  ]
+    .map((c) => Components.clinicalAssessmentCard(c))
+    .join("");
+
+  const RISK_ITEMS = [
+    "ความดันโลหิตสูง",
+    "เบาหวานชนิดที่ 2",
+    "Positive Crossmatch",
+    "eGFR ต่ำกว่าเกณฑ์",
+    "Urine Protein ผิดปกติ",
+    "โรคติดเชื้อ",
+    "BMI สูงเกินเกณฑ์",
+    "ข้อบ่งชี้ทางจิตใจ",
+  ];
+  document.getElementById("risk-checklist").innerHTML = RISK_ITEMS.map(
+    (label) => `
+    <label class="flex items-center gap-2.5 text-sm rounded-lg border border-slate-200 p-3 cursor-pointer hover:bg-slate-50">
+      <input type="checkbox" value="${label}" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary" /> ${label}
+    </label>`
+  ).join("");
+
+  const cards = document.querySelectorAll(".assessment-card");
+  const reasonSection = document.getElementById("reason-section");
+  cards.forEach((card) => {
+    card.addEventListener("click", () => {
+      cards.forEach((c) => c.classList.remove("selected"));
+      card.classList.add("selected");
+      card.querySelector("input").checked = true;
+      const val = card.getAttribute("data-value");
+      reasonSection.classList.toggle("hidden", val === "suitable");
+    });
+  });
+
+  function renderSummary(id) {
+    const donor = donors.find((d) => d.id === id);
+    const evalRecord = D.donorEvaluations.find((e) => e.donorId === id);
+    const panel = D.donorLabPanels[id] || [];
+    const getVal = (name) => (panel.find((p) => p.name === name) || {}).value ?? "-";
+
+    document.getElementById("summary-donor").innerHTML = `
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">ผู้บริจาค (Donor)</p>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center" style="color:#0f766e"><i data-lucide="heart-handshake" class="w-5 h-5"></i></div>
+        <div>
+          <p class="font-bold text-slate-800">${donor.name}</p>
+          <p class="text-xs text-slate-500">${donor.id} · ${donor.type}</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs text-slate-500">
+        <p>อายุ/เพศ: <span class="text-slate-700 font-medium">${donor.age} ปี · ${donor.gender}</span></p>
+        <p>กรุ๊ปเลือด: <span class="text-slate-700 font-medium">${donor.blood}</span></p>
+        <p>Creatinine: <span class="text-slate-700 font-medium">${getVal("Creatinine")} mg/dL</span></p>
+        <p>eGFR: <span class="text-slate-700 font-medium">${getVal("eGFR")} mL/min/1.73m²</span></p>
+        <p>Crossmatch: <span class="text-slate-700 font-medium">${getVal("Crossmatch")}</span></p>
+        <p>PRA: <span class="text-slate-700 font-medium">${getVal("PRA")}%</span></p>
+      </div>`;
+
+    document.getElementById("summary-eval").innerHTML = evalRecord
+      ? `
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">ผลประเมินสุขภาพล่าสุด</p>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><i data-lucide="stethoscope" class="w-5 h-5"></i></div>
+        <div>
+          <p class="font-bold text-slate-800">${evalRecord.date}</p>
+          <p class="text-xs text-slate-500">โดย ${evalRecord.evaluator}</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs text-slate-500">
+        <p>ความดันโลหิต: <span class="text-slate-700 font-medium">${evalRecord.bp}</span></p>
+        <p>BMI: <span class="text-slate-700 font-medium">${evalRecord.bmi}</span></p>
+        <p>โรคประจำตัว: <span class="text-slate-700 font-medium">${evalRecord.comorbidities.length ? evalRecord.comorbidities.join(", ") : "ไม่มี"}</span></p>
+        <p>ผลการประเมิน: <span class="text-slate-700 font-medium">${{ suitable: "Suitable", risk: "Suitable with Risk", "not-suitable": "Not Suitable", pending: "Pending" }[evalRecord.result]}</span></p>
+      </div>`
+      : `<p class="text-sm text-slate-400">ยังไม่มีข้อมูลการประเมินสุขภาพสำหรับผู้บริจาครายนี้</p>`;
+
+    lucide.createIcons();
+  }
+
+  function renderHistory() {
+    const resultBadge = { suitable: '<span class="badge badge-green">Suitable</span>', risk: '<span class="badge badge-amber">Suitable with Risk</span>', "not-suitable": '<span class="badge badge-red">Not Suitable</span>' };
+    document.getElementById("assessment-tbody").innerHTML = D.donorAssessments
+      .map(
+        (a) => `
+      <tr>
+        <td class="font-medium text-slate-700">${a.donorId}</td>
+        <td>${(donors.find((d) => d.id === a.donorId) || {}).name || "-"}</td>
+        <td class="text-slate-500">${a.date}</td>
+        <td>${a.doctor}</td>
+        <td>${resultBadge[a.result] || ""}</td>
+        <td class="text-slate-500 max-w-xs truncate" title="${a.reasons.join(', ') || a.note}">${a.reasons.length ? a.reasons.join(", ") : a.note}</td>
+      </tr>`
+      )
+      .join("");
+  }
+  renderHistory();
+
+  document.getElementById("donor-select").addEventListener("change", (e) => renderSummary(e.target.value));
+  renderSummary(initialId);
+
+  const actionMsg = {
+    save: { text: "บันทึกผลการประเมินเป็นฉบับร่างเรียบร้อยแล้ว", type: "info", redirect: false },
+    approve: { text: "อนุมัติผู้บริจาคเรียบร้อยแล้ว พร้อมเข้าสู่กระบวนการจับคู่", type: "success", redirect: true },
+    reject: { text: "ปฏิเสธผู้บริจาครายนี้เรียบร้อยแล้ว", type: "error", redirect: true },
+  };
+  document.querySelectorAll("#assessment-form button[data-action]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const action = btn.getAttribute("data-action");
+      if (action !== "save" && !document.querySelector('input[name="assessment"]:checked')) {
+        UI.toast("กรุณาเลือกผลการประเมินก่อนดำเนินการ", "error");
+        return;
+      }
+      const m = actionMsg[action];
+      UI.toast(m.text, m.type);
+      if (m.redirect) setTimeout(() => (window.location.href = "donor-dashboard.html"), 800);
+    });
+  });
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

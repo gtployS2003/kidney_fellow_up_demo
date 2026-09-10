@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ติดตามหลังบริจาค | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="flex min-h-screen">
+  <div id="app-sidebar"></div>
+
+  <div class="flex-1 min-w-0 flex flex-col">
+    <div id="app-topbar"></div>
+
+    <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-5xl w-full mx-auto">
+
+      <!-- Header -->
+      <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Post-Donation Follow-up</h2>
+          <p class="text-sm text-slate-500 mt-0.5">ติดตามสุขภาพผู้บริจาคไตในระยะยาวหลังการผ่าตัด ตามมาตรฐาน 2 สัปดาห์ / 1 เดือน / 6 เดือน / 1 ปี</p>
+        </div>
+        <a href="donor-dashboard.html" class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> กลับแดชบอร์ดผู้บริจาค</a>
+      </div>
+
+      <!-- Donor selector -->
+      <div class="card p-4 fade-in flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-slate-600 flex items-center gap-1.5"><i data-lucide="heart-handshake" class="w-4 h-4 text-slate-400"></i> เลือกผู้บริจาคที่บริจาคแล้ว (Used):</span>
+        <select id="donor-select" class="px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white min-w-[220px]"></select>
+      </div>
+
+      <div id="empty-wrap" class="hidden card p-5 fade-in"></div>
+
+      <div id="content-wrap" class="space-y-6">
+        <!-- Latest vitals -->
+        <div id="vitals-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 fade-in"></div>
+
+        <div class="grid lg:grid-cols-3 gap-4">
+          <!-- Timeline -->
+          <div class="card p-5 lg:col-span-2 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-primary"></i> Follow-up Schedule</h3>
+            <div id="followup-timeline" class="timeline-line space-y-6"></div>
+          </div>
+
+          <!-- Add follow-up form -->
+          <form id="followup-form" class="card p-5 space-y-3.5 fade-in">
+            <h3 class="font-semibold text-slate-800 text-sm mb-1 flex items-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4 text-primary"></i> บันทึกการติดตามใหม่</h3>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">ช่วงเวลาติดตาม</label>
+              <input id="f-visit" type="text" placeholder="เช่น 6 เดือนหลังบริจาค" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Creatinine (mg/dL)</label>
+                <input id="f-creatinine" type="number" step="0.1" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">eGFR</label>
+                <input id="f-egfr" type="number" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">ความดันโลหิต</label>
+              <input id="f-bp" type="text" placeholder="เช่น 118/76 mmHg" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">ภาวะแทรกซ้อน</label>
+              <input id="f-complication" type="text" placeholder="เช่น ไม่มี" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Medication</label>
+              <input id="f-medication" type="text" placeholder="เช่น ไม่มี" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Quality of Life</label>
+              <input id="f-qol" type="text" placeholder="เช่น ดี (ทำกิจวัตรประจำวันได้ตามปกติ)" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">บันทึกเพิ่มเติม</label>
+              <textarea id="f-note" rows="2" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition"></textarea>
+            </div>
+            <button type="submit" class="w-full px-4 py-2.5 text-sm rounded-lg bg-primary hover:bg-primary-dark text-white font-medium flex items-center justify-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> บันทึกการติดตาม</button>
+          </form>
+        </div>
+
+        <!-- History table -->
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="list" class="w-4 h-4 text-primary"></i> ประวัติการติดตามทั้งหมด</h3>
+          <div class="overflow-x-auto">
+            <table class="table-modern">
+              <thead><tr><th>ช่วงเวลา</th><th>วันที่</th><th>Creatinine</th><th>eGFR</th><th>ความดันโลหิต</th><th>ภาวะแทรกซ้อน</th><th>Medication</th><th>Quality of Life</th><th>สถานะ</th></tr></thead>
+              <tbody id="followup-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/layout.js"></script>
+<script src="../assets/js/components.js"></script>
+<script>
+  StaffLayout.init({ role: "doctor", active: "donor-followup", title: "ติดตามหลังบริจาค" });
+
+  const D = window.MOCK_DATA;
+  const usedDonors = D.donors.filter((d) => d.status === "used");
+
+  const params = new URLSearchParams(window.location.search);
+  const initialId = params.get("id") && usedDonors.some((d) => d.id === params.get("id")) ? params.get("id") : usedDonors[0]?.id;
+
+  const emptyWrap = document.getElementById("empty-wrap");
+  const contentWrap = document.getElementById("content-wrap");
+  const donorSelect = document.getElementById("donor-select");
+
+  if (!usedDonors.length) {
+    donorSelect.innerHTML = `<option>ไม่มีผู้บริจาคที่ดำเนินการบริจาคแล้ว</option>`;
+    donorSelect.disabled = true;
+    contentWrap.classList.add("hidden");
+    emptyWrap.classList.remove("hidden");
+    emptyWrap.innerHTML = Components.emptyState({ icon: "heart-handshake", title: "ยังไม่มีผู้บริจาคที่ดำเนินการบริจาคแล้ว", desc: "รายการจะปรากฏที่นี่หลังผู้บริจาคผ่านการผ่าตัดเรียบร้อยแล้ว" });
+    lucide.createIcons();
+  } else {
+    donorSelect.innerHTML = usedDonors.map((d) => `<option value="${d.id}">${d.id} · ${d.name}</option>`).join("");
+    donorSelect.value = initialId;
+
+    const stateBadge = { done: '<span class="badge badge-green">เสร็จสิ้น</span>', active: '<span class="badge badge-blue">ครั้งถัดไป</span>', pending: '<span class="badge badge-slate">รอนัด</span>' };
+
+    function renderDonor(id) {
+      const visits = D.donorFollowups.filter((f) => f.donorId === id);
+      const latestDone = visits.filter((v) => v.state === "done").slice(-1)[0];
+
+      document.getElementById("vitals-grid").innerHTML = [
+        { icon: "flask-conical", title: "Creatinine ล่าสุด", value: latestDone ? `${latestDone.creatinine} mg/dL` : "-", iconBg: "bg-blue-50 text-primary" },
+        { icon: "activity", title: "eGFR ล่าสุด", value: latestDone ? `${latestDone.egfr}` : "-", iconBg: "bg-teal-50" },
+        { icon: "heart-pulse", title: "ความดันโลหิตล่าสุด", value: latestDone ? latestDone.bp : "-", iconBg: "bg-amber-50 text-amber-600" },
+        { icon: "shield-check", title: "ภาวะแทรกซ้อน", value: latestDone ? latestDone.complication : "-", iconBg: "bg-green-50 text-green-600" },
+        { icon: "pill", title: "Medication", value: latestDone ? latestDone.medication : "-", iconBg: "bg-purple-50 text-purple-600" },
+        { icon: "smile", title: "Quality of Life", value: latestDone ? latestDone.qualityOfLife : "-", iconBg: "bg-blue-50 text-primary" },
+      ]
+        .map((c) => Components.statCard(c))
+        .join("");
+
+      document.getElementById("followup-timeline").innerHTML = Components.timeline(
+        visits.map((v) => ({
+          icon: v.state === "done" ? "check" : v.state === "active" ? "calendar-clock" : "clock",
+          state: v.state,
+          title: v.visit,
+          date: v.date,
+          desc: v.state === "done" ? `Creatinine ${v.creatinine} mg/dL · eGFR ${v.egfr} · ${v.bp} · Medication: ${v.medication} · QoL: ${v.qualityOfLife} · ${v.note}` : v.note,
+        }))
+      );
+
+      document.getElementById("followup-tbody").innerHTML = visits
+        .map(
+          (v) => `
+        <tr>
+          <td class="font-medium text-slate-700">${v.visit}</td>
+          <td class="text-slate-500">${v.date}</td>
+          <td>${v.creatinine ?? "-"}</td>
+          <td>${v.egfr ?? "-"}</td>
+          <td>${v.bp || "-"}</td>
+          <td>${v.complication || "-"}</td>
+          <td>${v.medication || "-"}</td>
+          <td>${v.qualityOfLife || "-"}</td>
+          <td>${stateBadge[v.state] || ""}</td>
+        </tr>`
+        )
+        .join("");
+
+      lucide.createIcons();
+    }
+
+    donorSelect.addEventListener("change", (e) => renderDonor(e.target.value));
+    renderDonor(initialId);
+
+    document.getElementById("followup-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!document.getElementById("f-visit").value.trim()) {
+        UI.toast("กรุณาระบุช่วงเวลาการติดตาม", "error");
+        return;
+      }
+      UI.toast("บันทึกการติดตามหลังบริจาคเรียบร้อยแล้ว", "success");
+      e.target.reset();
+    });
+  }
+
+  lucide.createIcons();
+</script>
+</body>
+</html>

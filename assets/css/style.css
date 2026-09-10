@@ -1,0 +1,969 @@
+/* Kidney Transplant Follow-up System — Shared Design System CSS
+   ใช้ร่วมกับ Tailwind CDN (utility classes) — ไฟล์นี้เก็บ token/คอมโพเนนต์ที่ใช้ซ้ำบ่อย */
+
+:root {
+  /* Core healthcare design tokens */
+  --primary-color: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary-color: #0ea5e9;
+  --medical-teal: #14b8a6;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --background: #f8fafc;
+  --card-background: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #2563eb, #06b6d4);
+  --gradient-header: linear-gradient(135deg, #0f172a, #2563eb);
+  --gradient-success: linear-gradient(135deg, #10b981, #14b8a6);
+  --gradient-warning: linear-gradient(135deg, #f59e0b, #f97316);
+  --gradient-danger: linear-gradient(135deg, #ef4444, #db2777);
+  --gradient-nurse: linear-gradient(135deg, #4c1d95, #2563eb, #0ea5e9);
+  --gradient-mesh: radial-gradient(circle at 15% 15%, rgba(255, 255, 255, .16) 0, transparent 45%),
+                    radial-gradient(circle at 85% 30%, rgba(255, 255, 255, .12) 0, transparent 40%);
+
+  /* Backward-compatible aliases (used by existing inline styles/JS) */
+  --color-primary: var(--primary-color);
+  --color-primary-dark: var(--primary-dark);
+  --color-teal: #0f766e;
+  --color-bg: var(--background);
+  --color-border: #e2e8f0;
+  --color-white: var(--card-background);
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+  --color-success: #16a34a;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body {
+  background: var(--background);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: var(--text-primary);
+}
+
+/* ---------- Gradient theme (use sparingly: headers, hero cards, CTAs) ---------- */
+.gradient-primary { background: var(--gradient-primary); }
+.gradient-header { background: var(--gradient-header); }
+.gradient-success { background: var(--gradient-success); }
+.gradient-warning { background: var(--gradient-warning); }
+.gradient-danger { background: var(--gradient-danger); }
+.gradient-nurse { background: var(--gradient-nurse); }
+
+.gradient-mesh {
+  position: relative;
+  isolation: isolate;
+}
+
+.gradient-mesh::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-mesh);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.gradient-mesh > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ---------- Fade / motion ---------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeInUp .35s ease both;
+}
+
+.fade-in-delay-1 {
+  animation-delay: .05s;
+}
+
+.fade-in-delay-2 {
+  animation-delay: .1s;
+}
+
+.fade-in-delay-3 {
+  animation-delay: .15s;
+}
+
+.fade-in-delay-4 {
+  animation-delay: .2s;
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(.96) translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-panel {
+  animation: modalIn .2s ease-out both;
+}
+
+@keyframes pulseDot {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: .35;
+  }
+}
+
+.pulse-dot {
+  animation: pulseDot 1.6s ease-in-out infinite;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.toast-in {
+  animation: toastIn .25s ease-out both;
+}
+
+/* ---------- Card ---------- */
+.card {
+  background: var(--card-background);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+}
+
+.card-hover:hover {
+  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, .12);
+  transform: translateY(-3px);
+  border-color: #cbd5e1;
+}
+
+/* Glass-effect card — used sparingly on doctor clinical dashboards */
+.card-glass {
+  background: rgba(255, 255, 255, .72);
+  border: 1px solid rgba(255, 255, 255, .5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px -8px rgba(15, 23, 42, .1);
+}
+
+/* Card with a colored gradient surface (stat/profile/status/notification cards) */
+.card-gradient {
+  color: #fff;
+  border: none;
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, .35);
+}
+
+.card-gradient .card-gradient-sub {
+  color: rgba(255, 255, 255, .78);
+}
+
+/* ---------- Stat Card ---------- */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+  padding: 1.1rem;
+}
+
+.stat-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stat-card-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: .75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-card-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.01em;
+}
+
+.stat-card-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.stat-card-trend.up { color: #16a34a; }
+.stat-card-trend.down { color: #dc2626; }
+.card-gradient .stat-card-trend.up,
+.card-gradient .stat-card-trend.down { color: #fff; }
+
+/* ---------- Patient Card ---------- */
+.patient-card {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .9rem;
+  border-radius: .9rem;
+  border: 1px solid var(--color-border);
+  background: var(--card-background);
+  transition: background .15s ease, border-color .15s ease, transform .15s ease;
+}
+
+.patient-card:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateX(2px);
+}
+
+.patient-card-avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: .78rem;
+  flex-shrink: 0;
+}
+
+/* ---------- Alert Card ---------- */
+.alert-card {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  padding: .75rem .85rem;
+  border-radius: .8rem;
+  border: 1px solid transparent;
+}
+
+.alert-card.level-critical {
+  background: #fef2f2;
+  border-color: #fecaca;
+  border-left: 3px solid var(--danger);
+}
+
+.alert-card.level-warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  border-left: 3px solid var(--warning);
+}
+
+.alert-card.level-normal {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  border-left: 3px solid var(--success);
+}
+
+/* ---------- Task Card (Nurse workflow) ---------- */
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .9rem 1rem;
+  border-radius: .9rem;
+  border: 1px solid var(--color-border);
+  background: var(--card-background);
+  border-left-width: 4px;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -8px rgba(15, 23, 42, .15);
+}
+
+.task-card.priority-high { border-left-color: var(--danger); }
+.task-card.priority-medium { border-left-color: var(--warning); }
+.task-card.priority-low { border-left-color: var(--success); }
+
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .18rem .55rem;
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.priority-badge.priority-high { background: #fee2e2; color: #b91c1c; }
+.priority-badge.priority-medium { background: #fef3c7; color: #b45309; }
+.priority-badge.priority-low { background: #dcfce7; color: #15803d; }
+
+/* ---------- Medical Data Card (Lab / Medication) ---------- */
+.medical-data-card {
+  padding: .9rem 1rem;
+  border-radius: .9rem;
+  border: 1px solid var(--color-border);
+  background: var(--card-background);
+}
+
+.medical-data-card.status-high { border-color: #fecaca; background: #fef7f7; }
+.medical-data-card.status-low { border-color: #bfdbfe; background: #f5f9ff; }
+.medical-data-card.status-normal { border-color: var(--color-border); }
+
+/* ---------- Badges ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .6rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-green {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge-amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge-red {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-teal {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.badge-slate {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* ---------- Sidebar (Enterprise) ---------- */
+.app-sidebar-shell {
+  width: 260px;
+}
+
+.app-sidebar-shell .sidebar-brand {
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.app-sidebar-shell.theme-doctor {
+  background: var(--gradient-header);
+}
+
+.app-sidebar-shell.theme-nurse {
+  background: var(--gradient-nurse);
+}
+
+.app-sidebar-shell .sidebar-tag {
+  background: rgba(255, 255, 255, .16);
+  color: #fff;
+}
+
+#app-sidebar .nav-item,
+#mobile-sidebar .nav-item {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .62rem .85rem;
+  border-radius: .7rem;
+  color: rgba(255, 255, 255, .68);
+  font-size: .85rem;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+
+#app-sidebar .nav-item:hover,
+#mobile-sidebar .nav-item:hover {
+  background: rgba(255, 255, 255, .08);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+#app-sidebar .nav-item.active,
+#mobile-sidebar .nav-item.active {
+  background: rgba(255, 255, 255, .16);
+  color: #fff;
+  border-left-color: #fff;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
+}
+
+#app-sidebar .nav-item .nav-icon,
+#mobile-sidebar .nav-item .nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+#app-sidebar .nav-submenu a {
+  color: rgba(255, 255, 255, .6);
+}
+
+#app-sidebar .nav-submenu a:hover {
+  color: #fff;
+}
+
+#app-sidebar .nav-submenu a.active {
+  color: #fff;
+  font-weight: 700;
+  background: rgba(255, 255, 255, .12);
+}
+
+/* Tablet: collapse to icon-only rail */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-sidebar-shell {
+    width: 76px;
+  }
+
+  .app-sidebar-shell .sidebar-label,
+  .app-sidebar-shell .sidebar-brand-text,
+  .app-sidebar-shell .sidebar-chevron,
+  .app-sidebar-shell .nav-submenu,
+  .app-sidebar-shell .sidebar-footnote {
+    display: none !important;
+  }
+
+  .app-sidebar-shell .nav-item {
+    justify-content: center;
+    padding: .7rem;
+  }
+}
+
+/* ---------- Table ---------- */
+.table-modern {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: .875rem;
+}
+
+.table-modern thead th {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 1;
+  text-align: left;
+  padding: .75rem 1rem;
+  font-weight: 600;
+  color: #64748b;
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table-modern tbody td {
+  padding: .85rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.table-modern tbody tr {
+  transition: background .15s ease;
+}
+
+.table-modern tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Mobile: table rows become stacked cards (data-label injected automatically by UI.enhanceTables()) */
+@media (max-width: 767px) {
+  .table-modern.table-responsive-cards thead {
+    display: none;
+  }
+
+  .table-modern.table-responsive-cards,
+  .table-modern.table-responsive-cards tbody,
+  .table-modern.table-responsive-cards tr,
+  .table-modern.table-responsive-cards td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-modern.table-responsive-cards tr {
+    border: 1px solid var(--color-border);
+    border-radius: .8rem;
+    margin-bottom: .7rem;
+    padding: .3rem .9rem;
+    background: var(--card-background);
+  }
+
+  .table-modern.table-responsive-cards td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    text-align: right;
+    padding: .55rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .table-modern.table-responsive-cards td:last-child {
+    border-bottom: none;
+  }
+
+  .table-modern.table-responsive-cards td::before {
+    content: attr(data-label);
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    text-align: left;
+  }
+}
+
+/* ---------- Timeline ---------- */
+.timeline-line {
+  position: relative;
+  margin-left: 1.1rem;
+  padding-left: 2rem;
+  border-left: 2px solid var(--color-border);
+}
+
+.timeline-node {
+  position: absolute;
+  left: -2.55rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--color-bg);
+}
+
+/* ---------- Modal ----------
+   หมายเหตุ: กำหนด display ไว้ที่นี่โดยตรง (ไม่พึ่ง Tailwind .flex/.hidden ร่วมกัน)
+   เพราะ Play CDN สร้าง utility แบบ on-the-fly ลำดับ CSS อาจไม่แน่นอนข้ามหน้า */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, .45);
+  backdrop-filter: blur(2px);
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+/* ---------- Misc ---------- */
+.chip-btn {
+  transition: all .15s ease;
+}
+
+.chip-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.progress-track {
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  height: .5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* ---------- LIFF mobile shell ---------- */
+.liff-shell {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--color-bg);
+  position: relative;
+  box-shadow: 0 0 40px rgba(15, 23, 42, .08);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  body.liff-body {
+    background: #e2e8f0;
+    padding: 2rem 0;
+  }
+
+  .liff-shell {
+    min-height: 92vh;
+    border-radius: 2rem;
+    overflow: hidden;
+    border: 8px solid #1e293b;
+  }
+}
+
+.liff-bottom-nav {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  border-top: 1px solid var(--color-border);
+}
+
+.liff-tap {
+  transition: transform .1s ease;
+}
+
+.liff-tap:active {
+  transform: scale(.96);
+}
+
+/* ---------- Kanban / Status Pipeline ---------- */
+.kanban-board {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: .5rem;
+}
+
+.kanban-column {
+  flex: 0 0 260px;
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  max-height: 640px;
+}
+
+.kanban-column-header {
+  padding: .85rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.kanban-column-body {
+  padding: .65rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.kanban-card {
+  background: var(--card-background);
+  border: 1px solid var(--color-border);
+  border-radius: .75rem;
+  padding: .7rem .8rem;
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 8px 18px -8px rgba(15, 23, 42, .15);
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+}
+
+/* Mobile: kanban ยุบเป็น stacked card list ต่อคอลัมน์ */
+@media (max-width: 767px) {
+  .kanban-board {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+
+  .kanban-column {
+    flex: 1 1 auto;
+    max-height: none;
+  }
+}
+
+/* ---------- Match Score Ring ---------- */
+.score-ring-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-ring-wrap svg {
+  transform: rotate(-90deg);
+}
+
+.score-ring-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Clinical Assessment Card (selectable) ---------- */
+.assessment-card {
+  border-width: 2px;
+}
+
+.assessment-card.selected[data-value="suitable"] { border-color: var(--success); background: #f0fdf4; }
+.assessment-card.selected[data-value="risk"] { border-color: var(--warning); background: #fffbeb; }
+.assessment-card.selected[data-value="not-suitable"] { border-color: var(--danger); background: #fef2f2; }
+
+/* LIFF cards get a larger radius + taller primary buttons than the web app */
+.liff-shell .card {
+  border-radius: 20px;
+}
+
+.liff-shell button[type="submit"],
+.liff-shell .liff-btn-primary {
+  min-height: 52px;
+  border-radius: 16px;
+  font-size: .95rem;
+}
+
+.liff-shell,
+.liff-shell input,
+.liff-shell select,
+.liff-shell textarea {
+  font-size: 15px;
+}
+
+/* ---------- Topbar ---------- */
+#app-topbar .topbar-search {
+  transition: all .15s ease;
+}
+
+@media (max-width: 767px) {
+  #app-topbar .topbar-search-wrap {
+    display: none;
+  }
+
+  #app-topbar .topbar-search-wrap.search-open {
+    display: block;
+    position: absolute;
+    left: .75rem;
+    right: .75rem;
+    top: 100%;
+    max-width: none;
+    margin-top: .5rem;
+    z-index: 20;
+  }
+
+  #app-topbar .topbar-search-wrap.search-open .topbar-search {
+    background: var(--card-background);
+    box-shadow: 0 8px 20px -6px rgba(15, 23, 42, .18);
+  }
+}
+
+/* ---------- Buttons ---------- */
+.btn-gradient {
+  background: var(--gradient-primary);
+  color: #fff;
+  box-shadow: 0 6px 16px -4px rgba(37, 99, 235, .45);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -4px rgba(37, 99, 235, .55);
+  filter: brightness(1.04);
+}
+
+.btn-gradient:active {
+  transform: translateY(0);
+}
+
+/* Secondary — outline style, Danger — filled with confirmation-style emphasis */
+.btn-secondary {
+  background: var(--card-background);
+  color: var(--text-primary);
+  border: 1px solid var(--color-border);
+  transition: all .15s ease;
+}
+
+.btn-secondary:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.btn-danger {
+  background: var(--gradient-danger);
+  color: #fff;
+  box-shadow: 0 6px 16px -4px rgba(220, 38, 38, .4);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+/* Loading state — add .btn-loading to any button; text stays in DOM (for width) but is hidden behind a spinner */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, .5);
+  border-top-color: #fff;
+  animation: btnSpin .6s linear infinite;
+}
+
+.btn-secondary.btn-loading::after {
+  border-color: rgba(37, 99, 235, .25);
+  border-top-color: var(--color-primary);
+}
+
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- LIFF Emergency Contact Button ---------- */
+/* วางมุมซ้ายล่างเพื่อเลี่ยงปุ่มส่งข้อความ/Composer ที่อยู่มุมขวาล่างในหน้าแชท */
+.liff-emergency-fab {
+  position: absolute;
+  left: 1rem;
+  bottom: 5.25rem;
+  z-index: 30;
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 999px;
+  background: var(--gradient-danger);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px -6px rgba(220, 38, 38, .55);
+}
+
+/* ---------- Accessibility: minimum touch target (WCAG 44x44) for icon-only buttons ---------- */
+.liff-shell header a,
+.liff-shell header button,
+.liff-shell .icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* ---------- Page transition ---------- */
+main {
+  animation: fadeInUp .3s ease both;
+}
+
+/* ---------- Notification ---------- */
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-12deg); }
+  40% { transform: rotate(10deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(4deg); }
+}
+
+.notif-ring {
+  animation: bellRing 1.8s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in, .modal-panel, .pulse-dot, .toast-in, main, .notif-ring {
+    animation: none !important;
+  }
+
+  .card-hover:hover, .btn-gradient:hover, .patient-card:hover, .task-card:hover {
+    transform: none !important;
+  }
+}
