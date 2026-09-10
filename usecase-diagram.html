@@ -18,6 +18,14 @@
 <link rel="stylesheet" href="assets/css/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  #uc-diagram-wrap { overflow-x: auto; overflow-y: visible; }
+  #uc-diagram .clickable { cursor: pointer; }
+  #uc-diagram .node:hover > rect,
+  #uc-diagram .node:hover > polygon,
+  #uc-diagram .node:hover > path { filter: brightness(0.95); stroke-width: 2px !important; }
+  .uc-modal-icon i { width: 20px; height: 20px; }
+</style>
 </head>
 <body class="font-sans bg-bgapp text-slate-800">
 
@@ -35,15 +43,37 @@
 
     <div class="fade-in">
       <h2 class="text-xl font-bold text-slate-800">Use Case Diagram</h2>
-      <p class="text-sm text-slate-500 mt-0.5">ภาพรวม Actor ทั้ง 3 บทบาท (Doctor / Nurse / Patient) และฟังก์ชันหลักที่แต่ละบทบาทใช้งานในระบบ</p>
+      <p class="text-sm text-slate-500 mt-0.5">ภาพรวม Actor ทั้ง 3 บทบาท (Doctor / Nurse Coordinator / Patient) และ Use Case ทั้งหมด 40 รายการ อ้างอิงจากหน้าจอจริงในระบบทุกส่วน — <span class="font-semibold text-primary">คลิกที่ Use Case ในแผนภาพเพื่อดูคำอธิบายโดยละเอียด</span></p>
     </div>
 
-    <div class="card p-5 fade-in overflow-x-auto">
+    <!-- Stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 fade-in">
+      <div class="card p-4 text-center">
+        <p class="text-2xl font-bold text-slate-800">3</p>
+        <p class="text-[11px] text-slate-500 mt-0.5">Actor หลัก</p>
+      </div>
+      <div class="card p-4 text-center">
+        <p class="text-2xl font-bold" style="color:#2563eb">20</p>
+        <p class="text-[11px] text-slate-500 mt-0.5">Doctor Use Cases</p>
+      </div>
+      <div class="card p-4 text-center">
+        <p class="text-2xl font-bold" style="color:#7c3aed">6</p>
+        <p class="text-[11px] text-slate-500 mt-0.5">Nurse Use Cases</p>
+      </div>
+      <div class="card p-4 text-center">
+        <p class="text-2xl font-bold" style="color:#0f766e">11</p>
+        <p class="text-[11px] text-slate-500 mt-0.5">Patient Use Cases</p>
+      </div>
+    </div>
+
+    <div class="card p-5 fade-in" id="uc-diagram-wrap">
       <pre class="mermaid" id="uc-diagram">
 flowchart LR
   classDef actor fill:#0f172a,color:#ffffff,stroke:#0f172a,stroke-width:1px,font-weight:700,rx:10,ry:10
-  classDef shared fill:#fef3c7,color:#92400e,stroke:#f59e0b,stroke-width:1px
-  classDef doctorUC fill:#dbeafe,color:#1e3a8a,stroke:#2563eb,stroke-width:1px
+  classDef auth fill:#f1f5f9,color:#334155,stroke:#94a3b8,stroke-width:1px
+  classDef docCare fill:#dbeafe,color:#1e3a8a,stroke:#2563eb,stroke-width:1px
+  classDef docDonor fill:#e0e7ff,color:#3730a3,stroke:#4f46e5,stroke-width:1px
+  classDef docAdmin fill:#e2e8f0,color:#1e293b,stroke:#475569,stroke-width:1px
   classDef nurseUC fill:#f3e8ff,color:#4c1d95,stroke:#7c3aed,stroke-width:1px
   classDef patientUC fill:#ccfbf1,color:#0f4c44,stroke:#0f766e,stroke-width:1px
 
@@ -54,61 +84,163 @@ flowchart LR
   subgraph SYS["Kidney Transplant Follow-up System"]
     direction TB
 
-    Login(["Login / Authentication"]):::shared
-    Notify(["Receive Clinical Alerts"]):::shared
-    Chat(["Chat / Messaging"]):::shared
-
-    subgraph DOC["Doctor Use Cases"]
+    subgraph AUTHG["🔐 Entry / Authentication (Shared)"]
       direction TB
-      UC1(["Manage Patient Records"]):::doctorUC
-      UC2(["Treatment Timeline &amp; Medication"]):::doctorUC
-      UC3(["Review Lab Results"]):::doctorUC
-      UC4(["Manage Appointments"]):::doctorUC
-      UC5(["Manage Donor Registry"]):::doctorUC
-      UC6(["Kidney Matching &amp; Suitability"]):::doctorUC
-      UC7(["View Reports &amp; Audit Log"]):::doctorUC
+      UC_LOGIN(["เข้าสู่ระบบ"]):::auth
+      UC_PWD(["จัดการรหัสผ่าน"]):::auth
+      UC_LIFFAUTH(["เข้าใช้งานผ่าน LINE"]):::auth
     end
 
-    subgraph NUR["Nurse Use Cases"]
+    subgraph DOCCARE["Doctor · การดูแลผู้ป่วย"]
       direction TB
-      UC8(["Monitor Assigned Patients"]):::nurseUC
-      UC9(["Record Follow-up Visits"]):::nurseUC
-      UC10(["Monitor Symptom Questionnaires"]):::nurseUC
+      UC_D_DASH(["แดชบอร์ดภาพรวม"]):::docCare
+      UC_D_PATIENT(["จัดการข้อมูลผู้ป่วย"]):::docCare
+      UC_D_TIMELINE(["Timeline การรักษา"]):::docCare
+      UC_D_LAB(["จัดการผลตรวจ Lab"]):::docCare
+      UC_D_MED(["จัดการยากดภูมิคุ้มกัน"]):::docCare
+      UC_D_COMPLY(["ติดตามความร่วมมือใช้ยา"]):::docCare
+      UC_D_APPT(["จัดการนัดหมาย"]):::docCare
+      UC_D_NOTIF(["การแจ้งเตือนทางคลินิก"]):::docCare
+      UC_D_CHAT(["แชทกับผู้ป่วย"]):::docCare
     end
 
-    subgraph PAT["Patient Use Cases"]
+    subgraph DOCDONOR["Doctor · ผู้บริจาค & จับคู่ไต"]
       direction TB
-      UC11(["View Health Dashboard &amp; Timeline"]):::patientUC
-      UC12(["Track Medication &amp; Reminders"]):::patientUC
-      UC13(["Complete Symptom Questionnaire"]):::patientUC
-      UC14(["Browse Knowledge Center"]):::patientUC
+      UC_D_WAIT(["รายชื่อรอปลูกถ่ายไต"]):::docDonor
+      UC_D_DONORREG(["ทะเบียนผู้บริจาคไต"]):::docDonor
+      UC_D_DONOREVAL(["ประเมินสุขภาพผู้บริจาค"]):::docDonor
+      UC_D_DONORLAB(["ผลแล็บผู้บริจาค"]):::docDonor
+      UC_D_DONORCOMMITTEE(["พิจารณาความเหมาะสมผู้บริจาค"]):::docDonor
+      UC_D_MATCH(["จับคู่ผู้บริจาค-ผู้รับ"]):::docDonor
+      UC_D_SUIT(["อนุมัติความเหมาะสมคู่จับคู่"]):::docDonor
+      UC_D_DONORFU(["ติดตามผู้บริจาคหลังบริจาค"]):::docDonor
+    end
+
+    subgraph DOCADMIN["Doctor · รายงาน & ผู้ดูแลระบบ"]
+      direction TB
+      UC_D_REPORT(["รายงานภาพรวมคลินิก"]):::docAdmin
+      UC_D_DONORREPORT(["รายงานโครงการผู้บริจาค"]):::docAdmin
+      UC_D_AUDIT(["Audit Log"]):::docAdmin
+    end
+
+    subgraph NURG["Nurse Coordinator"]
+      direction TB
+      UC_N_DASH(["แดชบอร์ดพยาบาล"]):::nurseUC
+      UC_N_PATIENT(["ผู้ป่วยในความดูแล"]):::nurseUC
+      UC_N_APPT(["จัดการนัดหมาย"]):::nurseUC
+      UC_N_QUEST(["ติดตามแบบสอบถาม"]):::nurseUC
+      UC_N_FU(["บันทึกการติดตาม"]):::nurseUC
+      UC_N_CHAT(["แชทกับผู้ป่วย"]):::nurseUC
+    end
+
+    subgraph PATG["Patient (LINE LIFF)"]
+      direction TB
+      UC_P_HOME(["หน้าแรก & สถานะสุขภาพ"]):::patientUC
+      UC_P_APPT(["นัดหมายของฉัน"]):::patientUC
+      UC_P_MED(["ยา & แจ้งเตือนกินยา"]):::patientUC
+      UC_P_LAB(["ผลตรวจของฉัน"]):::patientUC
+      UC_P_TIMELINE(["Timeline การรักษา"]):::patientUC
+      UC_P_WAIT(["สถานะรอปลูกถ่ายไต"]):::patientUC
+      UC_P_QUEST(["แบบสอบถามอาการ"]):::patientUC
+      UC_P_CHAT(["แชทกับทีมพยาบาล"]):::patientUC
+      UC_P_KNOWLEDGE(["คลังความรู้"]):::patientUC
+      UC_P_PROFILE(["โปรไฟล์ของฉัน"]):::patientUC
+      UC_P_EMERGENCY(["โทรฉุกเฉิน 1669"]):::patientUC
     end
   end
 
-  Doctor --> Login
-  Nurse --> Login
-  Patient --> Login
+  Doctor --> UC_LOGIN
+  Nurse --> UC_LOGIN
+  Patient --> UC_LIFFAUTH
 
-  Doctor --> UC1
-  Doctor --> UC2
-  Doctor --> UC3
-  Doctor --> UC4
-  Doctor --> UC5
-  Doctor --> UC6
-  Doctor --> UC7
-  Doctor --> Notify
+  Doctor --> UC_D_DASH
+  Doctor --> UC_D_PATIENT
+  Doctor --> UC_D_TIMELINE
+  Doctor --> UC_D_LAB
+  Doctor --> UC_D_MED
+  Doctor --> UC_D_APPT
+  Doctor --> UC_D_NOTIF
+  Doctor --> UC_D_CHAT
+  Doctor --> UC_D_WAIT
+  Doctor --> UC_D_DONORREG
+  Doctor --> UC_D_DONOREVAL
+  Doctor --> UC_D_DONORLAB
+  Doctor --> UC_D_DONORCOMMITTEE
+  Doctor --> UC_D_MATCH
+  Doctor --> UC_D_SUIT
+  Doctor --> UC_D_DONORFU
+  Doctor --> UC_D_REPORT
+  Doctor --> UC_D_DONORREPORT
+  Doctor --> UC_D_AUDIT
 
-  Nurse --> UC8
-  Nurse --> UC9
-  Nurse --> UC10
-  Nurse --> Notify
-  Nurse --> Chat
+  Nurse --> UC_N_DASH
+  Nurse --> UC_N_PATIENT
+  Nurse --> UC_N_APPT
+  Nurse --> UC_N_QUEST
+  Nurse --> UC_N_FU
+  Nurse --> UC_N_CHAT
 
-  Patient --> UC11
-  Patient --> UC12
-  Patient --> UC13
-  Patient --> UC14
-  Patient --> Chat
+  Patient --> UC_P_HOME
+  Patient --> UC_P_APPT
+  Patient --> UC_P_MED
+  Patient --> UC_P_LAB
+  Patient --> UC_P_TIMELINE
+  Patient --> UC_P_WAIT
+  Patient --> UC_P_QUEST
+  Patient --> UC_P_CHAT
+  Patient --> UC_P_KNOWLEDGE
+  Patient --> UC_P_PROFILE
+  Patient --> UC_P_EMERGENCY
+
+  UC_LOGIN -.->|"&lt;&lt;extend&gt;&gt;"| UC_PWD
+  UC_D_MED -.->|"&lt;&lt;extend&gt;&gt;"| UC_D_COMPLY
+  UC_D_DONORREG -.->|"ลำดับขั้นตอน"| UC_D_DONOREVAL
+  UC_D_DONOREVAL -.->|"ลำดับขั้นตอน"| UC_D_DONORLAB
+  UC_D_DONORLAB -.->|"ลำดับขั้นตอน"| UC_D_DONORCOMMITTEE
+  UC_D_DONORCOMMITTEE -.->|"ลำดับขั้นตอน"| UC_D_MATCH
+  UC_D_MATCH -.->|"&lt;&lt;extend&gt;&gt;"| UC_D_SUIT
+  UC_D_SUIT -.->|"ลำดับขั้นตอน"| UC_D_DONORFU
+
+  click UC_LOGIN call ucClick("UC_LOGIN")
+  click UC_PWD call ucClick("UC_PWD")
+  click UC_LIFFAUTH call ucClick("UC_LIFFAUTH")
+  click UC_D_DASH call ucClick("UC_D_DASH")
+  click UC_D_PATIENT call ucClick("UC_D_PATIENT")
+  click UC_D_TIMELINE call ucClick("UC_D_TIMELINE")
+  click UC_D_LAB call ucClick("UC_D_LAB")
+  click UC_D_MED call ucClick("UC_D_MED")
+  click UC_D_COMPLY call ucClick("UC_D_COMPLY")
+  click UC_D_APPT call ucClick("UC_D_APPT")
+  click UC_D_NOTIF call ucClick("UC_D_NOTIF")
+  click UC_D_CHAT call ucClick("UC_D_CHAT")
+  click UC_D_WAIT call ucClick("UC_D_WAIT")
+  click UC_D_DONORREG call ucClick("UC_D_DONORREG")
+  click UC_D_DONOREVAL call ucClick("UC_D_DONOREVAL")
+  click UC_D_DONORLAB call ucClick("UC_D_DONORLAB")
+  click UC_D_DONORCOMMITTEE call ucClick("UC_D_DONORCOMMITTEE")
+  click UC_D_MATCH call ucClick("UC_D_MATCH")
+  click UC_D_SUIT call ucClick("UC_D_SUIT")
+  click UC_D_DONORFU call ucClick("UC_D_DONORFU")
+  click UC_D_REPORT call ucClick("UC_D_REPORT")
+  click UC_D_DONORREPORT call ucClick("UC_D_DONORREPORT")
+  click UC_D_AUDIT call ucClick("UC_D_AUDIT")
+  click UC_N_DASH call ucClick("UC_N_DASH")
+  click UC_N_PATIENT call ucClick("UC_N_PATIENT")
+  click UC_N_APPT call ucClick("UC_N_APPT")
+  click UC_N_QUEST call ucClick("UC_N_QUEST")
+  click UC_N_FU call ucClick("UC_N_FU")
+  click UC_N_CHAT call ucClick("UC_N_CHAT")
+  click UC_P_HOME call ucClick("UC_P_HOME")
+  click UC_P_APPT call ucClick("UC_P_APPT")
+  click UC_P_MED call ucClick("UC_P_MED")
+  click UC_P_LAB call ucClick("UC_P_LAB")
+  click UC_P_TIMELINE call ucClick("UC_P_TIMELINE")
+  click UC_P_WAIT call ucClick("UC_P_WAIT")
+  click UC_P_QUEST call ucClick("UC_P_QUEST")
+  click UC_P_CHAT call ucClick("UC_P_CHAT")
+  click UC_P_KNOWLEDGE call ucClick("UC_P_KNOWLEDGE")
+  click UC_P_PROFILE call ucClick("UC_P_PROFILE")
+  click UC_P_EMERGENCY call ucClick("UC_P_EMERGENCY")
       </pre>
     </div>
 
@@ -118,24 +250,553 @@ flowchart LR
       <div class="grid sm:grid-cols-3 gap-4 text-sm">
         <div class="rounded-xl border border-slate-100 p-4">
           <p class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="stethoscope" class="w-4 h-4 text-primary"></i> Doctor</p>
-          <p class="text-xs text-slate-500 mt-1.5">ดูแลผู้ป่วย ตรวจสอบผลแล็บ จัดการแผนการรักษาและยา บริหารบัญชีผู้บริจาคไตตั้งแต่ลงทะเบียนจนถึงติดตามหลังบริจาค และดูรายงานภาพรวม</p>
+          <p class="text-xs text-slate-500 mt-1.5">ดูแลผู้ป่วย ตรวจสอบผลแล็บ จัดการแผนการรักษาและยา บริหารทะเบียนผู้บริจาคไตตั้งแต่ลงทะเบียนจนถึงจับคู่และติดตามหลังบริจาค พิจารณาความเหมาะสมในนามคณะกรรมการ และดูรายงาน/Audit Log ของระบบ</p>
         </div>
         <div class="rounded-xl border border-slate-100 p-4">
           <p class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="heart-handshake" class="w-4 h-4" style="color:#7c3aed"></i> Nurse Coordinator</p>
-          <p class="text-xs text-slate-500 mt-1.5">ติดตามผู้ป่วยในความดูแล บันทึกผลการติดตามอาการ ตรวจสอบแบบสอบถามความเสี่ยง และสื่อสารกับผู้ป่วยผ่านแชท</p>
+          <p class="text-xs text-slate-500 mt-1.5">ติดตามผู้ป่วยในความดูแล จัดการนัดหมาย บันทึกผลการติดตามอาการ ตรวจสอบแบบสอบถามความเสี่ยง และสื่อสารกับผู้ป่วยผ่านแชท</p>
         </div>
         <div class="rounded-xl border border-slate-100 p-4">
           <p class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="smartphone" class="w-4 h-4" style="color:#0f766e"></i> Patient</p>
-          <p class="text-xs text-slate-500 mt-1.5">ดูข้อมูลสุขภาพของตนเอง ติดตามการกินยาและนัดหมาย ตอบแบบสอบถามอาการ และเรียนรู้ข้อมูลสุขภาพผ่าน LINE LIFF</p>
+          <p class="text-xs text-slate-500 mt-1.5">ดูข้อมูลสุขภาพของตนเอง ติดตามการกินยาและนัดหมาย ตอบแบบสอบถามอาการ ดูสถานะรอปลูกถ่ายไต และเรียนรู้ข้อมูลสุขภาพผ่าน LINE LIFF</p>
         </div>
       </div>
+      <div class="grid sm:grid-cols-2 gap-4 text-xs text-slate-500 mt-5 pt-4 border-t border-slate-100">
+        <p class="flex items-center gap-2"><span class="inline-block w-6 h-0 border-t-2 border-slate-400"></span> เส้นทึบ = Actor เป็นผู้ใช้งาน Use Case นั้นโดยตรง</p>
+        <p class="flex items-center gap-2"><span class="inline-block w-6 h-0 border-t-2 border-slate-400" style="border-top-style:dashed"></span> เส้นประ + &lt;&lt;extend&gt;&gt; / ลำดับขั้นตอน = ความสัมพันธ์ระหว่าง Use Case (เช่น ส่วนขยายของอีก Use Case หรือขั้นตอนถัดไปในกระบวนการเดียวกัน)</p>
+      </div>
+      <p class="text-xs text-slate-400 mt-3 flex items-center gap-1.5"><i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5"></i> คลิกที่รูปวงรี (Use Case) ในแผนภาพด้านบน เพื่อดูคำอธิบายการทำงาน หน้าจอที่เกี่ยวข้อง และความสัมพันธ์โดยละเอียด</p>
     </div>
 
   </main>
 </div>
 
+<!-- Use Case Description Modal -->
+<div id="uc-modal" class="modal-overlay hidden" data-modal-overlay>
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg modal-panel max-h-[85vh] flex flex-col">
+    <div class="flex items-start justify-between gap-3 px-5 py-4 border-b border-slate-100 shrink-0">
+      <div class="flex items-center gap-3 min-w-0">
+        <div id="uc-modal-icon" class="uc-modal-icon w-10 h-10 rounded-xl flex items-center justify-center shrink-0"><i data-lucide="workflow"></i></div>
+        <div class="min-w-0">
+          <p id="uc-modal-tag" class="text-[11px] font-semibold uppercase tracking-wide truncate"></p>
+          <h3 id="uc-modal-title" class="font-bold text-slate-800 text-base leading-snug"></h3>
+        </div>
+      </div>
+      <button id="uc-modal-close" class="p-1.5 rounded-lg hover:bg-slate-100 shrink-0"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="px-5 py-4 space-y-4 overflow-y-auto">
+      <p id="uc-modal-summary" class="text-sm text-slate-600 leading-relaxed"></p>
+      <div>
+        <p class="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5"><i data-lucide="list-checks" class="w-3.5 h-3.5"></i> การทำงานหลัก</p>
+        <ul id="uc-modal-actions" class="space-y-1.5 text-sm text-slate-700"></ul>
+      </div>
+      <div id="uc-modal-related-wrap" class="hidden">
+        <p class="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5"><i data-lucide="git-branch" class="w-3.5 h-3.5"></i> ความสัมพันธ์กับ Use Case อื่น</p>
+        <div id="uc-modal-related" class="space-y-1.5 text-xs text-slate-500"></div>
+      </div>
+      <div id="uc-modal-pages-wrap">
+        <p class="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5"><i data-lucide="file-text" class="w-3.5 h-3.5"></i> หน้าจอที่เกี่ยวข้อง</p>
+        <div id="uc-modal-pages" class="flex flex-wrap gap-1.5"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  mermaid.initialize({ startOnLoad: true, theme: "base", themeVariables: { primaryColor: "#eef2ff", primaryTextColor: "#1e293b", primaryBorderColor: "#94a3b8", lineColor: "#94a3b8", fontFamily: "'Segoe UI', Arial, sans-serif" } });
+  const GROUP_META = {
+    auth:     { label: 'Shared / Authentication',            bg: '#f1f5f9', fg: '#334155', icon: 'shield-check' },
+    docCare:  { label: 'Doctor · การดูแลผู้ป่วย',              bg: '#dbeafe', fg: '#1e3a8a', icon: 'stethoscope' },
+    docDonor: { label: 'Doctor · ผู้บริจาค & จับคู่ไต',         bg: '#e0e7ff', fg: '#3730a3', icon: 'heart-handshake' },
+    docAdmin: { label: 'Doctor · รายงาน & ผู้ดูแลระบบ',        bg: '#e2e8f0', fg: '#1e293b', icon: 'bar-chart-3' },
+    nurse:    { label: 'Nurse Coordinator',                   bg: '#f3e8ff', fg: '#4c1d95', icon: 'heart-pulse' },
+    patient:  { label: 'Patient (LINE LIFF)',                 bg: '#ccfbf1', fg: '#0f4c44', icon: 'smartphone' },
+  };
+
+  const UC = {
+    UC_LOGIN: {
+      group: 'auth', actor: 'Doctor, Nurse', title: 'เข้าสู่ระบบ (Login)',
+      summary: 'หน้าจอสำหรับเจ้าหน้าที่ (แพทย์และพยาบาล) ยืนยันตัวตนก่อนเข้าใช้งานระบบฝั่งเว็บ',
+      actions: [
+        'กรอก Username / Password พร้อมปุ่มแสดง-ซ่อนรหัสผ่าน และติ๊ก "จดจำการเข้าสู่ระบบ"',
+        'ปุ่มลัดสาธิต "เข้าสู่ระบบแพทย์" / "เข้าสู่ระบบพยาบาล" เข้าสู่แดชบอร์ดของแต่ละบทบาททันที (เฉพาะเวอร์ชัน Mockup)',
+        'ลิงก์ไปหน้า "ลืมรหัสผ่าน" เมื่อเข้าสู่ระบบไม่สำเร็จ',
+      ],
+      relations: ['ขยาย (&lt;&lt;extend&gt;&gt;) ไปยัง "จัดการรหัสผ่าน" เมื่อผู้ใช้ลืมรหัสผ่านหรือต้องการเปลี่ยนรหัสผ่านใหม่'],
+      pages: [{ href: 'auth/login.html', label: 'auth/login.html' }],
+    },
+    UC_PWD: {
+      group: 'auth', actor: 'Doctor, Nurse', title: 'จัดการรหัสผ่าน (ลืม / เปลี่ยนรหัสผ่าน)',
+      summary: 'ให้เจ้าหน้าที่ขอรีเซ็ตรหัสผ่านเมื่อลืม หรือเปลี่ยนรหัสผ่านปัจจุบันด้วยตนเองหลังเข้าสู่ระบบ',
+      actions: [
+        'ลืมรหัสผ่าน: กรอกอีเมล/เบอร์โทร/รหัสพนักงาน เพื่อขอรับลิงก์รีเซ็ต (ลิงก์หมดอายุใน 30 นาที)',
+        'เปลี่ยนรหัสผ่าน: กรอกรหัสเดิม + รหัสใหม่ + ยืนยันรหัสใหม่ พร้อมเช็คลิสต์เกณฑ์ความปลอดภัย (ความยาว, ตัวพิมพ์ใหญ่-เล็ก, ตัวเลข, อักขระพิเศษ)',
+        'ระบบตรวจสอบว่ารหัสใหม่กับช่องยืนยันตรงกันก่อนบันทึกและพากลับไปหน้า Login',
+      ],
+      pages: [
+        { href: 'auth/forgot-password.html', label: 'auth/forgot-password.html' },
+        { href: 'auth/change-password.html', label: 'auth/change-password.html' },
+      ],
+    },
+    UC_LIFFAUTH: {
+      group: 'auth', actor: 'Patient', title: 'เข้าใช้งานผ่าน LINE LIFF',
+      summary: 'ผู้ป่วยเข้าใช้งานแอปอัตโนมัติผ่านบัญชี LINE ที่ผูกไว้ (LIFF) โดยไม่ต้องกรอก Username/Password แยกต่างหาก',
+      actions: [
+        'ระบบดึงข้อมูลตัวตนจาก LINE Profile เพื่อจับคู่กับ HN ของผู้ป่วยในโรงพยาบาล',
+        'เป็นจุดเริ่มต้นก่อนเข้าถึงทุกฟีเจอร์ฝั่งผู้ป่วย เช่น หน้าแรก นัดหมาย ยา ผลตรวจ แบบสอบถาม แชท',
+      ],
+      pages: [{ href: 'liff/home.html', label: 'liff/home.html' }],
+    },
+
+    UC_D_DASH: {
+      group: 'docCare', actor: 'Doctor', title: 'แดชบอร์ดภาพรวมแพทย์',
+      summary: 'หน้าหลักสรุปภาพรวมผู้ป่วยและงานประจำวันของแพทย์เมื่อเข้าสู่ระบบ',
+      actions: [
+        'การ์ด KPI: จำนวนผู้ป่วยทั้งหมด, นัดหมายวันนี้, ผู้ป่วยขาดนัด, ผลแล็บผิดปกติ, เคสเร่งด่วน',
+        'ฟีดการแจ้งเตือนทางคลินิก และกราฟวิเคราะห์ (แนวโน้มการติดตาม, ความร่วมมือใช้ยาตามกลุ่มเสี่ยง, ผลลัพธ์การปลูกถ่าย)',
+        'ตารางคิวนัดหมายวันนี้พร้อมลิงก์ดูรายละเอียดผู้ป่วย, สรุปรายชื่อรอปลูกถ่ายไต และรายชื่อผู้ป่วยกลุ่มเสี่ยงสูง',
+        'ปุ่ม "Export Report" และ "เพิ่มผู้ป่วยใหม่"',
+      ],
+      pages: [{ href: 'doctor/dashboard.html', label: 'doctor/dashboard.html' }],
+    },
+    UC_D_PATIENT: {
+      group: 'docCare', actor: 'Doctor', title: 'จัดการข้อมูลผู้ป่วย',
+      summary: 'ลงทะเบียน ค้นหา และดูข้อมูลผู้ป่วยปลูกถ่ายไตทั้งหมดในระบบแบบรวมศูนย์',
+      actions: [
+        'ค้นหา/กรองรายชื่อผู้ป่วยตามชื่อ, HN, โรงพยาบาล, สถานะ, ระดับความเสี่ยง, ปีที่ปลูกถ่าย',
+        'ลงทะเบียนผู้ป่วยใหม่ด้วยฟอร์มหลายส่วน (ข้อมูลทั่วไป, โรงพยาบาล/แพทย์เจ้าของไข้, ข้อมูลการปลูกถ่าย/ผู้บริจาค/HLA)',
+        'เปิดดูโปรไฟล์ผู้ป่วยแบบละเอียด (แท็บ Overview, สถานะรอปลูกถ่าย, Timeline, Lab, ยา, นัดหมาย, แชท, การติดตามของพยาบาล)',
+        'ปุ่มลัดจากหน้าโปรไฟล์: แชท, แก้ไข, สร้างบันทึก, สั่ง Lab, ปรับยา, สร้างนัดหมาย',
+      ],
+      pages: [
+        { href: 'doctor/patient-management.html', label: 'doctor/patient-management.html' },
+        { href: 'doctor/patient-registration.html', label: 'doctor/patient-registration.html' },
+        { href: 'doctor/patient-summary.html', label: 'doctor/patient-summary.html' },
+      ],
+    },
+    UC_D_TIMELINE: {
+      group: 'docCare', actor: 'Doctor', title: 'ดู Timeline การรักษา',
+      summary: 'ไทม์ไลน์เหตุการณ์ทางการแพทย์ของผู้ป่วยตั้งแต่วันปลูกถ่ายจนถึงปัจจุบัน',
+      actions: [
+        'กรองเหตุการณ์ตามประเภทผ่าน chip filter (ปลูกถ่าย, รับตัว, OPD, แล็บ, ยา, ติดเชื้อ, ปฏิเสธอวัยวะ, ผ่าตัด)',
+        'คลิกเหตุการณ์เพื่อเปิดหน้าต่างรายละเอียด (แพทย์ผู้บันทึก, รายละเอียด, ไฟล์แนบ)',
+      ],
+      pages: [{ href: 'doctor/treatment-timeline.html', label: 'doctor/treatment-timeline.html' }],
+    },
+    UC_D_LAB: {
+      group: 'docCare', actor: 'Doctor', title: 'จัดการผลตรวจ Lab',
+      summary: 'ดูผลตรวจทางห้องปฏิบัติการของผู้ป่วยและบันทึกผลตรวจใหม่',
+      actions: [
+        'เลือกช่วงเวลา และดูการ์ดผลตรวจแต่ละค่าพร้อมค่าปัจจุบัน/ค่าก่อนหน้า/ช่วงปกติและสถานะ',
+        'กราฟแนวโน้ม Creatinine/eGFR และตารางประวัติผลตรวจทั้งหมด',
+        'ปุ่ม "Export PDF" และ "บันทึกผลตรวจใหม่"',
+      ],
+      pages: [{ href: 'doctor/laboratory.html', label: 'doctor/laboratory.html' }],
+    },
+    UC_D_MED: {
+      group: 'docCare', actor: 'Doctor', title: 'จัดการยากดภูมิคุ้มกัน',
+      summary: 'บริหารแผนการใช้ยากดภูมิคุ้มกัน (Immunosuppressant) ของผู้ป่วยแต่ละราย',
+      actions: [
+        'ตารางยาปัจจุบัน พร้อมปุ่ม "ปรับขนาดยา", "เปลี่ยนยา", "หยุดยา" ต่อรายการ (ต้องระบุเหตุผลผ่าน modal ยืนยัน)',
+        'เพิ่มยาใหม่ผ่าน modal และดูประวัติการปรับเปลี่ยนยาแบบไทม์ไลน์',
+      ],
+      relations: ['ขยาย (&lt;&lt;extend&gt;&gt;) ไปยัง "ติดตามความร่วมมือใช้ยา" เพื่อวิเคราะห์ compliance ของยาที่สั่งในภาพรวมทุกผู้ป่วย'],
+      pages: [{ href: 'doctor/medication-management.html', label: 'doctor/medication-management.html' }],
+    },
+    UC_D_COMPLY: {
+      group: 'docCare', actor: 'Doctor', title: 'ติดตามความร่วมมือการใช้ยา',
+      summary: 'ภาพรวมความร่วมมือ (compliance) ในการกินยาของผู้ป่วยทุกรายเพื่อคัดกรองผู้ป่วยกลุ่มเสี่ยง',
+      actions: [
+        'KPI: % compliance เฉลี่ย, จำนวนผู้ป่วยต่ำกว่า 80%, จำนวนที่ขาดยาใน 7 วัน',
+        'กราฟแท่งเปรียบเทียบ compliance รายผู้ป่วย',
+        'ตารางพร้อม progress bar และ badge ระดับ (ดีมาก / ปานกลาง / ต้องเฝ้าระวัง) เชื่อมไปหน้าโปรไฟล์ผู้ป่วย',
+      ],
+      relations: ['เป็นส่วนขยาย (&lt;&lt;extend&gt;&gt;) ของ "จัดการยากดภูมิคุ้มกัน"'],
+      pages: [{ href: 'doctor/medication-compliance.html', label: 'doctor/medication-compliance.html' }],
+    },
+    UC_D_APPT: {
+      group: 'docCare', actor: 'Doctor', title: 'จัดการนัดหมายผู้ป่วย',
+      summary: 'ศูนย์กลางจัดตารางนัดหมายผู้ป่วยของแพทย์',
+      actions: [
+        'ปฏิทินรายเดือนพร้อมจุดวันที่มีนัด และสรุปนัดหมายวันนี้',
+        'ตารางนัดหมายทั้งหมด พร้อม "เลื่อนนัด" / "ยกเลิกนัด" ต่อแถว (ผ่าน modal ยืนยัน)',
+        'สร้างนัดหมายใหม่ (เลือกผู้ป่วย, วันเวลา, ประเภทนัด, แพทย์)',
+      ],
+      pages: [{ href: 'doctor/appointment-management.html', label: 'doctor/appointment-management.html' }],
+    },
+    UC_D_NOTIF: {
+      group: 'docCare', actor: 'Doctor', title: 'จัดการการแจ้งเตือนทางคลินิก',
+      summary: 'ศูนย์รวมการแจ้งเตือน/สัญญาณเตือนทางคลินิกที่ต้องให้แพทย์รับทราบและดำเนินการต่อ',
+      actions: [
+        'จัดกลุ่มการแจ้งเตือนเป็นระดับ วิกฤต / เตือน / ข้อมูลทั่วไป พร้อม KPI นับจำนวน',
+        'ตัวกรอง (ทั้งหมด/วิกฤต/เตือน/ข้อมูล/อ่านแล้ว) และปุ่ม "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด"',
+        'ลิงก์ "ดูผู้ป่วย" จากแต่ละรายการแจ้งเตือนเพื่อไปยังโปรไฟล์ผู้ป่วยที่เกี่ยวข้อง',
+      ],
+      relations: ['รับข้อมูลที่ส่งต่อมาจาก "ติดตามแบบสอบถาม" ของพยาบาล เมื่อพบคำตอบผิดปกติที่ต้องแจ้งแพทย์'],
+      pages: [{ href: 'doctor/notifications.html', label: 'doctor/notifications.html' }],
+    },
+    UC_D_CHAT: {
+      group: 'docCare', actor: 'Doctor', title: 'แชทกับผู้ป่วย',
+      summary: 'สื่อสารข้อความกับผู้ป่วยได้โดยตรงจากแท็บ Chat ในหน้าโปรไฟล์ผู้ป่วย',
+      actions: ['ดูตัวอย่างบทสนทนาและส่งข้อความถึงผู้ป่วยจากแท็บ Chat ในหน้าสรุปผู้ป่วย'],
+      pages: [{ href: 'doctor/patient-summary.html', label: 'doctor/patient-summary.html (แท็บ Chat)' }],
+    },
+
+    UC_D_WAIT: {
+      group: 'docDonor', actor: 'Doctor', title: 'จัดการรายชื่อรอปลูกถ่ายไต',
+      summary: 'ติดตามคิวผู้ป่วยที่รอรับการปลูกถ่ายไตทั้งหมดในโครงการ',
+      actions: [
+        'การ์ด KPI สรุปสถานะคิวรอทั้งหมด',
+        'มุมมอง Kanban แสดงขั้นตอน: ลงทะเบียน → ตรวจสอบ → จับคู่ → ประเมิน → พร้อมผ่าตัด → เสร็จสิ้น',
+        'ตารางพร้อม badge ระดับความสำคัญ และปุ่ม "ดูรายละเอียด" / "อัปเดตสถานะ"',
+      ],
+      relations: ['เชื่อมต่อไปยัง "จับคู่ผู้บริจาค-ผู้รับ" เพื่อเริ่มกระบวนการจับคู่ให้ผู้ป่วยรายที่เลือก'],
+      pages: [{ href: 'doctor/waiting-list.html', label: 'doctor/waiting-list.html' }],
+    },
+    UC_D_DONORREG: {
+      group: 'docDonor', actor: 'Doctor', title: 'จัดการทะเบียนผู้บริจาคไต',
+      summary: 'ภาพรวมโครงการผู้บริจาคไตทั้งหมด และลงทะเบียนผู้บริจาครายใหม่เข้าสู่ระบบ',
+      actions: [
+        'แดชบอร์ด KPI ผู้บริจาค (รอประเมิน / อนุมัติแล้ว / ปฏิเสธ / บริจาคสำเร็จ) และ Kanban ขั้นตอนผู้บริจาค',
+        'รายการที่ต้องติดตามเร่งด่วน (ประเมินมีความเสี่ยง/ไม่เหมาะสม, รอผลคัดกรองการติดเชื้อ)',
+        'ลงทะเบียนผู้บริจาคใหม่ด้วยฟอร์มหลายส่วน: ข้อมูลทั่วไป, ประเภทบริจาค Living/Deceased (สลับฟิลด์ความสัมพันธ์/เลือกผู้รับอัตโนมัติ), ประวัติการรักษา, ข้อมูลผู้รับ, ข้อมูลอวัยวะ/HLA',
+      ],
+      relations: ['เป็นจุดเริ่มต้นของลำดับขั้นตอนผู้บริจาค → ต่อด้วย "ประเมินสุขภาพผู้บริจาค"'],
+      pages: [
+        { href: 'doctor/donor-dashboard.html', label: 'doctor/donor-dashboard.html' },
+        { href: 'doctor/donor-registration.html', label: 'doctor/donor-registration.html' },
+      ],
+    },
+    UC_D_DONOREVAL: {
+      group: 'docDonor', actor: 'Doctor', title: 'ประเมินสุขภาพผู้บริจาค',
+      summary: 'ประเมินความพร้อมทางการแพทย์ของผู้บริจาคก่อนเข้าสู่กระบวนการจับคู่',
+      actions: [
+        'เช็คลิสต์ทางการแพทย์ (ความดัน, เบาหวาน, การทำงานของไต, หัวใจ, มะเร็ง, คัดกรองการติดเชื้อ) พร้อมสถานะ ปกติ/ผิดปกติ/รอผล',
+        'ผลตรวจภาพถ่ายทางการแพทย์ และแบบประเมินทางจิตวิทยา',
+        'สรุปผล เหมาะสม / เหมาะสมแบบมีความเสี่ยง / ไม่เหมาะสม พร้อมบันทึกหมายเหตุ, ดูประวัติการประเมินย้อนหลัง',
+      ],
+      relations: ['ต่อจาก "จัดการทะเบียนผู้บริจาคไต" และส่งผลต่อไปยัง "ตรวจสอบผลแล็บผู้บริจาค"'],
+      pages: [{ href: 'doctor/donor-evaluation.html', label: 'doctor/donor-evaluation.html' }],
+    },
+    UC_D_DONORLAB: {
+      group: 'docDonor', actor: 'Doctor', title: 'ตรวจสอบผลแล็บผู้บริจาค',
+      summary: 'ดูผลตรวจทางห้องปฏิบัติการของผู้บริจาคเพื่อประกอบการประเมินความเหมาะสม',
+      actions: [
+        'การ์ดผลตรวจแยกกลุ่ม (ทั่วไป, ความเข้ากันได้, คัดกรองการติดเชื้อ)',
+        'กราฟแนวโน้ม Creatinine/eGFR ตามรอบการประเมิน และตารางประวัติผลตรวจ',
+        'ปุ่ม Export PDF และลิงก์ต่อไปยังหน้าพิจารณาความเหมาะสม',
+      ],
+      relations: ['ต่อจาก "ประเมินสุขภาพผู้บริจาค" และส่งต่อไปยัง "พิจารณาความเหมาะสมผู้บริจาค"'],
+      pages: [{ href: 'doctor/donor-laboratory.html', label: 'doctor/donor-laboratory.html' }],
+    },
+    UC_D_DONORCOMMITTEE: {
+      group: 'docDonor', actor: 'Doctor', title: 'พิจารณาความเหมาะสมผู้บริจาค (Committee Review)',
+      summary: 'การตัดสินใจขั้นสุดท้ายของคณะกรรมการว่าผู้บริจาครายนี้เหมาะสมที่จะเข้าสู่กระบวนการบริจาคหรือไม่',
+      actions: [
+        'แสดงข้อมูลผู้บริจาคและผลประเมินสุขภาพล่าสุดเทียบกันในหน้าเดียว',
+        'เลือกผล เหมาะสม / เหมาะสมแบบมีความเสี่ยง / ไม่เหมาะสม พร้อมเช็คลิสต์ความเสี่ยงและสรุปผลเป็นข้อความ',
+        'ปุ่ม บันทึกร่าง / ปฏิเสธผู้บริจาค / อนุมัติผู้บริจาค พร้อมตารางประวัติการพิจารณาย้อนหลัง',
+      ],
+      relations: ['ต่อจาก "ตรวจสอบผลแล็บผู้บริจาค" และเมื่ออนุมัติแล้วผู้บริจาคจะพร้อมเข้าสู่ "จับคู่ผู้บริจาค-ผู้รับ"'],
+      pages: [{ href: 'doctor/donor-assessment.html', label: 'doctor/donor-assessment.html' }],
+    },
+    UC_D_MATCH: {
+      group: 'docDonor', actor: 'Doctor', title: 'จับคู่ผู้บริจาค-ผู้รับ (Kidney Matching)',
+      summary: 'เวิร์กเบนช์สำหรับจับคู่ผู้บริจาคไตกับผู้ป่วยในรายชื่อรอปลูกถ่าย',
+      actions: [
+        'เลือกผู้บริจาคและผู้ป่วยจาก dropdown เพื่อเปรียบเทียบโปรไฟล์แบบเคียงข้าง',
+        'คำนวณคะแนนความเข้ากันได้ (หมู่เลือด, HLA, Crossmatch, PRA, Cold Ischemic Time) พร้อม badge สถานะ',
+        'ปุ่ม "ปฏิเสธ" คู่ที่ไม่เหมาะสม หรือส่งต่อไปประเมินความเหมาะสมอย่างเป็นทางการ',
+        'ไทม์ไลน์ประวัติการจับคู่ของผู้บริจาครายนั้น',
+      ],
+      relations: ['ขยาย (&lt;&lt;extend&gt;&gt;) ไปยัง "อนุมัติความเหมาะสมคู่จับคู่" เพื่อยืนยันผลอย่างเป็นทางการ'],
+      pages: [{ href: 'doctor/kidney-matching.html', label: 'doctor/kidney-matching.html' }],
+    },
+    UC_D_SUIT: {
+      group: 'docDonor', actor: 'Doctor', title: 'อนุมัติความเหมาะสมของการจับคู่',
+      summary: 'ตรวจสอบและอนุมัติ/ปฏิเสธคู่ผู้บริจาค-ผู้รับที่จับคู่ไว้อย่างเป็นทางการก่อนเข้าสู่กระบวนการผ่าตัด',
+      actions: [
+        'สรุปข้อมูลผู้บริจาค/ผู้ป่วยที่จับคู่ พร้อมเลือกผล เหมาะสม / เหมาะสมแบบมีความเสี่ยง / ไม่เหมาะสม',
+        'เช็คลิสต์ความเสี่ยงและสรุป/ข้อเสนอแนะแบบข้อความ',
+        'ปุ่ม บันทึกผลประเมิน / ปฏิเสธคู่จับคู่ / อนุมัติคู่จับคู่',
+      ],
+      relations: ['เป็นส่วนขยาย (&lt;&lt;extend&gt;&gt;) ของ "จับคู่ผู้บริจาค-ผู้รับ" และเมื่ออนุมัติแล้วผู้บริจาคจะเข้าสู่ "ติดตามผู้บริจาคหลังบริจาค"'],
+      pages: [{ href: 'doctor/kidney-suitability.html', label: 'doctor/kidney-suitability.html' }],
+    },
+    UC_D_DONORFU: {
+      group: 'docDonor', actor: 'Doctor', title: 'ติดตามผู้บริจาคหลังบริจาค',
+      summary: 'ติดตามสุขภาพระยะยาวของผู้บริจาคหลังผ่าตัดบริจาคไตแล้ว (2 สัปดาห์ / 1 เดือน / 6 เดือน / 1 ปี)',
+      actions: [
+        'การ์ดสัญญาณชีพล่าสุด และไทม์ไลน์ตารางนัดติดตาม',
+        'บันทึกผลการติดตามครั้งใหม่ (Creatinine, eGFR, ความดัน, ภาวะแทรกซ้อน, ยา, คุณภาพชีวิต, หมายเหตุ)',
+        'ตารางประวัติการติดตามทั้งหมดของผู้บริจาครายนั้น',
+      ],
+      relations: ['ขั้นตอนสุดท้ายของกระบวนการผู้บริจาค ต่อจาก "อนุมัติความเหมาะสมของการจับคู่"'],
+      pages: [{ href: 'doctor/donor-followup.html', label: 'doctor/donor-followup.html' }],
+    },
+
+    UC_D_REPORT: {
+      group: 'docAdmin', actor: 'Doctor', title: 'รายงานภาพรวมทางคลินิก',
+      summary: 'วิเคราะห์ผลลัพธ์การรักษาและแนวโน้มของผู้ป่วยทั้งโครงการเพื่อประกอบการบริหารจัดการ',
+      actions: [
+        'สลับช่วงเวลา (เดือน/ไตรมาส/ปี) และดู KPI (ผู้ป่วยสะสม, อัตรารอดชีวิต, อัตราปฏิเสธอวัยวะ, ความร่วมมือใช้ยา)',
+        'กราฟหลายมิติ พร้อมรายงานย่อยรายชื่อรอปลูกถ่าย (เวลารอเฉลี่ย, ปลูกถ่ายสำเร็จ, จับคู่ที่ถูกปฏิเสธ, แนวโน้มอัตราจับคู่สำเร็จ)',
+        'ปุ่ม Export Excel / PDF',
+      ],
+      pages: [{ href: 'doctor/reports.html', label: 'doctor/reports.html' }],
+    },
+    UC_D_DONORREPORT: {
+      group: 'docAdmin', actor: 'Doctor', title: 'รายงานโครงการผู้บริจาค',
+      summary: 'วิเคราะห์ผลการดำเนินงานของโครงการผู้บริจาคไตทั้งหมดแยกต่างหากจากรายงานผู้ป่วย',
+      actions: [
+        'KPI: จำนวนรวม, Living/Deceased, อัตราอนุมัติ/ปฏิเสธ/บริจาคสำเร็จ, ความครบถ้วนของการติดตาม',
+        'กราฟ funnel ขั้นตอนผู้บริจาค, บริจาครายเดือน, สัดส่วนตามหมู่เลือด/ประเภท/ผลประเมิน',
+        'ตารางรายชื่อผู้บริจาคพร้อมผลประเมินและผลการพิจารณา, ปุ่ม Export Excel/PDF',
+      ],
+      pages: [{ href: 'doctor/donor-reports.html', label: 'doctor/donor-reports.html' }],
+    },
+    UC_D_AUDIT: {
+      group: 'docAdmin', actor: 'Doctor', title: 'ตรวจสอบ Audit Log',
+      summary: 'ตรวจสอบประวัติการใช้งานระบบของผู้ใช้ทุกคนเพื่อความปลอดภัยและการตรวจสอบย้อนหลัง',
+      actions: [
+        'ค้นหาและกรองบันทึกตามบทบาทผู้ใช้ (role) และช่วงวันที่',
+        'ตารางบันทึก ผู้ใช้ / บทบาท / การกระทำ / วันเวลา / IP แบบแบ่งหน้า',
+        'ปุ่ม Export Report',
+      ],
+      pages: [{ href: 'doctor/audit-log.html', label: 'doctor/audit-log.html' }],
+    },
+
+    UC_N_DASH: {
+      group: 'nurse', actor: 'Nurse', title: 'แดชบอร์ดพยาบาล',
+      summary: 'ภาพรวมงานประจำวันของพยาบาลผู้ประสานงานเมื่อเข้าสู่ระบบ',
+      actions: [
+        'KPI: นัดหมายวันนี้, รอติดตาม, แบบสอบถามยังไม่ตอบ, ผลแล็บที่ขาดหาย, ผู้ป่วยกลุ่มเสี่ยงสูง',
+        'รายการงานวันนี้ (Task Queue) พร้อม progress bar, กราฟภาพรวมความเสี่ยงและแนวโน้มการติดตาม',
+        'แผงการแจ้งเตือน และตารางคิวติดตามพร้อมไอคอนโทร/แชทด่วนต่อผู้ป่วย',
+        'ปุ่ม "บันทึกการติดตามใหม่"',
+      ],
+      pages: [{ href: 'nurse/dashboard.html', label: 'nurse/dashboard.html' }],
+    },
+    UC_N_PATIENT: {
+      group: 'nurse', actor: 'Nurse', title: 'จัดการผู้ป่วยในความดูแล',
+      summary: 'ดูและค้นหาผู้ป่วยที่อยู่ในความดูแลของพยาบาลผู้ประสานงาน',
+      actions: [
+        'ค้นหา/กรองตามสถานะการติดตาม, ระดับความเสี่ยง, ความล่าสุดของการติดต่อ, วันนัดหมาย',
+        'ตารางแสดงระดับความเสี่ยง, การติดต่อล่าสุด, นัดถัดไป, สถานะแบบสอบถาม, ความร่วมมือใช้ยา',
+        'ไอคอนด่วนต่อผู้ป่วยแต่ละราย: ดูข้อมูล / บันทึกติดตาม / แชท',
+      ],
+      pages: [{ href: 'nurse/patient-management.html', label: 'nurse/patient-management.html' }],
+    },
+    UC_N_APPT: {
+      group: 'nurse', actor: 'Nurse', title: 'จัดการนัดหมาย (ฝั่งพยาบาล)',
+      summary: 'ประสานงานตารางนัดหมายของผู้ป่วยแทนแพทย์ รวมถึงการยืนยันและแจ้งเตือนผ่าน LINE',
+      actions: [
+        'มุมมองปฏิทินราย วัน / สัปดาห์ / เดือน และสรุปนัดหมายวันนี้',
+        'ต่อแถว: ยืนยันนัด (เฉพาะรายการที่รอยืนยัน), ส่งข้อความแจ้งเตือนผ่าน LINE, เลื่อนนัด, ยกเลิกนัด',
+        'สร้างนัดหมายใหม่ผ่าน modal',
+      ],
+      relations: ['การส่งแจ้งเตือนผ่าน LINE จากที่นี่ จะไปปรากฏในฝั่งผู้ป่วยที่ "นัดหมายของฉัน" และหน้าแรกของผู้ป่วย'],
+      pages: [{ href: 'nurse/appointment-management.html', label: 'nurse/appointment-management.html' }],
+    },
+    UC_N_QUEST: {
+      group: 'nurse', actor: 'Nurse', title: 'ติดตามแบบสอบถามอาการ',
+      summary: 'ตรวจสอบคำตอบแบบสอบถามอาการที่ผู้ป่วยส่งเข้ามาและคัดกรองความผิดปกติ',
+      actions: [
+        'KPI จำนวน ตอบแล้ว / รอตอบ / มีความเสี่ยงสูง',
+        'ตารางสถานะแบบสอบถามพร้อมลิงก์ดู/บันทึกติดตาม',
+        'แผงคำตอบผิดปกติ (Abnormal Response Panel) พร้อมปุ่ม "แจ้งเตือนแพทย์" ต่อรายผู้ป่วย',
+      ],
+      relations: ['เมื่อกดแจ้งเตือนแพทย์ ข้อมูลจะเชื่อมไปยัง "การแจ้งเตือนทางคลินิก" ของแพทย์'],
+      pages: [{ href: 'nurse/questionnaire-monitoring.html', label: 'nurse/questionnaire-monitoring.html' }],
+    },
+    UC_N_FU: {
+      group: 'nurse', actor: 'Nurse', title: 'บันทึกการติดตามผู้ป่วย',
+      summary: 'บันทึกผลการติดต่อ/ติดตามอาการผู้ป่วยแต่ละครั้งเพื่อเก็บเป็นประวัติ',
+      actions: [
+        'ฟอร์มบันทึกการติดต่อใหม่: วันที่, วิธีติดต่อ (โทร/LINE/มาพบ), ผลลัพธ์, หมายเหตุ, แนบไฟล์',
+        'ไทม์ไลน์ประวัติการติดตามของผู้ป่วยรายนั้น',
+      ],
+      pages: [{ href: 'nurse/nurse-followup.html', label: 'nurse/nurse-followup.html' }],
+    },
+    UC_N_CHAT: {
+      group: 'nurse', actor: 'Nurse', title: 'แชทกับผู้ป่วย (ฝั่งพยาบาล)',
+      summary: 'สื่อสารกับผู้ป่วยหลายรายพร้อมกันผ่านระบบแชทแบบสองคอลัมน์',
+      actions: [
+        'รายชื่อสนทนาผู้ป่วยพร้อมสถานะ (ออนไลน์ / รอตอบ / ด่วน) ด้านซ้าย',
+        'หน้าต่างแชทพร้อมข้อความด่วน (quick reply) และปุ่มแนบรูป/เอกสาร',
+      ],
+      pages: [{ href: 'nurse/chat-system.html', label: 'nurse/chat-system.html' }],
+    },
+
+    UC_P_HOME: {
+      group: 'patient', actor: 'Patient', title: 'หน้าแรก & สถานะสุขภาพ',
+      summary: 'ภาพรวมสถานะสุขภาพและทางลัดไปยังฟีเจอร์หลักทั้งหมดของผู้ป่วย',
+      actions: [
+        'การ์ดสถานะสุขภาพ (ปกติ / เฝ้าระวัง / วิกฤต) ตามระดับความเสี่ยง พร้อมแบนเนอร์เตือนเมื่อผลแล็บผิดปกติ',
+        'การ์ดนัดหมายถัดไป และการ์ดยาที่ต้องกินวันนี้พร้อมปุ่ม "กินยาแล้ว"',
+        'เมนูทางลัดไปยัง นัดหมาย / ยา / แบบสอบถาม / ผลตรวจ / Timeline / แชท / คลังความรู้ / โปรไฟล์',
+      ],
+      pages: [{ href: 'liff/home.html', label: 'liff/home.html' }],
+    },
+    UC_P_APPT: {
+      group: 'patient', actor: 'Patient', title: 'นัดหมายของฉัน',
+      summary: 'ดูและจัดการนัดหมายของตนเอง เช่น ยืนยันหรือขอเลื่อนนัด',
+      actions: [
+        'การ์ดนัดถัดไปพร้อมปุ่ม "ยืนยันนัด" และ "ขอเลื่อนนัด" (ระบุวันที่ใหม่และเหตุผลผ่าน modal)',
+        'ปุ่มเปิดแผนที่โรงพยาบาล และไทม์ไลน์ประวัตินัดหมายที่ผ่านมา',
+      ],
+      relations: ['รับการแจ้งเตือนนัดหมายที่พยาบาลส่งผ่าน "จัดการนัดหมาย (ฝั่งพยาบาล)"'],
+      pages: [{ href: 'liff/appointment.html', label: 'liff/appointment.html' }],
+    },
+    UC_P_MED: {
+      group: 'patient', actor: 'Patient', title: 'ยา & แจ้งเตือนกินยา',
+      summary: 'ติดตามการกินยาประจำวันของตนเองและรับการแจ้งเตือนเมื่อถึงเวลากินยา',
+      actions: [
+        'รายการยาแบ่งช่วงเช้า/เย็น พร้อมปุ่ม "กินยาแล้ว" ต่อรายการ และปุ่มดูรายละเอียดยา (ขนาด, จำนวนเม็ด, วิธีใช้, คำเตือน)',
+        'หน้าแจ้งเตือนยาแบบ push แสดงมื้อยาที่ถึงเวลา พร้อมปุ่ม "กินแล้ว" / "ลืมกิน" และวงกลมแสดง % ความร่วมมือ 30 วัน',
+      ],
+      pages: [
+        { href: 'liff/medication.html', label: 'liff/medication.html' },
+        { href: 'liff/medication-reminder.html', label: 'liff/medication-reminder.html' },
+      ],
+    },
+    UC_P_LAB: {
+      group: 'patient', actor: 'Patient', title: 'ผลตรวจของฉัน',
+      summary: 'ดูผลตรวจทางห้องปฏิบัติการของตนเองแบบอ่านอย่างเดียว',
+      actions: [
+        'การ์ดสรุปค่า Creatinine, eGFR, Tacrolimus, ความดันโลหิต พร้อมทิศทางแนวโน้มและช่วงค่าปกติ',
+        'กราฟแนวโน้ม Creatinine/eGFR ย้อนหลัง 7 เดือน',
+      ],
+      pages: [{ href: 'liff/lab-result.html', label: 'liff/lab-result.html' }],
+    },
+    UC_P_TIMELINE: {
+      group: 'patient', actor: 'Patient', title: 'Timeline การรักษาของฉัน',
+      summary: 'ดูประวัติเหตุการณ์การรักษาของตนเองตั้งแต่วันปลูกถ่ายไตจนถึงปัจจุบัน',
+      actions: ['แสดงไทม์ไลน์เหตุการณ์สำคัญแบบอ่านอย่างเดียว ดึงข้อมูลจากประวัติการรักษาจริง'],
+      pages: [{ href: 'liff/timeline.html', label: 'liff/timeline.html' }],
+    },
+    UC_P_WAIT: {
+      group: 'patient', actor: 'Patient', title: 'สถานะรอปลูกถ่ายไต',
+      summary: 'ติดตามความคืบหน้าของตนเองในคิวรอรับไต (สำหรับผู้ป่วยที่ยังไม่ได้ปลูกถ่าย)',
+      actions: [
+        'การ์ดสรุป: ระยะเวลารอ, กรุ๊ปเลือด, วันที่ขึ้นทะเบียน, โรงพยาบาล',
+        'การ์ดแจ้งเตือนผ่าน LINE เมื่อสถานะเปลี่ยน (กำลังจับคู่ / กำลังประเมิน / พร้อมผ่าตัด)',
+        'Stepper แสดงขั้นตอน: ลงทะเบียน → จับคู่ → ประเมิน → พร้อมผ่าตัด ตามสถานะจริงของผู้ป่วย',
+      ],
+      pages: [{ href: 'liff/waiting-list.html', label: 'liff/waiting-list.html' }],
+    },
+    UC_P_QUEST: {
+      group: 'patient', actor: 'Patient', title: 'แบบสอบถามอาการ',
+      summary: 'รายงานอาการหลังปลูกถ่ายไตให้ทีมพยาบาลติดตามเป็นระยะ',
+      actions: [
+        'ตอบคำถามอาการแบบ มี/ไม่มี ด้วยปุ่ม toggle ทีละข้อ',
+        'แนบรูปภาพ 3 ประเภท (แผลผ่าตัด, ยา, ผลตรวจ)',
+        'ส่งแบบสอบถาม (แจ้งเตือนสำเร็จและกลับสู่หน้าแรกอัตโนมัติ)',
+      ],
+      relations: ['คำตอบที่ผิดปกติจะปรากฏใน "ติดตามแบบสอบถามอาการ" ของฝั่งพยาบาล'],
+      pages: [{ href: 'liff/questionnaire.html', label: 'liff/questionnaire.html' }],
+    },
+    UC_P_CHAT: {
+      group: 'patient', actor: 'Patient', title: 'แชทกับทีมพยาบาล',
+      summary: 'พูดคุยหรือสอบถามอาการกับทีมพยาบาลได้โดยตรงจากมือถือ',
+      actions: [
+        'ส่งข้อความและใช้ปุ่มข้อความด่วน (quick message)',
+        'แนบรูป/เอกสาร และปุ่มโทรหาโรงพยาบาลโดยตรง',
+      ],
+      pages: [{ href: 'liff/chat.html', label: 'liff/chat.html' }],
+    },
+    UC_P_KNOWLEDGE: {
+      group: 'patient', actor: 'Patient', title: 'คลังความรู้',
+      summary: 'เรียนรู้ข้อมูลการดูแลตนเองหลังปลูกถ่ายไตด้วยตนเอง',
+      actions: [
+        'เรียกดูรายการบทความแยกตามหมวดหมู่',
+        'เปิดอ่านรายละเอียดบทความ (การกินยา, สังเกตอาการ, ดูแลแผล, มาตรวจตามนัด, ป้องกันติดเชื้อ) พร้อมบทความที่เกี่ยวข้อง',
+      ],
+      pages: [
+        { href: 'liff/knowledge.html', label: 'liff/knowledge.html' },
+        { href: 'liff/knowledge-detail.html', label: 'liff/knowledge-detail.html' },
+      ],
+    },
+    UC_P_PROFILE: {
+      group: 'patient', actor: 'Patient', title: 'โปรไฟล์ของฉัน',
+      summary: 'ดูและจัดการข้อมูลส่วนตัวและการตั้งค่าบัญชีของผู้ป่วย',
+      actions: [
+        'ดูข้อมูลส่วนตัว (ชื่อ, HN, วันเกิด, กรุ๊ปเลือด, โรงพยาบาล, เบอร์โทร, LINE)',
+        'เมนูตั้งค่า: การแจ้งเตือน, ความเป็นส่วนตัว, ติดต่อโรงพยาบาล, ช่วยเหลือ',
+        'ปุ่มออกจากระบบ',
+      ],
+      pages: [{ href: 'liff/profile.html', label: 'liff/profile.html' }],
+    },
+    UC_P_EMERGENCY: {
+      group: 'patient', actor: 'Patient', title: 'โทรฉุกเฉิน (1669)',
+      summary: 'ปุ่มลอยสำหรับโทรสายด่วนการแพทย์ฉุกเฉินได้ทันทีจากทุกหน้าจอของผู้ป่วย',
+      actions: ['ปุ่มลอยมุมขวาล่างเหนือ Bottom Navigation แสดงอยู่ทุกหน้าจอฝั่งผู้ป่วย เชื่อมไปยังเบอร์ 1669 โดยตรง (tel:1669)'],
+      pages: [],
+    },
+  };
+
+  function ucClick(id) {
+    const d = UC[id];
+    if (!d) return;
+    const meta = GROUP_META[d.group];
+
+    const iconEl = document.getElementById('uc-modal-icon');
+    iconEl.style.background = meta.bg;
+    iconEl.style.color = meta.fg;
+    iconEl.innerHTML = '<i data-lucide="' + meta.icon + '"></i>';
+
+    const tagEl = document.getElementById('uc-modal-tag');
+    tagEl.textContent = meta.label + (meta.label.includes(d.actor) ? '' : ' · ' + d.actor);
+    tagEl.style.color = meta.fg;
+
+    document.getElementById('uc-modal-title').textContent = d.title;
+    document.getElementById('uc-modal-summary').textContent = d.summary;
+    document.getElementById('uc-modal-actions').innerHTML = d.actions
+      .map((a) => '<li class="flex gap-2"><i data-lucide="check" class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color:' + meta.fg + '"></i><span>' + a + '</span></li>')
+      .join('');
+
+    const relWrap = document.getElementById('uc-modal-related-wrap');
+    if (d.relations && d.relations.length) {
+      relWrap.classList.remove('hidden');
+      document.getElementById('uc-modal-related').innerHTML = d.relations
+        .map((r) => '<p class="flex gap-1.5"><i data-lucide="corner-down-right" class="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-400"></i><span>' + r + '</span></p>')
+        .join('');
+    } else {
+      relWrap.classList.add('hidden');
+    }
+
+    const pagesWrap = document.getElementById('uc-modal-pages-wrap');
+    if (d.pages && d.pages.length) {
+      pagesWrap.classList.remove('hidden');
+      document.getElementById('uc-modal-pages').innerHTML = d.pages
+        .map((p) => '<a href="' + p.href + '" class="text-[11px] font-mono px-2 py-1 rounded-md border border-slate-200 hover:bg-slate-50 text-slate-600 transition">' + p.label + '</a>')
+        .join('');
+    } else {
+      pagesWrap.classList.add('hidden');
+    }
+
+    document.getElementById('uc-modal').classList.remove('hidden');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function closeUcModal() {
+    document.getElementById('uc-modal').classList.add('hidden');
+  }
+
+  document.getElementById('uc-modal-close').addEventListener('click', closeUcModal);
+  document.getElementById('uc-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'uc-modal') closeUcModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeUcModal();
+  });
+
+  mermaid.initialize({
+    startOnLoad: true,
+    securityLevel: 'loose',
+    theme: 'base',
+    flowchart: { curve: 'basis', nodeSpacing: 26, rankSpacing: 50 },
+    themeVariables: { primaryColor: '#eef2ff', primaryTextColor: '#1e293b', primaryBorderColor: '#94a3b8', lineColor: '#94a3b8', fontFamily: "'Segoe UI', Arial, sans-serif" },
+  });
   lucide.createIcons();
 </script>
 </body>
