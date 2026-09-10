@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Use Case Diagram | Kidney Transplant Follow-up System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+        fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="assets/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+</head>
+<body class="font-sans bg-bgapp text-slate-800">
+
+<div class="min-h-screen">
+  <header class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-slate-200 h-16 flex items-center gap-3 px-4 lg:px-6">
+    <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white shrink-0" style="background: var(--gradient-primary);"><i data-lucide="activity" class="w-5 h-5"></i></div>
+    <div class="leading-tight">
+      <p class="text-sm font-bold text-slate-800">Kidney Transplant Follow-up System</p>
+      <p class="text-[11px] text-slate-500">Use Case Diagram</p>
+    </div>
+    <a href="index.html" class="ml-auto flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i data-lucide="arrow-left" class="w-4 h-4"></i> กลับหน้าหลัก</a>
+  </header>
+
+  <main class="max-w-[1400px] w-full mx-auto p-4 lg:p-6 space-y-6">
+
+    <div class="fade-in">
+      <h2 class="text-xl font-bold text-slate-800">Use Case Diagram</h2>
+      <p class="text-sm text-slate-500 mt-0.5">ภาพรวม Actor ทั้ง 3 บทบาท (Doctor / Nurse / Patient) และฟังก์ชันหลักที่แต่ละบทบาทใช้งานในระบบ</p>
+    </div>
+
+    <div class="card p-5 fade-in overflow-x-auto">
+      <pre class="mermaid" id="uc-diagram">
+flowchart LR
+  classDef actor fill:#0f172a,color:#ffffff,stroke:#0f172a,stroke-width:1px,font-weight:700,rx:10,ry:10
+  classDef shared fill:#fef3c7,color:#92400e,stroke:#f59e0b,stroke-width:1px
+  classDef doctorUC fill:#dbeafe,color:#1e3a8a,stroke:#2563eb,stroke-width:1px
+  classDef nurseUC fill:#f3e8ff,color:#4c1d95,stroke:#7c3aed,stroke-width:1px
+  classDef patientUC fill:#ccfbf1,color:#0f4c44,stroke:#0f766e,stroke-width:1px
+
+  Doctor["👨‍⚕️ Doctor"]:::actor
+  Nurse["👩‍⚕️ Nurse Coordinator"]:::actor
+  Patient["🧑 Patient"]:::actor
+
+  subgraph SYS["Kidney Transplant Follow-up System"]
+    direction TB
+
+    Login(["Login / Authentication"]):::shared
+    Notify(["Receive Clinical Alerts"]):::shared
+    Chat(["Chat / Messaging"]):::shared
+
+    subgraph DOC["Doctor Use Cases"]
+      direction TB
+      UC1(["Manage Patient Records"]):::doctorUC
+      UC2(["Treatment Timeline &amp; Medication"]):::doctorUC
+      UC3(["Review Lab Results"]):::doctorUC
+      UC4(["Manage Appointments"]):::doctorUC
+      UC5(["Manage Donor Registry"]):::doctorUC
+      UC6(["Kidney Matching &amp; Suitability"]):::doctorUC
+      UC7(["View Reports &amp; Audit Log"]):::doctorUC
+    end
+
+    subgraph NUR["Nurse Use Cases"]
+      direction TB
+      UC8(["Monitor Assigned Patients"]):::nurseUC
+      UC9(["Record Follow-up Visits"]):::nurseUC
+      UC10(["Monitor Symptom Questionnaires"]):::nurseUC
+    end
+
+    subgraph PAT["Patient Use Cases"]
+      direction TB
+      UC11(["View Health Dashboard &amp; Timeline"]):::patientUC
+      UC12(["Track Medication &amp; Reminders"]):::patientUC
+      UC13(["Complete Symptom Questionnaire"]):::patientUC
+      UC14(["Browse Knowledge Center"]):::patientUC
+    end
+  end
+
+  Doctor --> Login
+  Nurse --> Login
+  Patient --> Login
+
+  Doctor --> UC1
+  Doctor --> UC2
+  Doctor --> UC3
+  Doctor --> UC4
+  Doctor --> UC5
+  Doctor --> UC6
+  Doctor --> UC7
+  Doctor --> Notify
+
+  Nurse --> UC8
+  Nurse --> UC9
+  Nurse --> UC10
+  Nurse --> Notify
+  Nurse --> Chat
+
+  Patient --> UC11
+  Patient --> UC12
+  Patient --> UC13
+  Patient --> UC14
+  Patient --> Chat
+      </pre>
+    </div>
+
+    <!-- Legend -->
+    <div class="card p-5 fade-in">
+      <h3 class="font-semibold text-slate-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="list" class="w-4 h-4 text-primary"></i> คำอธิบาย Actor</h3>
+      <div class="grid sm:grid-cols-3 gap-4 text-sm">
+        <div class="rounded-xl border border-slate-100 p-4">
+          <p class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="stethoscope" class="w-4 h-4 text-primary"></i> Doctor</p>
+          <p class="text-xs text-slate-500 mt-1.5">ดูแลผู้ป่วย ตรวจสอบผลแล็บ จัดการแผนการรักษาและยา บริหารบัญชีผู้บริจาคไตตั้งแต่ลงทะเบียนจนถึงติดตามหลังบริจาค และดูรายงานภาพรวม</p>
+        </div>
+        <div class="rounded-xl border border-slate-100 p-4">
+          <p class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="heart-handshake" class="w-4 h-4" style="color:#7c3aed"></i> Nurse Coordinator</p>
+          <p class="text-xs text-slate-500 mt-1.5">ติดตามผู้ป่วยในความดูแล บันทึกผลการติดตามอาการ ตรวจสอบแบบสอบถามความเสี่ยง และสื่อสารกับผู้ป่วยผ่านแชท</p>
+        </div>
+        <div class="rounded-xl border border-slate-100 p-4">
+          <p class="font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="smartphone" class="w-4 h-4" style="color:#0f766e"></i> Patient</p>
+          <p class="text-xs text-slate-500 mt-1.5">ดูข้อมูลสุขภาพของตนเอง ติดตามการกินยาและนัดหมาย ตอบแบบสอบถามอาการ และเรียนรู้ข้อมูลสุขภาพผ่าน LINE LIFF</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: "base", themeVariables: { primaryColor: "#eef2ff", primaryTextColor: "#1e293b", primaryBorderColor: "#94a3b8", lineColor: "#94a3b8", fontFamily: "'Segoe UI', Arial, sans-serif" } });
+  lucide.createIcons();
+</script>
+</body>
+</html>
