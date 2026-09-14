@@ -40,16 +40,51 @@
           { key: "suitability", label: "ประเมินความเหมาะสม", href: "../doctor/kidney-suitability.html" },
         ],
       },
+      { key: "questionnaire", label: "ติดตามแบบสอบถาม", icon: "clipboard-list", href: "../nurse/questionnaire-monitoring.html" },
+      { key: "followup", label: "บันทึกการติดตาม", icon: "phone-call", href: "../nurse/nurse-followup.html" },
+      { key: "chat", label: "แชทกับผู้ป่วย", icon: "message-circle", href: "../nurse/chat-system.html" },
       { key: "reports", label: "รายงาน", icon: "bar-chart-3", href: "../doctor/reports.html" },
       { key: "audit", label: "Audit Log", icon: "shield-check", href: "../doctor/audit-log.html" },
     ],
     nurse: [
-      { key: "dashboard", label: "แดชบอร์ด", icon: "layout-dashboard", href: "../nurse/dashboard.html" },
-      { key: "patients", label: "ผู้ป่วยในความดูแล", icon: "users", href: "../nurse/patient-management.html" },
-      { key: "appointment", label: "นัดหมาย", icon: "calendar-days", href: "../nurse/appointment-management.html" },
+      { key: "dashboard", label: "แดชบอร์ด", icon: "layout-dashboard", href: "../doctor/dashboard.html" },
+      { key: "patients", label: "จัดการผู้ป่วย", icon: "users", href: "../doctor/patient-management.html" },
+      { key: "timeline", label: "Timeline การรักษา", icon: "history", href: "../doctor/treatment-timeline.html" },
+      { key: "lab", label: "ผลตรวจ Lab", icon: "flask-conical", href: "../doctor/laboratory.html" },
+      {
+        key: "medication", label: "ยากดภูมิคุ้มกัน", icon: "pill", href: "../doctor/medication-management.html",
+        children: [
+          { key: "medication", label: "จัดการยา", href: "../doctor/medication-management.html" },
+          { key: "compliance", label: "ความร่วมมือการใช้ยา", href: "../doctor/medication-compliance.html" },
+        ],
+      },
+      { key: "appointment", label: "นัดหมาย", icon: "calendar-days", href: "../doctor/appointment-management.html" },
+      { key: "alert", label: "แจ้งเตือน", icon: "bell-ring", href: "../doctor/notifications.html" },
+      { key: "waitinglist", label: "รายชื่อรอปลูกถ่าย", icon: "list-ordered", href: "../doctor/waiting-list.html" },
+      {
+        key: "donor", label: "จัดการผู้บริจาค", icon: "heart-handshake", href: "../doctor/donor-dashboard.html",
+        children: [
+          { key: "donor-dashboard", label: "แดชบอร์ดผู้บริจาค", href: "../doctor/donor-dashboard.html" },
+          { key: "donor-registration", label: "ลงทะเบียนผู้บริจาค", href: "../doctor/donor-registration.html" },
+          { key: "donor-evaluation", label: "ประเมินสุขภาพผู้บริจาค", href: "../doctor/donor-evaluation.html" },
+          { key: "donor-laboratory", label: "ผลตรวจ Lab ผู้บริจาค", href: "../doctor/donor-laboratory.html" },
+          { key: "donor-assessment", label: "สรุปผลความเหมาะสม", href: "../doctor/donor-assessment.html" },
+          { key: "donor-followup", label: "ติดตามหลังบริจาค", href: "../doctor/donor-followup.html" },
+          { key: "donor-reports", label: "รายงานผู้บริจาค", href: "../doctor/donor-reports.html" },
+        ],
+      },
+      {
+        key: "matching", label: "จับคู่ผู้บริจาค", icon: "git-compare-arrows", href: "../doctor/kidney-matching.html",
+        children: [
+          { key: "matching", label: "Kidney Matching", href: "../doctor/kidney-matching.html" },
+          { key: "suitability", label: "ประเมินความเหมาะสม", href: "../doctor/kidney-suitability.html" },
+        ],
+      },
       { key: "questionnaire", label: "ติดตามแบบสอบถาม", icon: "clipboard-list", href: "../nurse/questionnaire-monitoring.html" },
       { key: "followup", label: "บันทึกการติดตาม", icon: "phone-call", href: "../nurse/nurse-followup.html" },
       { key: "chat", label: "แชทกับผู้ป่วย", icon: "message-circle", href: "../nurse/chat-system.html" },
+      { key: "reports", label: "รายงาน", icon: "bar-chart-3", href: "../doctor/reports.html" },
+      { key: "audit", label: "Audit Log", icon: "shield-check", href: "../doctor/audit-log.html" },
     ],
   };
 
@@ -58,8 +93,8 @@
   }
 
   function renderSidebar(role, active) {
-    const items = NAV[role] || [];
-    const roleLabel = role === "nurse" ? "Nurse Coordinator" : "Clinical Dashboard";
+    const items = NAV[role] || NAV.doctor;
+    const roleLabel = "Unified Clinical Team";
     const brand = `
       <div class="sidebar-brand flex items-center gap-2.5 px-5 h-16 shrink-0">
         <div class="w-9 h-9 rounded-lg bg-white/15 backdrop-blur flex items-center justify-center text-white font-bold text-sm">KT</div>
@@ -92,7 +127,7 @@
       })
       .join("");
 
-    const themeClass = role === "nurse" ? "theme-nurse" : "theme-doctor";
+    const themeClass = "theme-doctor";
 
     return `
       <aside class="app-sidebar-shell ${themeClass} hidden md:flex md:flex-col shrink-0 h-screen sticky top-0">
