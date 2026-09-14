@@ -315,6 +315,71 @@ window.MOCK_DATA = (function () {
     { donorId: "DNR-5524", visit: "1 ปีหลังบริจาค", date: "18 ส.ค. 2570", creatinine: null, egfr: null, bp: "", medication: "", qualityOfLife: "", complication: "", note: "นัดตรวจติดตามระยะยาวตามมาตรฐานการดูแลผู้บริจาคไต", by: "นพ.ธนกร วัฒนสิน", state: "pending" },
   ];
 
+  // ===== Donor Self-Service (LIFF) — ข้อมูลสำหรับผู้บริจาคไตที่ล็อกอินเข้าใช้งานแอปด้วยตนเอง =====
+  // primaryDonor: ผู้บริจาคตัวอย่างหลักของหน้า Donor LIFF ทั้งหมด (น้องสาวผู้บริจาคไตให้ primaryPatient เมื่อ ม.ค. 2566 ปัจจุบันติดตามระยะยาวปีที่ 3)
+  const primaryDonor = {
+    id: "DNR-9001", name: "นางสาวมณีรัตน์ ใจดี", age: 46, gender: "หญิง", blood: "O+",
+    type: "Living Related", relationship: "น้องสาวผู้บริจาค (Sibling Donor)",
+    recipientHn: "HN-102345", recipientName: "นายสมชาย ใจดี",
+    hospital: "รพ.ศิริราช", donationDate: "18 ม.ค. 2566",
+    phone: "089-765-4321", line: "maneerat_jd",
+    creatinine: 1.1, egfr: 80, risk: "low", status: "ติดตามระยะยาวปกติ (ปีที่ 3 หลังบริจาค)",
+  };
+
+  // Donor Follow-up Trend — แนวโน้มค่า Creatinine / eGFR ของ primaryDonor ตลอดการติดตามหลังบริจาค
+  const donorFollowupTrend = {
+    labels: ["2 สัปดาห์", "1 เดือน", "6 เดือน", "1 ปี", "2 ปี", "3 ปี"],
+    creatinine: [1.0, 1.05, 1.1, 1.1, 1.15, 1.1],
+    egfr: [88, 85, 82, 80, 79, 80],
+  };
+
+  // Donor Follow-up Visits — ประวัติการติดตามอาการของ primaryDonor หลังผ่าตัดบริจาคไต
+  const donorFollowupVisits = [
+    { visit: "ติดตามหลังผ่าตัด 2 สัปดาห์", date: "01 ก.พ. 2566", creatinine: 1.0, egfr: 88, bp: "120/78 mmHg", complication: "ไม่มี", note: "แผลผ่าตัดหายดี ไม่มีภาวะแทรกซ้อน กลับไปใช้ชีวิตประจำวันเบาๆ ได้", state: "done" },
+    { visit: "ติดตาม 1 เดือนหลังบริจาค", date: "18 ก.พ. 2566", creatinine: 1.05, egfr: 85, bp: "118/76 mmHg", complication: "ไม่มี", note: "สุขภาพแข็งแรงดี กลับไปทำงานได้ตามปกติ", state: "done" },
+    { visit: "ติดตาม 6 เดือนหลังบริจาค", date: "18 ก.ค. 2566", creatinine: 1.1, egfr: 82, bp: "122/78 mmHg", complication: "ไม่มี", note: "การทำงานของไตข้างที่เหลือปรับตัวดี ค่าการทำงานไตอยู่ในเกณฑ์ปกติ", state: "done" },
+    { visit: "ติดตาม 1 ปีหลังบริจาค", date: "18 ม.ค. 2567", creatinine: 1.1, egfr: 80, bp: "120/80 mmHg", complication: "ไม่มี", note: "ตรวจสุขภาพประจำปีครั้งแรก ผลเลือดและความดันโลหิตปกติดี", state: "done" },
+    { visit: "ติดตาม 2 ปีหลังบริจาค", date: "18 ม.ค. 2568", creatinine: 1.15, egfr: 79, bp: "124/80 mmHg", complication: "ไม่มี", note: "ค่าการทำงานไตคงที่ แนะนำดื่มน้ำให้เพียงพอและตรวจสุขภาพประจำปีต่อเนื่อง", state: "done" },
+    { visit: "ติดตาม 3 ปีหลังบริจาค", date: "18 ม.ค. 2569", creatinine: 1.1, egfr: 80, bp: "118/78 mmHg", complication: "ไม่มี", note: "สุขภาพโดยรวมแข็งแรงดี ไม่พบภาวะแทรกซ้อนระยะยาว", state: "done" },
+    { visit: "ตรวจสุขภาพประจำปีที่ 4", date: "20 ก.ย. 2569", creatinine: null, egfr: null, bp: "", complication: "", note: "นัดตรวจเลือดและพบแพทย์เพื่อติดตามสุขภาพประจำปีตามมาตรฐานการดูแลผู้บริจาคไตระยะยาว", state: "active" },
+  ];
+
+  // Donor Journey Timeline — เหตุการณ์ตลอดกระบวนการของ primaryDonor ตั้งแต่ลงทะเบียนจนถึงติดตามหลังบริจาค
+  const donorJourneyTimeline = [
+    { date: "10 พ.ย. 2565", icon: "clipboard-list", color: "#2563eb", title: "ลงทะเบียนผู้บริจาค", desc: "ลงทะเบียนสมัครใจเป็นผู้บริจาคไตให้นายสมชาย ใจดี (พี่ชาย)", state: "done" },
+    { date: "18 พ.ย. 2565", icon: "flask-conical", color: "#7c3aed", title: "ตรวจคัดกรองและ HLA", desc: "ตรวจเลือด คัดกรองโรคติดเชื้อ และตรวจ HLA Typing ผลเข้ากันได้ดี", state: "done" },
+    { date: "02 ธ.ค. 2565", icon: "heart-pulse", color: "#0f766e", title: "ประเมินสุขภาพและสภาพจิตใจ", desc: "ผ่านการประเมินความพร้อมทางร่างกายและจิตใจโดยคณะกรรมการ", state: "done" },
+    { date: "20 ธ.ค. 2565", icon: "check-circle-2", color: "#16a34a", title: "คณะกรรมการอนุมัติ", desc: "ได้รับอนุมัติให้เป็นผู้บริจาคไตอย่างเป็นทางการ", state: "done" },
+    { date: "18 ม.ค. 2566", icon: "bed", color: "#dc2626", title: "ผ่าตัดบริจาคไต", desc: "ผ่าตัดบริจาคไตซ้ายสำเร็จ พักฟื้นที่โรงพยาบาล 4 วัน", state: "done" },
+    { date: "ติดตามต่อเนื่อง", icon: "activity", color: "#2563eb", title: "ติดตามสุขภาพระยะยาว", desc: "ติดตามอาการและตรวจสุขภาพประจำปีตามมาตรฐานการดูแลผู้บริจาคไต ปัจจุบันเข้าสู่ปีที่ 3", state: "active" },
+  ];
+
+  // Donor Appointments — นัดหมายของ primaryDonor (แยกจาก appointments ของฝั่งผู้ป่วยรอปลูกถ่าย/ปลูกถ่ายแล้ว)
+  const donorAppointments = [
+    { id: "DAP-001", donor: "นางสาวมณีรัตน์ ใจดี", donorId: "DNR-9001", date: "20 ก.ย. 2569", time: "10:00", doctor: "นพ.ธนกร วัฒนสิน", type: "ตรวจสุขภาพประจำปีที่ 4", status: "confirmed", hospital: "รพ.ศิริราช อาคาร 100 ปี ชั้น 3" },
+    { id: "DAP-000", donor: "นางสาวมณีรัตน์ ใจดี", donorId: "DNR-9001", date: "18 ม.ค. 2569", time: "09:30", doctor: "นพ.ธนกร วัฒนสิน", type: "ติดตาม 3 ปีหลังบริจาค", status: "confirmed", hospital: "รพ.ศิริราช อาคาร 100 ปี ชั้น 3" },
+    { id: "DAP-999", donor: "นางสาวมณีรัตน์ ใจดี", donorId: "DNR-9001", date: "18 ม.ค. 2568", time: "09:30", doctor: "นพ.ธนกร วัฒนสิน", type: "ติดตาม 2 ปีหลังบริจาค", status: "confirmed", hospital: "รพ.ศิริราช อาคาร 100 ปี ชั้น 3" },
+  ];
+
+  // Donor Symptom Questionnaire (LIFF)
+  const donorSymptomQuestions = [
+    { key: "fever", icon: "thermometer", text: "วันนี้มีไข้หรือไม่?" },
+    { key: "woundPain", icon: "bandage", text: "มีอาการปวดแผลผ่าตัดหรือบริเวณไตที่บริจาคหรือไม่?" },
+    { key: "swelling", icon: "activity", text: "มีอาการบวมบริเวณแผลผ่าตัดหรือไม่?" },
+    { key: "urine", icon: "droplet", text: "สังเกตปัสสาวะผิดปกติ (มีเลือดปน/ปัสสาวะน้อยลงมาก) หรือไม่?" },
+    { key: "fatigue", icon: "battery-low", text: "รู้สึกเหนื่อยง่ายผิดปกติหรือไม่?" },
+    { key: "dizzy", icon: "brain", text: "มีอาการปวดศีรษะหรือเวียนศีรษะหรือไม่?" },
+  ];
+
+  // Donor Knowledge Articles — บทความความรู้สำหรับผู้บริจาคไตหลังการบริจาค
+  const donorKnowledgeArticles = [
+    { id: "dkb-1", title: "การดูแลตนเองหลังบริจาคไต", cover: "🩺", summary: "แนวทางปฏิบัติตัวช่วง 3 เดือนแรกหลังผ่าตัดบริจาคไต", category: "การดูแลทั่วไป" },
+    { id: "dkb-2", title: "การดูแลแผลผ่าตัดผู้บริจาคไต", cover: "🩹", summary: "วิธีทำความสะอาดแผลและสัญญาณที่ต้องรีบพบแพทย์", category: "การดูแลทั่วไป" },
+    { id: "dkb-3", title: "ใช้ชีวิตอย่างมั่นใจด้วยไตข้างเดียว", cover: "🫘", summary: "ไตที่เหลือทำงานทดแทนได้ดี หากดูแลสุขภาพอย่างเหมาะสม", category: "การดูแลทั่วไป" },
+    { id: "dkb-4", title: "อาหารและการออกกำลังกายสำหรับผู้บริจาคไต", cover: "🥗", summary: "ดื่มน้ำให้เพียงพอ ควบคุมโซเดียม และออกกำลังกายอย่างเหมาะสม", category: "โภชนาการ" },
+    { id: "dkb-5", title: "สัญญาณอันตรายที่ผู้บริจาคไตควรรีบพบแพทย์", cover: "🚨", summary: "ไข้ ปัสสาวะผิดปกติ บวม หรือปวดแผลรุนแรง", category: "อาการอันตราย" },
+  ];
+
   // Matching Results — เชื่อม donor (donorId) กับผู้ป่วยในบัญชีรอคิว (patientHn)
   const matchingResults = [
     { donorId: "DNR-5521", patientHn: "HN-990211", bloodCompat: true, hla: "5/6 Match", crossmatch: "Negative", pra: "4%", coldIschemic: "6 ชม. 20 นาที", score: 92, status: "passed", date: "07 ก.ย. 2569", doctor: "นพ.ธนกร วัฒนสิน" },
@@ -415,5 +480,7 @@ window.MOCK_DATA = (function () {
     questionnaireStatus, followupHistory, nurseTasks, notifications, chatThreads, knowledgeArticles,
     timelineEvents, symptomQuestions,
     donorEvaluations, donorLabPanels, donorLabTrend, donorAssessments, donorFollowups, donorTimeline,
+    primaryDonor, donorFollowupTrend, donorFollowupVisits, donorJourneyTimeline, donorAppointments,
+    donorSymptomQuestions, donorKnowledgeArticles,
   };
 })();

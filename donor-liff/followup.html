@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>ติดตามอาการของฉัน | Kidney Donor LIFF</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+  <script src="../assets/js/charts.js"></script>
+</head>
+
+<body class="liff-body font-sans">
+  <div class="liff-shell">
+    <div id="liff-header"></div>
+
+    <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
+
+      <p class="text-sm font-bold text-slate-700 fade-in">ผลตรวจล่าสุด</p>
+      <div id="stat-cards" class="grid grid-cols-2 gap-3 fade-in fade-in-delay-1"></div>
+
+      <div class="card p-4 fade-in fade-in-delay-2">
+        <div class="flex items-center justify-between mb-1">
+          <p class="text-sm font-bold text-slate-700">แนวโน้มค่า Creatinine และ eGFR</p>
+        </div>
+        <p class="text-[11px] text-slate-400 mb-2">ตั้งแต่หลังผ่าตัดจนถึงปัจจุบัน (3 ปี)</p>
+        <div style="height:220px;"><canvas id="labChart"></canvas></div>
+      </div>
+
+      <div class="fade-in fade-in-delay-3">
+        <p class="text-sm font-bold text-slate-700 mb-2">ประวัติการติดตามอาการ</p>
+        <div id="followup-list"></div>
+      </div>
+
+      <div
+        class="rounded-xl bg-slate-50 border border-slate-100 p-3.5 flex items-start gap-2.5 fade-in fade-in-delay-4">
+        <i data-lucide="info" class="w-4.5 h-4.5 text-slate-400 shrink-0 mt-0.5"></i>
+        <p class="text-xs text-slate-500">หากมีข้อสงสัยเกี่ยวกับผลตรวจหรืออาการผิดปกติ
+          สามารถสอบถามผ่านหน้าแชทกับทีมพยาบาลได้ตลอดเวลา</p>
+      </div>
+
+    </main>
+
+    <div id="liff-bottomnav"></div>
+  </div>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/donor-liff-layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    DonorLiffLayout.init({ variant: "plain", active: "followup", title: "ติดตามอาการของฉัน", backHref: "home.html" });
+
+    const donor = window.MOCK_DATA.primaryDonor;
+    const trend = window.MOCK_DATA.donorFollowupTrend;
+    const visits = window.MOCK_DATA.donorFollowupVisits;
+
+    document.getElementById("stat-cards").innerHTML = `
+    <div class="card p-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-blue-50 text-primary flex items-center justify-center shrink-0"><i data-lucide="droplets" class="w-5.5 h-5.5"></i></div>
+        <div class="min-w-0">
+          <p class="text-xs text-slate-500">Creatinine</p>
+          <p class="text-lg font-bold text-slate-800">${donor.creatinine} <span class="text-xs font-normal text-slate-400">mg/dL</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="card p-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-teal-50 flex items-center justify-center shrink-0" style="color:#0f766e"><i data-lucide="activity" class="w-5.5 h-5.5"></i></div>
+        <div class="min-w-0">
+          <p class="text-xs text-slate-500">eGFR</p>
+          <p class="text-lg font-bold text-slate-800">${donor.egfr} <span class="text-xs font-normal text-slate-400">mL/min</span></p>
+        </div>
+      </div>
+    </div>`;
+
+    const ctx = document.getElementById("labChart").getContext("2d");
+    Charts.lineChart(ctx, {
+      labels: trend.labels,
+      datasets: [
+        { label: "Creatinine (mg/dL)", data: trend.creatinine, color: Charts.COLORS.primary },
+        { label: "eGFR (mL/min)", data: trend.egfr, color: Charts.COLORS.teal },
+      ],
+    });
+
+    const stateIcon = { done: "check-circle-2", active: "calendar-clock", pending: "circle" };
+    document.getElementById("followup-list").innerHTML = Components.timeline(
+      visits.map((v) => ({
+        icon: stateIcon[v.state] || "circle",
+        state: v.state,
+        title: v.visit,
+        date: v.date,
+        desc: v.state === "done"
+          ? `Creatinine ${v.creatinine} mg/dL · eGFR ${v.egfr} mL/min · ${v.note}`
+          : v.note,
+      }))
+    );
+
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>
