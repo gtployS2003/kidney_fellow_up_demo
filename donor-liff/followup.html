@@ -28,6 +28,10 @@
 
     <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
 
+      <div class="card p-3 fade-in">
+        <div id="phase-stepper-wrap"></div>
+      </div>
+
       <p class="text-sm font-bold text-slate-700 fade-in">ผลตรวจล่าสุด</p>
       <div id="stat-cards" class="grid grid-cols-2 gap-3 fade-in fade-in-delay-1"></div>
 
@@ -65,26 +69,31 @@
     const donor = window.MOCK_DATA.primaryDonor;
     const trend = window.MOCK_DATA.donorFollowupTrend;
     const visits = window.MOCK_DATA.donorFollowupVisits;
+    const latestDone = visits.filter((v) => v.state === "done").slice(-1)[0];
 
-    document.getElementById("stat-cards").innerHTML = `
+    document.getElementById("phase-stepper-wrap").innerHTML = Components.phaseStepper("followup", {
+      pre: "timeline.html", surgery: "timeline.html", discharge: "timeline.html", followup: "followup.html",
+    });
+
+    function miniStat(icon, label, value, iconBg) {
+      return `
     <div class="card p-4">
       <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-blue-50 text-primary flex items-center justify-center shrink-0"><i data-lucide="droplets" class="w-5.5 h-5.5"></i></div>
+        <div class="w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center shrink-0"><i data-lucide="${icon}" class="w-5.5 h-5.5"></i></div>
         <div class="min-w-0">
-          <p class="text-xs text-slate-500">Creatinine</p>
-          <p class="text-lg font-bold text-slate-800">${donor.creatinine} <span class="text-xs font-normal text-slate-400">mg/dL</span></p>
-        </div>
-      </div>
-    </div>
-    <div class="card p-4">
-      <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-xl bg-teal-50 flex items-center justify-center shrink-0" style="color:#0f766e"><i data-lucide="activity" class="w-5.5 h-5.5"></i></div>
-        <div class="min-w-0">
-          <p class="text-xs text-slate-500">eGFR</p>
-          <p class="text-lg font-bold text-slate-800">${donor.egfr} <span class="text-xs font-normal text-slate-400">mL/min</span></p>
+          <p class="text-xs text-slate-500">${label}</p>
+          <p class="text-lg font-bold text-slate-800">${value}</p>
         </div>
       </div>
     </div>`;
+    }
+    document.getElementById("stat-cards").innerHTML =
+      miniStat("droplets", "Creatinine", `${donor.creatinine} <span class="text-xs font-normal text-slate-400">mg/dL</span>`, "bg-blue-50 text-primary") +
+      miniStat("activity", "eGFR", `${donor.egfr} <span class="text-xs font-normal text-slate-400">mL/min</span>`, "bg-teal-50") +
+      miniStat("flask-conical", "BUN / Uric", `${latestDone ? `${latestDone.bun} / ${latestDone.uric}` : "-"}`, "bg-amber-50 text-amber-600") +
+      miniStat("droplet", "UA / UPCI", `${latestDone ? `${latestDone.ua} · ${latestDone.upci}` : "-"}`, "bg-purple-50 text-purple-600") +
+      miniStat("scale", "BW / BMI", `${latestDone ? `${latestDone.bw} kg / ${latestDone.bmi}` : "-"}`, "bg-blue-50 text-primary") +
+      miniStat("brain", "สุขภาพจิต", `<span class="text-sm">${latestDone ? latestDone.mentalHealth : "-"}</span>`, "bg-rose-50 text-rose-600");
 
     const ctx = document.getElementById("labChart").getContext("2d");
     Charts.lineChart(ctx, {
@@ -103,7 +112,7 @@
         title: v.visit,
         date: v.date,
         desc: v.state === "done"
-          ? `Creatinine ${v.creatinine} mg/dL · eGFR ${v.egfr} mL/min · ${v.note}`
+          ? `Creatinine ${v.creatinine} mg/dL · eGFR ${v.egfr} mL/min · BUN ${v.bun} · Uric ${v.uric} · ${v.bp} · BW ${v.bw} kg / BMI ${v.bmi} · ${v.note}`
           : v.note,
       }))
     );

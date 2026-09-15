@@ -94,6 +94,11 @@
           </div>
         </div>
 
+        <!-- Phase Stepper -->
+        <div class="card p-4 fade-in fade-in-delay-2">
+          <div id="phase-stepper"></div>
+        </div>
+
         <!-- Quick Information -->
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 fade-in fade-in-delay-2">
           <div class="card p-4">
@@ -217,6 +222,21 @@
     document.getElementById("link-assessment").href = `donor-assessment.html?id=${donor.id}`;
     document.getElementById("link-lab-full").href = `donor-laboratory.html?id=${donor.id}`;
 
+    // Phase Stepper — ก่อนปลูกถ่าย / ขณะปลูกถ่าย / ก่อนกลับบ้าน / หลังปลูกถ่ายไต
+    const txCase = D.transplantCases.find((c) => c.donorId === donor.id);
+    let phaseKey = "pre";
+    if (txCase) {
+      const surgeryDone = !!(txCase.donorSurgery && txCase.donorSurgery.startTime);
+      const dischargeDone = !!(txCase.donorDischarge && txCase.donorDischarge.sutureRemoved && txCase.donorDischarge.labs.every((l) => l.status !== "pending"));
+      phaseKey = !surgeryDone ? "surgery" : dischargeDone ? "followup" : "discharge";
+    }
+    document.getElementById("phase-stepper").innerHTML = Components.phaseStepper(phaseKey, {
+      pre: `donor-evaluation.html?id=${donor.id}`,
+      surgery: `transplant-surgery.html${txCase ? `?case=${txCase.caseId}` : ""}`,
+      discharge: `transplant-discharge.html${txCase ? `?case=${txCase.caseId}` : ""}`,
+      followup: `donor-followup.html?id=${donor.id}`,
+    });
+
     const evalRecord = D.donorEvaluations.find((e) => e.donorId === donor.id);
     document.getElementById("info-age").textContent = `${donor.age} ปี`;
     document.getElementById("info-blood").textContent = donor.blood;
@@ -263,24 +283,18 @@
         <div><p class="text-xs text-slate-400">ประวัติสูบบุหรี่</p><p class="font-semibold text-slate-800 mt-0.5">${evalRecord.smoking}</p></div>
         <div><p class="text-xs text-slate-400">ผู้ประเมิน</p><p class="font-semibold text-slate-800 mt-0.5">${evalRecord.evaluator}</p></div>
       </div>
-      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Medical Checklist</p>
-      <div class="flex flex-wrap gap-1.5 mb-4">
-        ${Object.entries(evalRecord.medicalChecklist).map(([k, v]) => `<span class="badge ${v === "normal" ? "badge-green" : v === "abnormal" ? "badge-red" : "badge-slate"}">${k.replace(/([A-Z])/g, " $1")}: ${v}</span>`).join("")}
-      </div>
-      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Imaging</p>
-      <div class="grid md:grid-cols-3 gap-4 text-sm mb-4">
-        <div><p class="text-xs text-slate-400">CT Kidney</p><p class="font-semibold text-slate-800 mt-0.5">${evalRecord.imaging.ctKidney}</p></div>
-        <div><p class="text-xs text-slate-400">Renal Anatomy</p><p class="font-semibold text-slate-800 mt-0.5">${evalRecord.imaging.renalAnatomy}</p></div>
-        <div><p class="text-xs text-slate-400">Kidney Size</p><p class="font-semibold text-slate-800 mt-0.5">${evalRecord.imaging.kidneySize}</p></div>
-      </div>
-      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Psychological Assessment</p>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-        <div><p class="text-xs text-slate-400">Voluntary</p><p class="font-semibold text-slate-800 mt-0.5">${evalRecord.psychological.donationVoluntary}</p></div>
-        <div><p class="text-xs text-slate-400">Mental Readiness</p><p class="font-semibold text-slate-800 mt-0.5">${evalRecord.psychological.mentalReadiness}</p></div>
-        <div><p class="text-xs text-slate-400">Family Pressure</p><p class="font-semibold text-slate-800 mt-0.5">${evalRecord.psychological.familyPressure}</p></div>
-        <div><p class="text-xs text-slate-400">Social Support</p><p class="font-semibold text-slate-800 mt-0.5">${evalRecord.psychological.socialSupport}</p></div>
-      </div>
-      <p class="text-xs text-slate-400 mt-4">บันทึกเพิ่มเติม</p>
+    </div>
+    <div class="space-y-4 mb-4">
+      ${[
+        { title: "ขั้นที่ 1 · เจาะเลือด / Lab", icon: "flask-conical", items: evalRecord.labs },
+        { title: "ขั้นที่ 2 · X-ray / Imaging", icon: "scan", items: evalRecord.imaging },
+        { title: "คัดกรองมะเร็ง", icon: "shield-alert", items: evalRecord.cancerScreening },
+        { title: "ขั้นที่ 3 · ปรึกษาแผนก (Consult)", icon: "users", items: evalRecord.consults },
+        { title: "ขั้นที่ 4 · Vaccine / Others", icon: "syringe", items: evalRecord.vaccineOthers },
+      ].map((s) => Components.checklistSection(s)).join("")}
+    </div>
+    <div class="rounded-xl border border-slate-100 p-4 mb-4">
+      <p class="text-xs text-slate-400">บันทึกเพิ่มเติม</p>
       <p class="text-sm text-slate-600 mt-1">${evalRecord.note}</p>
     </div>
     ${assessRecord

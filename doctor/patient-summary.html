@@ -111,6 +111,11 @@
           </div>
         </div>
 
+        <!-- Phase Stepper -->
+        <div class="card p-4 fade-in fade-in-delay-2">
+          <div id="phase-stepper"></div>
+        </div>
+
         <!-- Transplant info -->
         <div class="grid lg:grid-cols-4 gap-4 fade-in fade-in-delay-2">
           <div class="card p-4">
@@ -271,7 +276,12 @@
 
             <!-- Follow-up -->
             <div data-tab-panel="followup" class="hidden">
-              <p class="text-sm text-slate-500 mb-4">ประวัติการติดตามผู้ป่วยโดยทีมพยาบาลผู้ประสานงาน</p>
+              <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <p class="text-sm text-slate-500">ประวัติการติดตามผู้ป่วยโดยทีมพยาบาลผู้ประสานงาน</p>
+                <a id="link-opd-followup" href="patient-followup-visit.html"
+                  class="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">ดูบันทึกการตรวจ OPD
+                  แบบเต็ม (หลังปลูกถ่ายไต) <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+              </div>
               <div id="followup-timeline" class="timeline-line space-y-6"></div>
             </div>
 
@@ -303,10 +313,20 @@
     document.getElementById("patient-hospital").textContent = p.hospital;
     document.getElementById("patient-phone").textContent = p.phone;
 
+    // Phase Stepper — ผู้ป่วยในหน้านี้ปลูกถ่ายไตสำเร็จแล้วทุกราย จึงอยู่ในระยะ "หลังปลูกถ่ายไต" เสมอ
+    const txCase = D.transplantCases.find((c) => c.recipientHn === p.hn);
+    document.getElementById("phase-stepper").innerHTML = Components.phaseStepper("followup", {
+      pre: `patient-pretransplant.html`,
+      surgery: `transplant-surgery.html${txCase ? `?case=${txCase.caseId}` : ""}`,
+      discharge: `transplant-discharge.html${txCase ? `?case=${txCase.caseId}` : ""}`,
+      followup: `patient-followup-visit.html?hn=${p.hn}`,
+    });
+
     document.getElementById("info-transplant-date").textContent = p.transplantDate;
     document.getElementById("info-donor-type").textContent = p.donorType;
     document.getElementById("info-hla").textContent = p.hla;
     document.getElementById("info-compat").textContent = p.compatibility;
+    document.getElementById("link-opd-followup").href = `patient-followup-visit.html?hn=${p.hn}`;
 
     // Overview — Current Health Status (4 Medical Cards พร้อม Previous Value / Trend Arrow)
     const creatParam = D.labParams.find((l) => l.key === "creatinine");

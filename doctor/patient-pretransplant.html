@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ก่อนปลูกถ่ายไต (ผู้ป่วย) | Kidney Transplant Follow-up System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+
+<body class="font-sans bg-bgapp text-slate-800">
+
+  <div class="flex min-h-screen">
+    <div id="app-sidebar"></div>
+
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div id="app-topbar"></div>
+
+      <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-5xl w-full mx-auto">
+
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">ก่อนปลูกถ่ายไต — ผู้ป่วย (Recipient Pre-Transplant Work-up)</h2>
+            <p class="text-sm text-slate-500 mt-0.5">Matching / Lab / Imaging / คัดกรองมะเร็ง / ปรึกษาแผนก / Vaccine —
+              สำหรับผู้ป่วยในบัญชีรอปลูกถ่าย</p>
+          </div>
+          <a href="waiting-list.html"
+            class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i
+              data-lucide="arrow-left" class="w-4 h-4"></i> กลับรายชื่อรอปลูกถ่าย</a>
+        </div>
+
+        <!-- Candidate selector -->
+        <div class="card p-4 fade-in flex flex-wrap items-center gap-3">
+          <span class="text-sm font-medium text-slate-600 flex items-center gap-1.5"><i data-lucide="user-round-search"
+              class="w-4 h-4 text-slate-400"></i> เลือกผู้ป่วยในบัญชีรอปลูกถ่าย:</span>
+          <select id="patient-select"
+            class="px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white min-w-[260px]"></select>
+        </div>
+
+        <!-- Registration summary -->
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="user-round"
+              class="w-4 h-4 text-primary"></i> ลงทะเบียน / ข้อมูลพื้นฐาน</h3>
+          <div id="registration-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        </div>
+
+        <!-- Matching / Immunology -->
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="git-compare-arrows"
+              class="w-4 h-4 text-primary"></i> ข้อมูลภูมิคุ้มกัน / Matching</h3>
+          <div id="matching-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+        </div>
+
+        <form id="workup-form" class="space-y-6">
+          <div id="section-labs"></div>
+          <div id="section-imaging"></div>
+          <div id="section-cancer"></div>
+          <div id="section-consults"></div>
+          <div id="section-vaccine"></div>
+
+          <div class="flex justify-end gap-2">
+            <a href="waiting-list.html"
+              class="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 bg-white">ยกเลิก</a>
+            <button type="submit"
+              class="px-5 py-2 text-sm rounded-lg bg-primary hover:bg-primary-dark text-white font-medium flex items-center gap-2"><i
+                data-lucide="save" class="w-4 h-4"></i> บันทึกผลการตรวจ</button>
+          </div>
+        </form>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    StaffLayout.init({ role: "doctor", active: "patient-pretransplant", title: "ก่อนปลูกถ่ายไต — ผู้ป่วย" });
+
+    const D = window.MOCK_DATA;
+    const candidates = D.waitingList;
+
+    const params = new URLSearchParams(window.location.search);
+    const initialHn = params.get("hn") && candidates.some((c) => c.hn === params.get("hn")) ? params.get("hn") : candidates[0].hn;
+
+    document.getElementById("patient-select").innerHTML = candidates.map((c) => `<option value="${c.hn}">${c.hn} · ${c.name}</option>`).join("");
+    document.getElementById("patient-select").value = initialHn;
+
+    // ผู้ป่วยที่ยังไม่มีข้อมูลใน candidateWorkups จะถูกสร้าง Checklist สถานะ "รอผล" ให้อัตโนมัติ
+    function emptyWorkup(candidate) {
+      return {
+        registrationExtra: { statusType: "อยู่ระหว่างพิจารณา (ยังไม่ระบุ Donor)", previousKT: "ไม่เคย", bw: "-", bmi: "-" },
+        matching: { hlaMM: "-", dsa: "-", pra: candidate.pra, cdcCrossmatch: "-", cmvIgGDR: "-", aboi: "-" },
+        labs: buildEmpty(WORKUP_LABELS_LOCAL.recipientLabs),
+        imaging: buildEmpty(WORKUP_LABELS_LOCAL.recipientImaging),
+        cancerScreening: buildEmpty(WORKUP_LABELS_LOCAL.cancerScreening),
+        consults: buildEmpty(WORKUP_LABELS_LOCAL.recipientConsults),
+        vaccineOthers: buildEmpty(WORKUP_LABELS_LOCAL.vaccineOthers),
+      };
+    }
+    // รายการมาตรฐานเดียวกับที่ใช้สร้าง candidateWorkups ใน data.js (คัดลอกมาเพื่อใช้ fallback ในหน้านี้)
+    const WORKUP_LABELS_LOCAL = {
+      recipientLabs: ["CBC", "Chem (BUN/Electrolyte)", "การทำงานของตับ (Liver Function)", "การทำงานของไต (Renal Function)", "ไวรัส (HIV/HBsAg/Anti-HCV/CMV)", "Coagulogram (PT/INR/PTT)"],
+      recipientImaging: ["CXR", "EKG", "USG Whole Abdomen", "Echocardiogram", "CTA Femoral/Iliac Artery"],
+      cancerScreening: ["Colonoscopy", "Mammogram", "PAP Smear", "PSA"],
+      recipientConsults: ["Cardio", "GI", "SUR (ศัลยกรรม)", "URO", "Onco (มะเร็ง)", "Endocrine (ต่อมไร้ท่อ)", "Psychiatrist (จิตเวช)", "Co-worker (นักสังคมสงเคราะห์)", "Dentist (ทันตกรรม)"],
+      vaccineOthers: ["Vaccine ตามเกณฑ์", "Others (ตามแพทย์สั่ง)"],
+    };
+    function buildEmpty(labels) {
+      return labels.map((label) => ({ label, date: "-", status: "pending", comment: "" }));
+    }
+
+    function loadCandidate(hn) {
+      const candidate = candidates.find((c) => c.hn === hn);
+      const w = D.candidateWorkups[hn] || emptyWorkup(candidate);
+
+      document.getElementById("registration-grid").innerHTML = [
+        { label: "HN", value: candidate.hn },
+        { label: "ชื่อ-สกุล", value: candidate.name },
+        { label: "อายุ", value: `${candidate.age} ปี` },
+        { label: "หมู่เลือด", value: candidate.blood },
+        { label: "โรงพยาบาล / OPD", value: candidate.hospital },
+        { label: "Status", value: w.registrationExtra.statusType },
+        { label: "Previous KT", value: w.registrationExtra.previousKT },
+        { label: "BW / BMI", value: `${w.registrationExtra.bw} kg / ${w.registrationExtra.bmi}` },
+      ]
+        .map((f) => `<div class="rounded-xl border border-slate-100 p-3.5"><p class="text-xs text-slate-400">${f.label}</p><p class="text-sm font-bold text-slate-800 mt-1">${f.value}</p></div>`)
+        .join("");
+
+      document.getElementById("matching-grid").innerHTML = [
+        { label: "HLA MM (A-B-DR-DQ)", value: w.matching.hlaMM },
+        { label: "DSA", value: w.matching.dsa },
+        { label: "PRA", value: `${w.matching.pra}` },
+        { label: "CDC Crossmatch", value: w.matching.cdcCrossmatch },
+        { label: "CMV IgG (D/R)", value: w.matching.cmvIgGDR },
+        { label: "ABOi", value: w.matching.aboi },
+      ]
+        .map((f) => `<div class="rounded-xl border border-slate-100 p-3.5"><p class="text-xs text-slate-400">${f.label}</p><p class="text-sm font-bold text-slate-800 mt-1">${f.value}</p></div>`)
+        .join("");
+
+      const editable = { editable: true };
+      document.getElementById("section-labs").innerHTML = Components.checklistSection({ title: "ขั้นที่ 1 · เจาะเลือด / Lab", icon: "flask-conical", items: w.labs }, editable);
+      document.getElementById("section-imaging").innerHTML = Components.checklistSection({ title: "ขั้นที่ 2 · X-ray / Imaging", icon: "scan", items: w.imaging }, editable);
+      document.getElementById("section-cancer").innerHTML = Components.checklistSection({ title: "คัดกรองมะเร็ง", icon: "shield-alert", items: w.cancerScreening }, editable);
+      document.getElementById("section-consults").innerHTML = Components.checklistSection({ title: "ขั้นที่ 3 · ปรึกษาแผนก (Consult)", icon: "users", items: w.consults }, editable);
+      document.getElementById("section-vaccine").innerHTML = Components.checklistSection({ title: "ขั้นที่ 4 · Vaccine / Others", icon: "syringe", items: w.vaccineOthers }, editable);
+
+      lucide.createIcons();
+    }
+
+    document.getElementById("patient-select").addEventListener("change", (e) => loadCandidate(e.target.value));
+    loadCandidate(initialHn);
+
+    document.getElementById("workup-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      UI.toast("บันทึกผลการตรวจก่อนปลูกถ่ายไตเรียบร้อยแล้ว", "success");
+    });
+
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

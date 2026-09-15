@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>หลังปลูกถ่ายไต | Kidney Transplant LIFF</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+
+<body class="liff-body font-sans">
+  <div class="liff-shell">
+    <div id="liff-header"></div>
+
+    <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
+
+      <div id="phase-stepper-wrap" class="card p-3 fade-in"></div>
+
+      <div class="flex items-center gap-2 fade-in fade-in-delay-1">
+        <span class="text-xs font-semibold text-slate-600">ครั้งที่ตรวจ:</span>
+        <select id="visit-select"
+          class="flex-1 px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white outline-none"></select>
+      </div>
+
+      <div id="visit-content" class="space-y-4 fade-in fade-in-delay-2"></div>
+
+      <div class="rounded-xl bg-slate-50 border border-slate-100 p-3.5 flex items-start gap-2.5 fade-in fade-in-delay-4">
+        <i data-lucide="info" class="w-4.5 h-4.5 text-slate-400 shrink-0 mt-0.5"></i>
+        <p class="text-xs text-slate-500">ผลตรวจนี้เป็นข้อมูลเดียวกับที่แพทย์บันทึกไว้ในระบบ
+          หากมีข้อสงสัยสามารถสอบถามผ่านหน้าแชทกับทีมพยาบาลได้ตลอดเวลา</p>
+      </div>
+
+    </main>
+
+    <div id="liff-bottomnav"></div>
+  </div>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/liff-layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    LiffLayout.init({ variant: "plain", title: "หลังปลูกถ่ายไต", backHref: "home.html" });
+
+    const D = window.MOCK_DATA;
+    const patient = D.primaryPatient;
+    const visits = D.patientFollowupVisits.filter((v) => v.hn === patient.hn).sort((a, b) => (a.date < b.date ? -1 : 1));
+
+    document.getElementById("phase-stepper-wrap").innerHTML = Components.phaseStepper("followup", {
+      pre: "waiting-list.html", surgery: "timeline.html", discharge: "timeline.html", followup: "followup.html",
+    });
+
+    const summaryMeta = {
+      stable: { label: "Stable — ผลคงที่ดี", badge: '<span class="badge badge-green">Stable</span>' },
+      deteriorated: { label: "Deteriorated — ควรเฝ้าระวัง", badge: '<span class="badge badge-red">Deteriorated</span>' },
+      improved: { label: "Improved — ดีขึ้น", badge: '<span class="badge badge-blue">Improved</span>' },
+    };
+
+    function row(label, value) {
+      return `<div><p class="text-[11px] text-slate-400">${label}</p><p class="text-xs font-semibold text-slate-800 mt-0.5">${value ?? "-"}</p></div>`;
+    }
+    function group(title, icon, rows) {
+      return `
+      <div class="card p-4">
+        <p class="text-xs font-bold text-slate-700 mb-3 flex items-center gap-1.5"><i data-lucide="${icon}" class="w-3.5 h-3.5 text-primary"></i> ${title}</p>
+        <div class="grid grid-cols-2 gap-3">${rows.join("")}</div>
+      </div>`;
+    }
+
+    function renderVisit(idx) {
+      const v = visits[idx];
+      if (!v) {
+        document.getElementById("visit-content").innerHTML = Components.emptyState({ icon: "stethoscope", title: "ยังไม่มีบันทึกการตรวจหลังปลูกถ่ายไต" });
+        lucide.createIcons();
+        return;
+      }
+      const meta = summaryMeta[v.summary] || summaryMeta.stable;
+      document.getElementById("visit-content").innerHTML = `
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-1">
+          <p class="text-sm font-bold text-slate-800">ตรวจวันที่ ${v.date}</p>
+          ${meta.badge}
+        </div>
+        <p class="text-xs text-slate-500">แพทย์ผู้ตรวจ ${v.doctor} · นัดครั้งถัดไปอีก ${v.followupWeeks} สัปดาห์</p>
+      </div>
+      ${group("Vital Sign", "heart-pulse", [row("BT", v.vitals.bt), row("PR", v.vitals.pr), row("BP", v.vitals.bp), row("BW / BMI", `${v.vitals.bw} / ${v.vitals.bmi}`), row("Home BP", v.vitals.homeBp), row("Edema", v.physicalExam.edema)])}
+      ${group("Drug Level", "pill", [row("TAC C0", v.drugLevel.tacC0), row("%CV", v.drugLevel.cv)])}
+      ${group("Lab สำคัญ", "flask-conical", [row("Creatinine", v.chem.cr), row("BUN", v.chem.bun), row("K", v.chem.k), row("Hb", v.cbc.hb), row("FBS", v.chem.fbs), row("Uric", v.chem.uric)])}
+      ${group("ปัสสาวะ (24 ชม. / UA)", "droplet", [row("CrCl", v.urine24hr.crCl), row("Protein", v.urine24hr.protein), row("UPCI", v.ua.upci), row("UA Protein", v.ua.protein)])}
+      ${group("Virology", "shield-alert", [row("CMV VL", v.virology.cmvVL), row("BK VL (Blood)", v.virology.bkVLBlood)])}
+      <div class="card p-4">
+        <p class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5"><i data-lucide="pill" class="w-3.5 h-3.5 text-primary"></i> รายการยาปัจจุบัน</p>
+        <p class="text-xs text-slate-600">${v.medications}</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5"><i data-lucide="clipboard-list" class="w-3.5 h-3.5 text-primary"></i> สรุปจากแพทย์</p>
+        <p class="text-xs text-slate-600">${v.clinicalNote}</p>
+      </div>`;
+      lucide.createIcons();
+    }
+
+    document.getElementById("visit-select").innerHTML = visits.map((v, i) => `<option value="${i}">${v.date}</option>`).join("");
+    document.getElementById("visit-select").value = visits.length - 1;
+    document.getElementById("visit-select").addEventListener("change", (e) => renderVisit(Number(e.target.value)));
+    renderVisit(visits.length - 1);
+
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

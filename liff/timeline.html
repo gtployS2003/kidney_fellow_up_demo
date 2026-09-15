@@ -26,6 +26,10 @@
 
     <main class="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
 
+      <div class="card p-3 fade-in">
+        <div id="phase-stepper-wrap"></div>
+      </div>
+
       <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-3.5 flex items-center gap-2.5 fade-in">
         <i data-lucide="history" class="w-4.5 h-4.5 text-indigo-600 shrink-0"></i>
         <p class="text-xs text-indigo-800">ประวัติการรักษาตั้งแต่วันปลูกถ่ายไตจนถึงปัจจุบัน</p>
@@ -43,6 +47,10 @@
   <script src="../assets/js/components.js"></script>
   <script>
     LiffLayout.init({ variant: "plain", title: "Timeline การรักษา", backHref: "home.html" });
+
+    document.getElementById("phase-stepper-wrap").innerHTML = Components.phaseStepper("followup", {
+      pre: "waiting-list.html", surgery: "timeline.html", discharge: "timeline.html", followup: "followup.html",
+    });
 
     document.getElementById("timeline-list").innerHTML = Components.timeline(window.MOCK_DATA.timelineEvents);
 

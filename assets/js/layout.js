@@ -20,17 +20,30 @@
       },
       { key: "appointment", label: "นัดหมาย", icon: "calendar-days", href: "../doctor/appointment-management.html" },
       { key: "alert", label: "แจ้งเตือน", icon: "bell-ring", href: "../doctor/notifications.html" },
-      { key: "waitinglist", label: "รายชื่อรอปลูกถ่าย", icon: "list-ordered", href: "../doctor/waiting-list.html" },
+      {
+        key: "waitinglist", label: "รายชื่อรอปลูกถ่าย", icon: "list-ordered", href: "../doctor/waiting-list.html",
+        children: [
+          { key: "waitinglist", label: "รายชื่อรอปลูกถ่าย (Waiting List)", href: "../doctor/waiting-list.html" },
+          { key: "patient-pretransplant", label: "เตรียมผู้ป่วยก่อนปลูกถ่าย", href: "../doctor/patient-pretransplant.html" },
+        ],
+      },
       {
         key: "donor", label: "จัดการผู้บริจาค", icon: "heart-handshake", href: "../doctor/donor-dashboard.html",
         children: [
           { key: "donor-dashboard", label: "แดชบอร์ดผู้บริจาค", href: "../doctor/donor-dashboard.html" },
           { key: "donor-registration", label: "ลงทะเบียนผู้บริจาค", href: "../doctor/donor-registration.html" },
-          { key: "donor-evaluation", label: "ประเมินสุขภาพผู้บริจาค", href: "../doctor/donor-evaluation.html" },
+          { key: "donor-evaluation", label: "ก่อนปลูกถ่าย (Pre-Transplant Work-up)", href: "../doctor/donor-evaluation.html" },
           { key: "donor-laboratory", label: "ผลตรวจ Lab ผู้บริจาค", href: "../doctor/donor-laboratory.html" },
           { key: "donor-assessment", label: "สรุปผลความเหมาะสม", href: "../doctor/donor-assessment.html" },
-          { key: "donor-followup", label: "ติดตามหลังบริจาค", href: "../doctor/donor-followup.html" },
+          { key: "donor-followup", label: "หลังปลูกถ่ายไต (ติดตามหลังบริจาค)", href: "../doctor/donor-followup.html" },
           { key: "donor-reports", label: "รายงานผู้บริจาค", href: "../doctor/donor-reports.html" },
+        ],
+      },
+      {
+        key: "transplant-surgery", label: "ผ่าตัด & ก่อนกลับบ้าน", icon: "scissors", href: "../doctor/transplant-surgery.html",
+        children: [
+          { key: "transplant-surgery", label: "ขณะปลูกถ่าย (บันทึกผ่าตัด)", href: "../doctor/transplant-surgery.html" },
+          { key: "transplant-discharge", label: "ก่อนกลับบ้าน (Discharge Checklist)", href: "../doctor/transplant-discharge.html" },
         ],
       },
       {
@@ -60,17 +73,30 @@
       },
       { key: "appointment", label: "นัดหมาย", icon: "calendar-days", href: "../doctor/appointment-management.html" },
       { key: "alert", label: "แจ้งเตือน", icon: "bell-ring", href: "../doctor/notifications.html" },
-      { key: "waitinglist", label: "รายชื่อรอปลูกถ่าย", icon: "list-ordered", href: "../doctor/waiting-list.html" },
+      {
+        key: "waitinglist", label: "รายชื่อรอปลูกถ่าย", icon: "list-ordered", href: "../doctor/waiting-list.html",
+        children: [
+          { key: "waitinglist", label: "รายชื่อรอปลูกถ่าย (Waiting List)", href: "../doctor/waiting-list.html" },
+          { key: "patient-pretransplant", label: "เตรียมผู้ป่วยก่อนปลูกถ่าย", href: "../doctor/patient-pretransplant.html" },
+        ],
+      },
       {
         key: "donor", label: "จัดการผู้บริจาค", icon: "heart-handshake", href: "../doctor/donor-dashboard.html",
         children: [
           { key: "donor-dashboard", label: "แดชบอร์ดผู้บริจาค", href: "../doctor/donor-dashboard.html" },
           { key: "donor-registration", label: "ลงทะเบียนผู้บริจาค", href: "../doctor/donor-registration.html" },
-          { key: "donor-evaluation", label: "ประเมินสุขภาพผู้บริจาค", href: "../doctor/donor-evaluation.html" },
+          { key: "donor-evaluation", label: "ก่อนปลูกถ่าย (Pre-Transplant Work-up)", href: "../doctor/donor-evaluation.html" },
           { key: "donor-laboratory", label: "ผลตรวจ Lab ผู้บริจาค", href: "../doctor/donor-laboratory.html" },
           { key: "donor-assessment", label: "สรุปผลความเหมาะสม", href: "../doctor/donor-assessment.html" },
-          { key: "donor-followup", label: "ติดตามหลังบริจาค", href: "../doctor/donor-followup.html" },
+          { key: "donor-followup", label: "หลังปลูกถ่ายไต (ติดตามหลังบริจาค)", href: "../doctor/donor-followup.html" },
           { key: "donor-reports", label: "รายงานผู้บริจาค", href: "../doctor/donor-reports.html" },
+        ],
+      },
+      {
+        key: "transplant-surgery", label: "ผ่าตัด & ก่อนกลับบ้าน", icon: "scissors", href: "../doctor/transplant-surgery.html",
+        children: [
+          { key: "transplant-surgery", label: "ขณะปลูกถ่าย (บันทึกผ่าตัด)", href: "../doctor/transplant-surgery.html" },
+          { key: "transplant-discharge", label: "ก่อนกลับบ้าน (Discharge Checklist)", href: "../doctor/transplant-discharge.html" },
         ],
       },
       {

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>หลังปลูกถ่ายไต (ผู้ป่วย) | Kidney Transplant Follow-up System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+</head>
+
+<body class="font-sans bg-bgapp text-slate-800">
+
+  <div class="flex min-h-screen">
+    <div id="app-sidebar"></div>
+
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div id="app-topbar"></div>
+
+      <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-[1400px] w-full mx-auto">
+
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-1.5 text-xs text-slate-400 fade-in">
+          <a href="patient-management.html" class="hover:text-primary hover:underline">จัดการผู้ป่วย</a>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          <span class="text-slate-600 font-medium">หลังปลูกถ่ายไต — บันทึกการตรวจ OPD</span>
+        </div>
+
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">หลังปลูกถ่ายไต — บันทึกการตรวจ OPD (Follow-up Visit Record)</h2>
+            <p class="text-sm text-slate-500 mt-0.5">ข้อมูลครบตาม OPD Card ทุกครั้งที่มาตรวจ</p>
+          </div>
+        </div>
+
+        <!-- Selectors -->
+        <div class="card p-4 fade-in flex flex-wrap items-center gap-3">
+          <span class="text-sm font-medium text-slate-600 flex items-center gap-1.5"><i data-lucide="user-round"
+              class="w-4 h-4 text-slate-400"></i> ผู้ป่วย:</span>
+          <select id="patient-select"
+            class="px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white min-w-[220px]"></select>
+          <span class="text-sm font-medium text-slate-600 flex items-center gap-1.5"><i data-lucide="calendar-days"
+              class="w-4 h-4 text-slate-400"></i> วันที่ตรวจ:</span>
+          <select id="visit-select"
+            class="px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white min-w-[200px]"></select>
+        </div>
+
+        <div id="empty-wrap" class="hidden card p-5 fade-in"></div>
+        <div id="content-wrap" class="space-y-5"></div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    StaffLayout.init({ role: "doctor", active: "patients", title: "หลังปลูกถ่ายไต — บันทึกการตรวจ OPD" });
+
+    const D = window.MOCK_DATA;
+    const hnsWithVisits = [...new Set(D.patientFollowupVisits.map((v) => v.hn))];
+    const patientsWithVisits = D.patients.filter((p) => hnsWithVisits.includes(p.hn));
+
+    const params = new URLSearchParams(window.location.search);
+    const initialHn = params.get("hn") && hnsWithVisits.includes(params.get("hn")) ? params.get("hn") : patientsWithVisits[0]?.hn;
+
+    const patientSelect = document.getElementById("patient-select");
+    const visitSelect = document.getElementById("visit-select");
+    const emptyWrap = document.getElementById("empty-wrap");
+    const contentWrap = document.getElementById("content-wrap");
+
+    if (!patientsWithVisits.length) {
+      patientSelect.innerHTML = `<option>ไม่มีข้อมูล</option>`;
+      patientSelect.disabled = true;
+      visitSelect.disabled = true;
+      emptyWrap.classList.remove("hidden");
+      emptyWrap.innerHTML = Components.emptyState({ icon: "stethoscope", title: "ยังไม่มีบันทึกการตรวจ OPD" });
+      lucide.createIcons();
+    } else {
+      patientSelect.innerHTML = patientsWithVisits.map((p) => `<option value="${p.hn}">${p.hn} · ${p.name}</option>`).join("");
+      patientSelect.value = initialHn;
+
+      function row(label, value) {
+        return `<div><p class="text-xs text-slate-400">${label}</p><p class="text-sm font-semibold text-slate-800 mt-0.5">${value ?? "-"}</p></div>`;
+      }
+      function group(title, icon, rows) {
+        return `
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="${icon}" class="w-4 h-4 text-primary"></i> ${title}</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${rows.join("")}</div>
+        </div>`;
+      }
+
+      const summaryBadge = { stable: '<span class="badge badge-green">Stable</span>', deteriorated: '<span class="badge badge-red">Deteriorated</span>', improved: '<span class="badge badge-blue">Improved</span>' };
+
+      function renderVisit(visits, idx) {
+        const v = visits[idx];
+        if (!v) {
+          contentWrap.innerHTML = "";
+          return;
+        }
+        const patient = D.patients.find((p) => p.hn === v.hn);
+        contentWrap.innerHTML = `
+        <div class="card p-5 fade-in flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0">${patient.name.slice(0, 2)}</div>
+            <div>
+              <p class="font-bold text-slate-800">${patient.name} <span class="text-slate-400 font-normal text-sm">· ${patient.hn}</span></p>
+              <p class="text-xs text-slate-500 mt-0.5">ตรวจวันที่ ${v.date} · นัดครั้งถัดไปอีก ${v.followupWeeks} สัปดาห์ · แพทย์ผู้ตรวจ ${v.doctor}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-slate-400 mb-1">สรุปผล Graft Function</p>
+            ${summaryBadge[v.summary] || ""}
+          </div>
+        </div>
+
+        ${group("Vital Sign / Physical Exam", "heart-pulse", [
+          row("BT", v.vitals.bt), row("PR", v.vitals.pr), row("BP", v.vitals.bp), row("RR", v.vitals.rr),
+          row("BW", v.vitals.bw), row("BMI", v.vitals.bmi), row("Home BP", v.vitals.homeBp),
+          row("Edema", v.physicalExam.edema), row("Tremor", v.physicalExam.tremor), row("Oral Ulcer", v.physicalExam.oralUlcer),
+        ])}
+
+        ${group("Drug Level", "pill", [
+          row("TAC C0", v.drugLevel.tacC0), row("CSA C0/C2", v.drugLevel.csaC0C2), row("SRL C0", v.drugLevel.srlC0), row("EVL C0", v.drugLevel.evlC0),
+          row("เวลาเจาะ", v.drugLevel.drawTime), row("AUC", v.drugLevel.auc), row("%CV", v.drugLevel.cv),
+        ])}
+
+        ${group("CBC", "droplets", [
+          row("Hb", v.cbc.hb), row("Hct", v.cbc.hct), row("MCV", v.cbc.mcv), row("RDW", v.cbc.rdw),
+          row("WBC", v.cbc.wbc), row("PMNs", v.cbc.pmn), row("Lymph", v.cbc.lymph), row("Plt", v.cbc.plt),
+          row("Ferritin", v.cbc.ferritin), row("TSAT", v.cbc.tsat), row("Reticulocyte", v.cbc.reticulocyte),
+        ])}
+
+        ${group("Chemistry", "flask-conical", [
+          row("FBS", v.chem.fbs), row("HbA1C", v.chem.hba1c), row("BUN", v.chem.bun), row("Cr", v.chem.cr),
+          row("Na", v.chem.na), row("K", v.chem.k), row("Cl", v.chem.cl), row("HCO3", v.chem.hco3),
+          row("Ca", v.chem.ca), row("PO4", v.chem.po4), row("Mg", v.chem.mg), row("Uric", v.chem.uric),
+          row("Alb", v.chem.alb), row("Glob", v.chem.glob), row("TB/DB", `${v.chem.tb} / ${v.chem.db}`), row("AST/ALT", `${v.chem.ast} / ${v.chem.alt}`),
+          row("ALP", v.chem.alp), row("iPTH", v.chem.ipth), row("25-OH vitD", v.chem.vitD), row("Chol", v.chem.chol),
+          row("TG", v.chem.tg), row("HDL", v.chem.hdl), row("LDL", v.chem.ldl), row("PT/INR", v.chem.ptInr), row("PTT", v.chem.ptt),
+        ])}
+
+        ${group("24 hr Urine / UA", "droplet", [
+          row("Volume", v.urine24hr.volume), row("Total Cr", v.urine24hr.totalCr), row("Total Urea", v.urine24hr.totalUrea), row("Protein", v.urine24hr.protein),
+          row("DPI", v.urine24hr.dpi), row("CrCl", v.urine24hr.crCl), row("Urine Na", v.urine24hr.urineNa),
+          row("sp.gr", v.ua.spGr), row("UA Protein", v.ua.protein), row("Sugar", v.ua.sugar), row("RBC", v.ua.rbc), row("WBC/Leu", v.ua.wbcLeu), row("UPCI", v.ua.upci),
+        ])}
+
+        ${group("Virology", "shield-alert", [
+          row("CMV Viral Load", v.virology.cmvVL), row("CMV Log", v.virology.cmvLog),
+          row("BK VL (Blood)", v.virology.bkVLBlood), row("BK VL (Urine)", v.virology.bkVLUrine), row("BK Log", v.virology.bkLog),
+        ])}
+
+        ${group("Last Investigations / History", "history", [
+          row("USG Doppler Allograft", v.lastInvestigations.usgDoppler), row("Allograft Biopsy (Banff)", v.lastInvestigations.biopsy),
+          row("DSA ล่าสุด", `${v.lastInvestigations.dsaDate} · ${v.lastInvestigations.dsaResult}`),
+          row("ABMR", v.history.abmr), row("DM/HT/DLP", v.history.dmHtDlp), row("CNI Toxicity", v.history.cniToxicity), row("CMV DNAemia", v.history.cmvDnaemia),
+        ])}
+
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="pill" class="w-4 h-4 text-primary"></i> Review Medications</h3>
+          <p class="text-sm text-slate-600">${v.medications}</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="card p-5 fade-in"><p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Clinical Note</p><p class="text-sm text-slate-600">${v.clinicalNote}</p></div>
+          <div class="card p-5 fade-in"><p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Pharmacist Note</p><p class="text-sm text-slate-600">${v.pharmacistNote}</p></div>
+          <div class="card p-5 fade-in"><p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Dietician Note</p><p class="text-sm text-slate-600">${v.dieticianNote}</p></div>
+        </div>`;
+        lucide.createIcons();
+      }
+
+      let currentVisits = [];
+      function loadPatient(hn) {
+        currentVisits = D.patientFollowupVisits.filter((v) => v.hn === hn).sort((a, b) => (a.date < b.date ? -1 : 1));
+        visitSelect.innerHTML = currentVisits.map((v, i) => `<option value="${i}">${v.date} (${v.followupWeeks} สัปดาห์)</option>`).join("");
+        visitSelect.value = currentVisits.length - 1;
+        renderVisit(currentVisits, currentVisits.length - 1);
+      }
+      visitSelect.addEventListener("change", (e) => renderVisit(currentVisits, Number(e.target.value)));
+      patientSelect.addEventListener("change", (e) => loadPatient(e.target.value));
+      loadPatient(initialHn);
+    }
+
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

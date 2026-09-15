@@ -24,6 +24,27 @@ window.MOCK_DATA = (function () {
     },
   };
 
+  // ===== 4-Phase Transplant Flow — ตัวช่วยกลาง =====
+  // ทุกรายการตรวจ/นัดปรึกษา ก่อนปลูกถ่ายไตใช้รูปแบบเดียวกัน: { label, date, status, comment }
+  // status: pass (ผ่าน) / fail (ไม่ผ่าน) / pending (รอผล)
+  function buildSection(labels, date, status, comment) {
+    status = status || "pass";
+    comment = comment || "";
+    return labels.map((label) => ({ label, date, status, comment }));
+  }
+
+  // รายการตรวจตามมาตรฐาน Pre-Transplant Work-up (ใช้สร้าง donorEvaluations / candidateWorkups ด้านล่าง)
+  const WORKUP_LABELS = {
+    donorLabs: ["CBC", "Chem (BUN/Electrolyte)", "การทำงานของตับ (Liver Function)", "การทำงานของไต (Renal Function)", "ไวรัส (HIV/HBsAg/Anti-HCV)", "Urine 24 hr CrCl", "Renal Scan (MAG3)"],
+    recipientLabs: ["CBC", "Chem (BUN/Electrolyte)", "การทำงานของตับ (Liver Function)", "การทำงานของไต (Renal Function)", "ไวรัส (HIV/HBsAg/Anti-HCV/CMV)", "Coagulogram (PT/INR/PTT)"],
+    donorImaging: ["CXR", "EKG", "CTA Renal Artery", "CT Whole Abdomen"],
+    recipientImaging: ["CXR", "EKG", "USG Whole Abdomen", "Echocardiogram", "CTA Femoral/Iliac Artery"],
+    cancerScreening: ["Colonoscopy", "Mammogram", "PAP Smear", "PSA"],
+    donorConsults: ["Cardio", "GI", "SUR (ศัลยกรรม)", "URO", "Psychiatrist (จิตเวช)", "Co-worker (นักสังคมสงเคราะห์)", "Dentist (ทันตกรรม)"],
+    recipientConsults: ["Cardio", "GI", "SUR (ศัลยกรรม)", "URO", "Onco (มะเร็ง)", "Endocrine (ต่อมไร้ท่อ)", "Psychiatrist (จิตเวช)", "Co-worker (นักสังคมสงเคราะห์)", "Dentist (ทันตกรรม)"],
+    vaccineOthers: ["Vaccine ตามเกณฑ์", "Others (ตามแพทย์สั่ง)"],
+  };
+
   const patients = [
     { hn: "HN-102345", an: "AN-660234", name: "นายสมชาย ใจดี", age: 52, gender: "ชาย", dob: "12 มี.ค. 2516", blood: "O+", hospital: "รพ.ศิริราช", transplantDate: "18 ม.ค. 2566", donorType: "ญาติผู้บริจาค (Living Related)", hla: "5/6 Match", compatibility: "สูง", risk: "low", status: "ติดตามปกติ", phone: "081-234-5678", line: "somchai_jd", creatinine: 1.1, egfr: 78, tac: 6.2, lastVisit: "02 ก.ย. 2569", nextVisit: "16 ก.ย. 2569" },
     { hn: "HN-102346", an: "AN-660512", name: "นางสมหญิง แสงทอง", age: 47, gender: "หญิง", dob: "24 ก.ค. 2521", blood: "A+", hospital: "รพ.ศิริราช", transplantDate: "03 พ.ค. 2565", donorType: "ผู้บริจาคสมองตาย (Deceased)", hla: "4/6 Match", compatibility: "ปานกลาง", risk: "medium", status: "ติดตามปกติ", phone: "082-345-6789", line: "somying_st", creatinine: 1.6, egfr: 58, tac: 9.4, lastVisit: "28 ส.ค. 2569", nextVisit: "11 ก.ย. 2569" },
@@ -122,73 +143,163 @@ window.MOCK_DATA = (function () {
     { hn: "HN-990219", name: "นางประไพ วัฒนวงศ์", age: 60, blood: "O+", hla: "A2,A24,B13,B62,DR4,DR9", pra: "3%", registerDate: "01 ม.ค. 2565", duration: "4 ปี 8 เดือน", stage: "completed", priority: "normal", waitingNo: "WL-2022-0004", hospital: "รพ.จุฬาลงกรณ์" },
   ];
 
+  // Candidate Pre-Transplant Work-up (ก่อนปลูกถ่ายไต — ฝั่งผู้รับ) — keyed ด้วย HN ของผู้ป่วยในบัญชีรอคิว (waitingList)
+  // ผู้ป่วยที่ไม่มีข้อมูลในนี้ยังไม่เริ่มกระบวนการตรวจ — หน้าจอจะสร้าง Checklist สถานะ "รอผล" ให้อัตโนมัติ
+  const candidateWorkups = {
+    "HN-990211": {
+      registrationExtra: { statusType: "Deceased Donor KT (รอผู้บริจาคที่เข้ากันได้)", previousKT: "ไม่เคย", bw: 68, bmi: 23.5 },
+      matching: { hlaMM: "1-0-1-1", dsa: "Negative", pra: "4%", cdcCrossmatch: "Negative", cmvIgGDR: "D+/R+", aboi: "เข้ากันได้ (Compatible)" },
+      labs: buildSection(WORKUP_LABELS.recipientLabs, "03 ก.ย. 2569"),
+      imaging: buildSection(WORKUP_LABELS.recipientImaging, "04 ก.ย. 2569"),
+      cancerScreening: buildSection(WORKUP_LABELS.cancerScreening, "04 ก.ย. 2569", "pass"),
+      consults: buildSection(WORKUP_LABELS.recipientConsults, "05 ก.ย. 2569", "pass", "ผ่านการประเมิน"),
+      vaccineOthers: buildSection(WORKUP_LABELS.vaccineOthers, "05 ก.ย. 2569", "pass"),
+    },
+    "HN-990212": (function () {
+      const labs = buildSection(WORKUP_LABELS.recipientLabs, "07 ก.ย. 2569");
+      labs[1] = { label: "Chem (BUN/Electrolyte)", date: "07 ก.ย. 2569", status: "fail", comment: "ผลตรวจผู้บริจาคพบความดันโลหิตสูง อยู่ระหว่างเฝ้าระวังเพิ่มเติมก่อนกำหนดวันผ่าตัด" };
+      const consults = buildSection(WORKUP_LABELS.recipientConsults, "08 ก.ย. 2569", "pending", "รอนัดประเมิน");
+      return {
+        registrationExtra: { statusType: "Living Donor KT (จาก นางสาวพิมพ์ชนก รุ่งเจริญ — พี่น้อง/Sibling)", previousKT: "ไม่เคย", bw: 61, bmi: 24.2 },
+        matching: { hlaMM: "2-1-1-0", dsa: "Positive DR5 (MFI 3,200)", pra: "34%", cdcCrossmatch: "Negative", cmvIgGDR: "D+/R+", aboi: "เข้ากันได้ (Compatible)" },
+        labs, imaging: buildSection(WORKUP_LABELS.recipientImaging, "-", "pending", "รอนัดตรวจ"),
+        cancerScreening: buildSection(WORKUP_LABELS.cancerScreening, "-", "pending"), consults,
+        vaccineOthers: buildSection(WORKUP_LABELS.vaccineOthers, "-", "pending"),
+      };
+    })(),
+    "HN-990213": {
+      registrationExtra: { statusType: "Living Donor KT (จาก นางสาวธิดารัตน์ มีสุข — คู่สมรส/Spouse)", previousKT: "ไม่เคย", bw: 70, bmi: 22.8 },
+      matching: { hlaMM: "2-1-0-1", dsa: "Negative", pra: "8%", cdcCrossmatch: "Negative", cmvIgGDR: "D+/R-", aboi: "เข้ากันได้ (Compatible)" },
+      labs: buildSection(WORKUP_LABELS.recipientLabs, "-", "pending", "เพิ่งลงทะเบียน รอนัดเจาะเลือด"),
+      imaging: buildSection(WORKUP_LABELS.recipientImaging, "-", "pending"),
+      cancerScreening: buildSection(WORKUP_LABELS.cancerScreening, "-", "pending"),
+      consults: buildSection(WORKUP_LABELS.recipientConsults, "-", "pending"),
+      vaccineOthers: buildSection(WORKUP_LABELS.vaccineOthers, "-", "pending"),
+    },
+    "HN-990217": {
+      registrationExtra: { statusType: "Living Donor KT (จาก นายกิตติศักดิ์ แสงอรุณ — บิดา/Parent)", previousKT: "ไม่เคย", bw: 52, bmi: 20.9 },
+      matching: { hlaMM: "0-1-0-0", dsa: "Negative", pra: "0%", cdcCrossmatch: "Negative", cmvIgGDR: "D-/R-", aboi: "เข้ากันได้ (Compatible)" },
+      labs: buildSection(WORKUP_LABELS.recipientLabs, "09 ก.ย. 2569", "pending", "รอผลตรวจไวรัส"),
+      imaging: buildSection(WORKUP_LABELS.recipientImaging, "-", "pending"),
+      cancerScreening: buildSection(WORKUP_LABELS.cancerScreening, "-", "pending"),
+      consults: buildSection(WORKUP_LABELS.recipientConsults, "-", "pending"),
+      vaccineOthers: buildSection(WORKUP_LABELS.vaccineOthers, "-", "pending"),
+    },
+  };
+
   // Donor Registry — status (coarse, ใช้กับหน้าลงทะเบียน/badge ทั่วไป): registered / screening / approved / rejected / used
   // stage (ละเอียด, ใช้กับ Donor Pipeline Kanban/Report): registered / screening / evaluation / matching / approved / rejected / completed
   // risk: low / medium / high — ระดับความเสี่ยงโดยรวมของผู้บริจาค
   const donors = [
-    { id: "DNR-5521", name: "นายวีระ ตั้งสกุล", type: "Deceased Donor", age: 29, gender: "ชาย", blood: "O+", province: "กรุงเทพมหานคร", dob: "14 พ.ค. 2540", idCard: "1-1099-00521-XX-X", phone: "081-552-1001", address: "123 ถ.สุขุมวิท กรุงเทพมหานคร", relationship: "-", recipientHn: "-", recipientName: "-", hla: "A2,A24,B13,B60,DR4,DR15", organ: "ไตซ้าย", hospital: "รพ.ศิริราช", crossmatch: "Negative", pra: "4%", coldIschemic: "6 ชม. 20 นาที", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative (HIV, HBsAg, Anti-HCV)", kidneyCondition: "ปกติดี (eGFR ประเมิน 95)", status: "approved", stage: "approved", risk: "low", registerDate: "01 ก.ย. 2569" },
-    { id: "DNR-5522", name: "นางสาวพิมพ์ชนก รุ่งเจริญ", type: "Living Related", age: 45, gender: "หญิง", blood: "A+", province: "นนทบุรี", dob: "20 มี.ค. 2524", idCard: "1-1005-00522-XX-X", phone: "082-663-2002", address: "45/2 ถ.งามวงศ์วาน นนทบุรี", relationship: "พี่น้อง (Sibling)", recipientHn: "HN-990212", recipientName: "นางสาวรัตนา ทับทิม", hla: "A1,A2,B8,B44,DR3,DR7", organ: "ไตขวา", hospital: "รพ.รามาธิบดี", crossmatch: "Negative", pra: "2%", coldIschemic: "2 ชม. 10 นาที", medicalHistory: "ความดันโลหิตสูง ควบคุมได้ดี", medication: "Amlodipine 5 mg (ควบคุมความดัน)", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ดื่มเป็นครั้งคราว", infectionScreening: "Negative", kidneyCondition: "ดี (eGFR 98)", status: "screening", stage: "screening", risk: "medium", registerDate: "02 ก.ย. 2569" },
-    { id: "DNR-5523", name: "นายสมพงษ์ ศรีวิไล", type: "Deceased Donor", age: 52, gender: "ชาย", blood: "B+", province: "ชลบุรี", dob: "11 ก.พ. 2517", idCard: "1-2033-00523-XX-X", phone: "083-774-3003", address: "88 ถ.สุขุมวิท ชลบุรี", relationship: "-", recipientHn: "-", recipientName: "-", hla: "A3,A11,B7,B35,DR1,DR15", organ: "ไตซ้าย", hospital: "รพ.จุฬาลงกรณ์", crossmatch: "Positive", pra: "22%", coldIschemic: "10 ชม. 45 นาที", medicalHistory: "เบาหวานชนิดที่ 2", medication: "Metformin 500 mg", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "เลิกสูบบุหรี่ 2 ปี", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative", kidneyCondition: "ปานกลาง (มี fibrosis เล็กน้อย)", status: "rejected", stage: "rejected", risk: "high", registerDate: "28 ส.ค. 2569" },
-    { id: "DNR-5524", name: "นางสาวอรุณี ทองสุข", type: "Deceased Donor", age: 34, gender: "หญิง", blood: "O-", province: "เชียงใหม่", dob: "19 ก.ค. 2535", idCard: "1-5011-00524-XX-X", phone: "084-885-4004", address: "12 ถ.นิมมานเหมินท์ เชียงใหม่", relationship: "-", recipientHn: "-", recipientName: "-", hla: "A2,A26,B18,B60,DR4,DR13", organ: "ไตขวา", hospital: "รพ.ศิริราช", crossmatch: "Negative", pra: "6%", coldIschemic: "5 ชม. 55 นาที", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative", kidneyCondition: "ดีมาก (eGFR 110)", status: "used", stage: "completed", risk: "low", registerDate: "12 ส.ค. 2569" },
-    { id: "DNR-5525", name: "นายกิตติศักดิ์ แสงอรุณ", type: "Living Related", age: 38, gender: "ชาย", blood: "AB+", province: "กรุงเทพมหานคร", dob: "02 ม.ค. 2531", idCard: "1-1077-00525-XX-X", phone: "085-996-5005", address: "99 ถ.รัชดาภิเษก กรุงเทพมหานคร", relationship: "บิดา/มารดา (Parent)", recipientHn: "HN-990217", recipientName: "นางสาวสุนิสา ทรงศิริ", hla: "A24,A33,B44,B62,DR9,DR12", organ: "ไตซ้าย", hospital: "รพ.รามาธิบดี", crossmatch: "Negative", pra: "0%", coldIschemic: "1 ชม. 40 นาที", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "อยู่ระหว่างตรวจ", kidneyCondition: "รอผลตรวจ", status: "registered", stage: "registered", risk: "low", registerDate: "08 ก.ย. 2569" },
-    { id: "DNR-5526", name: "นางสาวธิดารัตน์ มีสุข", type: "Living Related", age: 41, gender: "หญิง", blood: "O+", province: "ปทุมธานี", dob: "09 มิ.ย. 2528", idCard: "1-1088-00526-XX-X", phone: "086-112-6006", address: "20 ถ.รังสิต-นครนายก ปทุมธานี", relationship: "คู่สมรส (Spouse)", recipientHn: "HN-990213", recipientName: "นายมงคล ศักดิ์สิทธิ์", hla: "A2,A3,B7,B44,DR7,DR11", organ: "ไตซ้าย", hospital: "รพ.ธรรมศาสตร์", crossmatch: "Negative", pra: "3%", coldIschemic: "-", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ผ่าตัดไส้ติ่ง (2565)", allergy: "แพ้เพนิซิลลิน", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative", kidneyCondition: "ดี (eGFR ประเมิน 100)", status: "screening", stage: "evaluation", risk: "medium", registerDate: "28 ส.ค. 2569" },
-    { id: "DNR-5527", name: "นายประวิทย์ บุญรอด", type: "Deceased Donor", age: 47, gender: "ชาย", blood: "A-", province: "นครปฐม", dob: "23 ต.ค. 2522", idCard: "1-7302-00527-XX-X", phone: "087-223-7007", address: "5 ถ.เพชรเกษม นครปฐม", relationship: "-", recipientHn: "-", recipientName: "-", hla: "A1,A24,B8,B60,DR3,DR4", organ: "ไตขวา", hospital: "รพ.ศิริราช", crossmatch: "Negative", pra: "5%", coldIschemic: "4 ชม. 30 นาที", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative", kidneyCondition: "ดี (eGFR ประเมิน 92)", status: "screening", stage: "matching", risk: "low", registerDate: "04 ก.ย. 2569" },
+    { id: "DNR-5521", name: "นายวีระ ตั้งสกุล", type: "Deceased Donor", age: 29, gender: "ชาย", blood: "O+", province: "กรุงเทพมหานคร", dob: "14 พ.ค. 2540", idCard: "1-1099-00521-XX-X", phone: "081-552-1001", address: "123 ถ.สุขุมวิท กรุงเทพมหานคร", relationship: "-", recipientHn: "-", recipientName: "-", hla: "A2,A24,B13,B60,DR4,DR15", organ: "ไตซ้าย", hospital: "รพ.ศิริราช", crossmatch: "Negative", pra: "4%", coldIschemic: "6 ชม. 20 นาที", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative (HIV, HBsAg, Anti-HCV)", kidneyCondition: "ปกติดี (eGFR ประเมิน 95)", cmvIgG: "Negative (D-)", consentSigned: true, ethicsApproved: true, status: "approved", stage: "approved", risk: "low", registerDate: "01 ก.ย. 2569" },
+    { id: "DNR-5522", name: "นางสาวพิมพ์ชนก รุ่งเจริญ", type: "Living Related", age: 45, gender: "หญิง", blood: "A+", province: "นนทบุรี", dob: "20 มี.ค. 2524", idCard: "1-1005-00522-XX-X", phone: "082-663-2002", address: "45/2 ถ.งามวงศ์วาน นนทบุรี", relationship: "พี่น้อง (Sibling)", recipientHn: "HN-990212", recipientName: "นางสาวรัตนา ทับทิม", hla: "A1,A2,B8,B44,DR3,DR7", organ: "ไตขวา", hospital: "รพ.รามาธิบดี", crossmatch: "Negative", pra: "2%", coldIschemic: "2 ชม. 10 นาที", medicalHistory: "ความดันโลหิตสูง ควบคุมได้ดี", medication: "Amlodipine 5 mg (ควบคุมความดัน)", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ดื่มเป็นครั้งคราว", infectionScreening: "Negative", kidneyCondition: "ดี (eGFR 98)", cmvIgG: "Positive (D+)", consentSigned: true, ethicsApproved: false, status: "screening", stage: "screening", risk: "medium", registerDate: "02 ก.ย. 2569" },
+    { id: "DNR-5523", name: "นายสมพงษ์ ศรีวิไล", type: "Deceased Donor", age: 52, gender: "ชาย", blood: "B+", province: "ชลบุรี", dob: "11 ก.พ. 2517", idCard: "1-2033-00523-XX-X", phone: "083-774-3003", address: "88 ถ.สุขุมวิท ชลบุรี", relationship: "-", recipientHn: "-", recipientName: "-", hla: "A3,A11,B7,B35,DR1,DR15", organ: "ไตซ้าย", hospital: "รพ.จุฬาลงกรณ์", crossmatch: "Positive", pra: "22%", coldIschemic: "10 ชม. 45 นาที", medicalHistory: "เบาหวานชนิดที่ 2", medication: "Metformin 500 mg", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "เลิกสูบบุหรี่ 2 ปี", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative", kidneyCondition: "ปานกลาง (มี fibrosis เล็กน้อย)", cmvIgG: "Positive (D+)", consentSigned: true, ethicsApproved: false, status: "rejected", stage: "rejected", risk: "high", registerDate: "28 ส.ค. 2569" },
+    { id: "DNR-5524", name: "นางสาวอรุณี ทองสุข", type: "Deceased Donor", age: 34, gender: "หญิง", blood: "O-", province: "เชียงใหม่", dob: "19 ก.ค. 2535", idCard: "1-5011-00524-XX-X", phone: "084-885-4004", address: "12 ถ.นิมมานเหมินท์ เชียงใหม่", relationship: "-", recipientHn: "-", recipientName: "-", hla: "A2,A26,B18,B60,DR4,DR13", organ: "ไตขวา", hospital: "รพ.ศิริราช", crossmatch: "Negative", pra: "6%", coldIschemic: "5 ชม. 55 นาที", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative", kidneyCondition: "ดีมาก (eGFR 110)", cmvIgG: "Negative (D-)", consentSigned: true, ethicsApproved: true, status: "used", stage: "completed", risk: "low", registerDate: "12 ส.ค. 2569" },
+    { id: "DNR-5525", name: "นายกิตติศักดิ์ แสงอรุณ", type: "Living Related", age: 38, gender: "ชาย", blood: "AB+", province: "กรุงเทพมหานคร", dob: "02 ม.ค. 2531", idCard: "1-1077-00525-XX-X", phone: "085-996-5005", address: "99 ถ.รัชดาภิเษก กรุงเทพมหานคร", relationship: "บิดา/มารดา (Parent)", recipientHn: "HN-990217", recipientName: "นางสาวสุนิสา ทรงศิริ", hla: "A24,A33,B44,B62,DR9,DR12", organ: "ไตซ้าย", hospital: "รพ.รามาธิบดี", crossmatch: "Negative", pra: "0%", coldIschemic: "1 ชม. 40 นาที", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "อยู่ระหว่างตรวจ", kidneyCondition: "รอผลตรวจ", cmvIgG: "รอผลตรวจ", consentSigned: true, ethicsApproved: false, status: "registered", stage: "registered", risk: "low", registerDate: "08 ก.ย. 2569" },
+    { id: "DNR-5526", name: "นางสาวธิดารัตน์ มีสุข", type: "Living Related", age: 41, gender: "หญิง", blood: "O+", province: "ปทุมธานี", dob: "09 มิ.ย. 2528", idCard: "1-1088-00526-XX-X", phone: "086-112-6006", address: "20 ถ.รังสิต-นครนายก ปทุมธานี", relationship: "คู่สมรส (Spouse)", recipientHn: "HN-990213", recipientName: "นายมงคล ศักดิ์สิทธิ์", hla: "A2,A3,B7,B44,DR7,DR11", organ: "ไตซ้าย", hospital: "รพ.ธรรมศาสตร์", crossmatch: "Negative", pra: "3%", coldIschemic: "-", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ผ่าตัดไส้ติ่ง (2565)", allergy: "แพ้เพนิซิลลิน", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative", kidneyCondition: "ดี (eGFR ประเมิน 100)", cmvIgG: "Positive (D+)", consentSigned: true, ethicsApproved: false, status: "screening", stage: "evaluation", risk: "medium", registerDate: "28 ส.ค. 2569" },
+    { id: "DNR-5527", name: "นายประวิทย์ บุญรอด", type: "Deceased Donor", age: 47, gender: "ชาย", blood: "A-", province: "นครปฐม", dob: "23 ต.ค. 2522", idCard: "1-7302-00527-XX-X", phone: "087-223-7007", address: "5 ถ.เพชรเกษม นครปฐม", relationship: "-", recipientHn: "-", recipientName: "-", hla: "A1,A24,B8,B60,DR3,DR4", organ: "ไตขวา", hospital: "รพ.ศิริราช", crossmatch: "Negative", pra: "5%", coldIschemic: "4 ชม. 30 นาที", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative", kidneyCondition: "ดี (eGFR ประเมิน 92)", cmvIgG: "Negative (D-)", consentSigned: true, ethicsApproved: true, status: "screening", stage: "matching", risk: "low", registerDate: "04 ก.ย. 2569" },
+    { id: "DNR-9001", name: "นางสาวมณีรัตน์ ใจดี", type: "Living Related", age: 46, gender: "หญิง", blood: "O+", province: "กรุงเทพมหานคร", dob: "05 ก.พ. 2523", idCard: "1-1099-09001-XX-X", phone: "089-765-4321", address: "88 ถ.พระราม 4 กรุงเทพมหานคร", relationship: "พี่น้อง (Sibling — น้องสาว)", recipientHn: "HN-102345", recipientName: "นายสมชาย ใจดี", hla: "5/6 Match", organ: "ไตซ้าย", hospital: "รพ.ศิริราช", crossmatch: "Negative", pra: "3%", coldIschemic: "3 ชม. 15 นาที", medicalHistory: "ไม่มีโรคประจำตัว", medication: "ไม่มี", previousSurgery: "ไม่มี", allergy: "ไม่มี", smoking: "ไม่สูบบุหรี่", alcohol: "ไม่ดื่มแอลกอฮอล์", infectionScreening: "Negative (HIV, HBsAg, Anti-HCV)", kidneyCondition: "ดีมาก (eGFR ประเมิน 105 ก่อนบริจาค)", cmvIgG: "Negative (D-)", consentSigned: true, ethicsApproved: true, status: "used", stage: "completed", risk: "low", registerDate: "10 พ.ย. 2565", donationDate: "18 ม.ค. 2566", line: "maneerat_jd", creatinine: 1.1, egfr: 80, followupStatusText: "ติดตามระยะยาวปกติ (ปีที่ 3 หลังบริจาค)" },
   ];
 
-  // Donor Evaluation — Clinical Assessment ตามมาตรฐาน Living/Deceased Donor Work-up
-  // medicalChecklist/psychological ค่า: normal/abnormal/pending (medical), yes/no/pending, ready/pending, none/some/significant, strong/moderate/weak (psychological)
-  // stage: pending / in-progress / completed, result: suitable / risk / not-suitable / pending
-  const donorEvaluations = [
-    {
-      donorId: "DNR-5521", date: "04 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "118/76 mmHg", bmi: 22.4, smoking: "ไม่สูบบุหรี่", comorbidities: [], psychStatus: "ผ่านการประเมินสภาพจิตใจ ไม่มีข้อบ่งชี้ผิดปกติ",
-      medicalChecklist: { bloodPressure: "normal", diabetesScreening: "normal", kidneyFunction: "normal", cardiacAssessment: "normal", cancerScreening: "normal", infectionScreening: "normal" },
-      imaging: { ctKidney: "ปกติ ไม่พบพยาธิสภาพ", renalAnatomy: "Normal anatomy, single renal artery/vein ทั้งสองข้าง", kidneySize: "ซ้าย 10.4 ซม. / ขวา 10.2 ซม." },
-      psychological: { donationVoluntary: "yes", mentalReadiness: "ready", familyPressure: "none", socialSupport: "strong" },
-      stage: "completed", result: "suitable", note: "สุขภาพร่างกายและจิตใจแข็งแรง ผ่านเกณฑ์ทุกด้าน เหมาะสมเป็นผู้บริจาค",
-    },
-    {
-      donorId: "DNR-5522", date: "07 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "138/88 mmHg", bmi: 25.1, smoking: "ไม่สูบบุหรี่", comorbidities: ["ความดันโลหิตสูง (ควบคุมด้วยยา)"], psychStatus: "อยู่ระหว่างนัดประเมินสภาพจิตใจ",
-      medicalChecklist: { bloodPressure: "abnormal", diabetesScreening: "normal", kidneyFunction: "normal", cardiacAssessment: "normal", cancerScreening: "normal", infectionScreening: "normal" },
-      imaging: { ctKidney: "รอตรวจ", renalAnatomy: "รอตรวจ", kidneySize: "รอตรวจ" },
-      psychological: { donationVoluntary: "yes", mentalReadiness: "pending", familyPressure: "none", socialSupport: "strong" },
-      stage: "in-progress", result: "pending", note: "พบความดันโลหิตสูง อยู่ระหว่างติดตามผลก่อนสรุปผลการประเมิน",
-    },
-    {
-      donorId: "DNR-5523", date: "31 ส.ค. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "124/80 mmHg", bmi: 27.8, smoking: "เลิกสูบบุหรี่ 2 ปี", comorbidities: ["เบาหวานชนิดที่ 2"], psychStatus: "ผ่านการประเมินสภาพจิตใจ",
-      medicalChecklist: { bloodPressure: "normal", diabetesScreening: "abnormal", kidneyFunction: "abnormal", cardiacAssessment: "normal", cancerScreening: "normal", infectionScreening: "normal" },
-      imaging: { ctKidney: "พบ fibrosis เล็กน้อย", renalAnatomy: "Normal anatomy", kidneySize: "ซ้าย 9.8 ซม. / ขวา 9.9 ซม." },
-      psychological: { donationVoluntary: "yes", mentalReadiness: "ready", familyPressure: "none", socialSupport: "moderate" },
-      stage: "completed", result: "not-suitable", note: "พบเบาหวานชนิดที่ 2 ร่วมกับผล Crossmatch Positive และ eGFR ต่ำกว่าเกณฑ์ ไม่เหมาะสมสำหรับการบริจาค",
-    },
-    {
-      donorId: "DNR-5524", date: "14 ส.ค. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "112/72 mmHg", bmi: 21.6, smoking: "ไม่สูบบุหรี่", comorbidities: [], psychStatus: "ผ่านการประเมินสภาพจิตใจ",
-      medicalChecklist: { bloodPressure: "normal", diabetesScreening: "normal", kidneyFunction: "normal", cardiacAssessment: "normal", cancerScreening: "normal", infectionScreening: "normal" },
-      imaging: { ctKidney: "ปกติดีมาก", renalAnatomy: "Normal anatomy", kidneySize: "ซ้าย 10.8 ซม. / ขวา 10.6 ซม." },
-      psychological: { donationVoluntary: "yes", mentalReadiness: "ready", familyPressure: "none", socialSupport: "strong" },
-      stage: "completed", result: "suitable", note: "ผลประเมินทุกด้านอยู่ในเกณฑ์ดีมาก ดำเนินการผ่าตัดบริจาคไตสำเร็จแล้ว",
-    },
-    {
-      donorId: "DNR-5525", date: "08 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "116/74 mmHg", bmi: 23.0, smoking: "ไม่สูบบุหรี่", comorbidities: [], psychStatus: "รอนัดประเมินสภาพจิตใจ",
-      medicalChecklist: { bloodPressure: "normal", diabetesScreening: "normal", kidneyFunction: "normal", cardiacAssessment: "pending", cancerScreening: "pending", infectionScreening: "pending" },
-      imaging: { ctKidney: "รอตรวจ", renalAnatomy: "รอตรวจ", kidneySize: "รอตรวจ" },
-      psychological: { donationVoluntary: "yes", mentalReadiness: "pending", familyPressure: "none", socialSupport: "strong" },
-      stage: "pending", result: "pending", note: "เพิ่งลงทะเบียน รอเริ่มกระบวนการตรวจคัดกรองเบื้องต้น",
-    },
-    {
-      donorId: "DNR-5526", date: "05 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "128/84 mmHg", bmi: 24.6, smoking: "ไม่สูบบุหรี่", comorbidities: [], psychStatus: "อยู่ระหว่างประเมินสภาพจิตใจ",
-      medicalChecklist: { bloodPressure: "abnormal", diabetesScreening: "normal", kidneyFunction: "normal", cardiacAssessment: "normal", cancerScreening: "normal", infectionScreening: "normal" },
-      imaging: { ctKidney: "ปกติ ไม่พบพยาธิสภาพ", renalAnatomy: "Normal anatomy", kidneySize: "ซ้าย 10.1 ซม. / ขวา 10.0 ซม." },
-      psychological: { donationVoluntary: "yes", mentalReadiness: "ready", familyPressure: "some", socialSupport: "moderate" },
-      stage: "in-progress", result: "risk", note: "ความดันโลหิตค่อนข้างสูงเล็กน้อยและมีแรงกดดันจากครอบครัวบางส่วน ต้องติดตามเพิ่มเติมก่อนสรุปผล",
-    },
-    {
-      donorId: "DNR-5527", date: "06 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "122/78 mmHg", bmi: 23.5, smoking: "ไม่สูบบุหรี่", comorbidities: [], psychStatus: "ไม่ระบุ (Deceased Donor)",
-      medicalChecklist: { bloodPressure: "normal", diabetesScreening: "normal", kidneyFunction: "normal", cardiacAssessment: "normal", cancerScreening: "normal", infectionScreening: "normal" },
-      imaging: { ctKidney: "ปกติ", renalAnatomy: "Normal anatomy", kidneySize: "ซ้าย 10.3 ซม. / ขวา 10.5 ซม." },
-      psychological: { donationVoluntary: "n/a", mentalReadiness: "n/a", familyPressure: "n/a", socialSupport: "n/a" },
-      stage: "completed", result: "suitable", note: "ผลประเมินทุกด้านผ่านเกณฑ์ อยู่ระหว่างกระบวนการจับคู่กับผู้ป่วยในบัญชีรอคิว",
-    },
-  ];
+  // Donor Pre-Transplant Work-up (ก่อนปลูกถ่ายไต) — labs/imaging/cancerScreening/consults/vaccineOthers เป็น Checklist { label, date, status, comment }
+  // stage: pending / in-progress / completed (ความคืบหน้าโดยรวม), result: suitable / risk / not-suitable / pending (สรุปผลคณะกรรมการ)
+  const donorEvaluations = (function () {
+    const d5521Labs = buildSection(WORKUP_LABELS.donorLabs, "03 ก.ย. 2569");
+    const d5521Imaging = buildSection(WORKUP_LABELS.donorImaging, "04 ก.ย. 2569");
+    const d5521Cancer = buildSection(WORKUP_LABELS.cancerScreening, "04 ก.ย. 2569", "pass", "ไม่พบความผิดปกติ");
+    const d5521Consults = buildSection(WORKUP_LABELS.donorConsults, "05 ก.ย. 2569", "pass", "ผ่านการประเมิน ไม่พบข้อบ่งชี้ผิดปกติ");
+    const d5521Vaccine = buildSection(WORKUP_LABELS.vaccineOthers, "05 ก.ย. 2569", "pass");
+
+    const d5522Labs = buildSection(WORKUP_LABELS.donorLabs, "07 ก.ย. 2569");
+    d5522Labs[1] = { label: "Chem (BUN/Electrolyte)", date: "07 ก.ย. 2569", status: "fail", comment: "พบความดันโลหิตสูง 138/88 mmHg ต้องติดตามและควบคุมความดันก่อนสรุปผล" };
+    const d5522Imaging = buildSection(WORKUP_LABELS.donorImaging, "-", "pending", "รอนัดตรวจหลังควบคุมความดันได้");
+    const d5522Cancer = buildSection(WORKUP_LABELS.cancerScreening, "-", "pending", "รอนัดตรวจ");
+    const d5522Consults = buildSection(WORKUP_LABELS.donorConsults, "09 ก.ย. 2569", "pending", "รอนัดประเมิน");
+    d5522Consults[0] = { label: "Cardio", date: "08 ก.ย. 2569", status: "fail", comment: "ความดันโลหิตสูง แนะนำให้ปรับยาและติดตามซ้ำใน 2 สัปดาห์" };
+    const d5522Vaccine = buildSection(WORKUP_LABELS.vaccineOthers, "-", "pending");
+
+    const d5523Labs = buildSection(WORKUP_LABELS.donorLabs, "30 ส.ค. 2569");
+    d5523Labs[3] = { label: "การทำงานของไต (Renal Function)", date: "30 ส.ค. 2569", status: "fail", comment: "eGFR ต่ำกว่าเกณฑ์ ร่วมกับพบ fibrosis เล็กน้อยจากภาพถ่าย" };
+    const d5523Imaging = buildSection(WORKUP_LABELS.donorImaging, "30 ส.ค. 2569", "pass", "พบ fibrosis เล็กน้อยที่ไต");
+    const d5523Cancer = buildSection(WORKUP_LABELS.cancerScreening, "31 ส.ค. 2569", "pass");
+    const d5523Consults = buildSection(WORKUP_LABELS.donorConsults, "31 ส.ค. 2569", "pass");
+    d5523Consults[0] = { label: "Cardio", date: "31 ส.ค. 2569", status: "fail", comment: "พบเบาหวานชนิดที่ 2 ร่วมกับความเสี่ยงหัวใจและหลอดเลือด" };
+    const d5523Vaccine = buildSection(WORKUP_LABELS.vaccineOthers, "31 ส.ค. 2569", "pass");
+
+    const d5524Labs = buildSection(WORKUP_LABELS.donorLabs, "13 ส.ค. 2569");
+    const d5524Imaging = buildSection(WORKUP_LABELS.donorImaging, "13 ส.ค. 2569", "pass", "ปกติดีมาก");
+    const d5524Cancer = buildSection(WORKUP_LABELS.cancerScreening, "14 ส.ค. 2569", "pass");
+    const d5524Consults = buildSection(WORKUP_LABELS.donorConsults, "16 ส.ค. 2569", "pass", "ผ่านการประเมินทุกแผนก");
+    const d5524Vaccine = buildSection(WORKUP_LABELS.vaccineOthers, "16 ส.ค. 2569", "pass");
+
+    const d5525Labs = buildSection(WORKUP_LABELS.donorLabs, "-", "pending", "รอนัดเจาะเลือด");
+    const d5525Imaging = buildSection(WORKUP_LABELS.donorImaging, "-", "pending");
+    const d5525Cancer = buildSection(WORKUP_LABELS.cancerScreening, "-", "pending");
+    const d5525Consults = buildSection(WORKUP_LABELS.donorConsults, "-", "pending");
+    const d5525Vaccine = buildSection(WORKUP_LABELS.vaccineOthers, "-", "pending");
+
+    const d5526Labs = buildSection(WORKUP_LABELS.donorLabs, "02 ก.ย. 2569");
+    const d5526Imaging = buildSection(WORKUP_LABELS.donorImaging, "02 ก.ย. 2569", "pass");
+    const d5526Cancer = buildSection(WORKUP_LABELS.cancerScreening, "03 ก.ย. 2569", "pass");
+    const d5526Consults = buildSection(WORKUP_LABELS.donorConsults, "05 ก.ย. 2569", "pass");
+    d5526Consults[4] = { label: "Psychiatrist (จิตเวช)", date: "05 ก.ย. 2569", status: "pending", comment: "มีแรงกดดันจากครอบครัวบางส่วน อยู่ระหว่างประเมินซ้ำ" };
+    const d5526Vaccine = buildSection(WORKUP_LABELS.vaccineOthers, "05 ก.ย. 2569", "pass");
+
+    const d5527Labs = buildSection(WORKUP_LABELS.donorLabs, "05 ก.ย. 2569");
+    const d5527Imaging = buildSection(WORKUP_LABELS.donorImaging, "05 ก.ย. 2569", "pass");
+    const d5527Cancer = buildSection(WORKUP_LABELS.cancerScreening, "-", "pending", "N/A — Deceased Donor");
+    const d5527Consults = buildSection(WORKUP_LABELS.donorConsults, "06 ก.ย. 2569", "pass", "ประเมินจากเวชระเบียนและญาติ (Deceased Donor)");
+    const d5527Vaccine = buildSection(WORKUP_LABELS.vaccineOthers, "-", "pending", "N/A — Deceased Donor");
+
+    const d9001Labs = buildSection(WORKUP_LABELS.donorLabs, "18 พ.ย. 2565");
+    const d9001Imaging = buildSection(WORKUP_LABELS.donorImaging, "20 พ.ย. 2565", "pass");
+    const d9001Cancer = buildSection(WORKUP_LABELS.cancerScreening, "22 พ.ย. 2565", "pass");
+    const d9001Consults = buildSection(WORKUP_LABELS.donorConsults, "28 พ.ย. 2565", "pass", "ผ่านการประเมินทุกแผนก รวมจิตเวชและนักสังคมสงเคราะห์");
+    const d9001Vaccine = buildSection(WORKUP_LABELS.vaccineOthers, "02 ธ.ค. 2565", "pass");
+
+    return [
+      {
+        donorId: "DNR-5521", date: "05 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "118/76 mmHg", bmi: 22.4, smoking: "ไม่สูบบุหรี่", comorbidities: [],
+        labs: d5521Labs, imaging: d5521Imaging, cancerScreening: d5521Cancer, consults: d5521Consults, vaccineOthers: d5521Vaccine,
+        stage: "completed", result: "suitable", note: "สุขภาพร่างกายและจิตใจแข็งแรง ผ่านเกณฑ์ทุกด้าน เหมาะสมเป็นผู้บริจาค",
+      },
+      {
+        donorId: "DNR-5522", date: "09 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "138/88 mmHg", bmi: 25.1, smoking: "ไม่สูบบุหรี่", comorbidities: ["ความดันโลหิตสูง (ควบคุมด้วยยา)"],
+        labs: d5522Labs, imaging: d5522Imaging, cancerScreening: d5522Cancer, consults: d5522Consults, vaccineOthers: d5522Vaccine,
+        stage: "in-progress", result: "pending", note: "พบความดันโลหิตสูง อยู่ระหว่างติดตามผลก่อนสรุปผลการประเมิน",
+      },
+      {
+        donorId: "DNR-5523", date: "02 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "124/80 mmHg", bmi: 27.8, smoking: "เลิกสูบบุหรี่ 2 ปี", comorbidities: ["เบาหวานชนิดที่ 2"],
+        labs: d5523Labs, imaging: d5523Imaging, cancerScreening: d5523Cancer, consults: d5523Consults, vaccineOthers: d5523Vaccine,
+        stage: "completed", result: "not-suitable", note: "พบเบาหวานชนิดที่ 2 ร่วมกับผล Crossmatch Positive และ eGFR ต่ำกว่าเกณฑ์ ไม่เหมาะสมสำหรับการบริจาค",
+      },
+      {
+        donorId: "DNR-5524", date: "18 ส.ค. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "112/72 mmHg", bmi: 21.6, smoking: "ไม่สูบบุหรี่", comorbidities: [],
+        labs: d5524Labs, imaging: d5524Imaging, cancerScreening: d5524Cancer, consults: d5524Consults, vaccineOthers: d5524Vaccine,
+        stage: "completed", result: "suitable", note: "ผลประเมินทุกด้านอยู่ในเกณฑ์ดีมาก ดำเนินการผ่าตัดบริจาคไตสำเร็จแล้ว",
+      },
+      {
+        donorId: "DNR-5525", date: "08 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "116/74 mmHg", bmi: 23.0, smoking: "ไม่สูบบุหรี่", comorbidities: [],
+        labs: d5525Labs, imaging: d5525Imaging, cancerScreening: d5525Cancer, consults: d5525Consults, vaccineOthers: d5525Vaccine,
+        stage: "pending", result: "pending", note: "เพิ่งลงทะเบียน รอเริ่มกระบวนการตรวจคัดกรองเบื้องต้น",
+      },
+      {
+        donorId: "DNR-5526", date: "05 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "128/84 mmHg", bmi: 24.6, smoking: "ไม่สูบบุหรี่", comorbidities: [],
+        labs: d5526Labs, imaging: d5526Imaging, cancerScreening: d5526Cancer, consults: d5526Consults, vaccineOthers: d5526Vaccine,
+        stage: "in-progress", result: "risk", note: "ความดันโลหิตค่อนข้างสูงเล็กน้อยและมีแรงกดดันจากครอบครัวบางส่วน ต้องติดตามเพิ่มเติมก่อนสรุปผล",
+      },
+      {
+        donorId: "DNR-5527", date: "06 ก.ย. 2569", evaluator: "นพ.ธนกร วัฒนสิน", bp: "122/78 mmHg", bmi: 23.5, smoking: "ไม่สูบบุหรี่", comorbidities: [],
+        labs: d5527Labs, imaging: d5527Imaging, cancerScreening: d5527Cancer, consults: d5527Consults, vaccineOthers: d5527Vaccine,
+        stage: "completed", result: "suitable", note: "ผลประเมินทุกด้านผ่านเกณฑ์ อยู่ระหว่างกระบวนการจับคู่กับผู้ป่วยในบัญชีรอคิว",
+      },
+      {
+        donorId: "DNR-9001", date: "02 ธ.ค. 2565", evaluator: "นพ.ธนกร วัฒนสิน", bp: "110/70 mmHg", bmi: 21.8, smoking: "ไม่สูบบุหรี่", comorbidities: [],
+        labs: d9001Labs, imaging: d9001Imaging, cancerScreening: d9001Cancer, consults: d9001Consults, vaccineOthers: d9001Vaccine,
+        stage: "completed", result: "suitable", note: "ผ่านเกณฑ์ทุกด้าน คณะกรรมการอนุมัติให้บริจาคไตซ้ายให้กับพี่ชาย (นายสมชาย ใจดี)",
+      },
+    ];
+  })();
 
   // Donor Laboratory — ผลตรวจ Lab รายผู้บริจาค (key = donor id)
   // group: general (Lab Dashboard: Creatinine/eGFR/BUN/CBC/Blood Sugar/Urine Protein/ACR) / compatibility (ABO/HLA/Crossmatch/PRA) / infection (HIV/HBsAg/Anti-HCV)
@@ -219,12 +330,13 @@ window.MOCK_DATA = (function () {
     "DNR-5525": buildDonorLabPanel({ creatinine: 0.9, creatinineStatus: "normal", egfr: 101, egfrStatus: "normal", bun: 15, bunStatus: "normal", cbc: 14.8, cbcStatus: "normal", bloodSugar: 90, bloodSugarStatus: "normal", urineProtein: 10, urineProteinStatus: "normal", acr: 9, acrStatus: "normal", abo: "AB+", hlaTyping: "A24,A33,B44,B62,DR9,DR12", crossmatchVal: "Negative", crossmatchStatus: "normal", praVal: 0, praStatus: "normal", hiv: "รอผลตรวจ", infectionStatus: "na" }),
     "DNR-5526": buildDonorLabPanel({ creatinine: 0.85, creatinineStatus: "normal", egfr: 100, egfrStatus: "normal", bun: 13, bunStatus: "normal", cbc: 13.0, cbcStatus: "normal", bloodSugar: 94, bloodSugarStatus: "normal", urineProtein: 9, urineProteinStatus: "normal", acr: 7, acrStatus: "normal", abo: "O+", hlaTyping: "A2,A3,B7,B44,DR7,DR11", crossmatchVal: "Negative", crossmatchStatus: "normal", praVal: 3, praStatus: "normal", hiv: "Negative", infectionStatus: "normal" }),
     "DNR-5527": buildDonorLabPanel({ creatinine: 0.95, creatinineStatus: "normal", egfr: 92, egfrStatus: "normal", bun: 17, bunStatus: "normal", cbc: 14.0, cbcStatus: "normal", bloodSugar: 96, bloodSugarStatus: "normal", urineProtein: 11, urineProteinStatus: "normal", acr: 10, acrStatus: "normal", abo: "A-", hlaTyping: "A1,A24,B8,B60,DR3,DR4", crossmatchVal: "Negative", crossmatchStatus: "normal", praVal: 5, praStatus: "normal", hiv: "Negative", infectionStatus: "normal" }),
+    "DNR-9001": buildDonorLabPanel({ creatinine: 0.85, creatinineStatus: "normal", egfr: 105, egfrStatus: "normal", bun: 13, bunStatus: "normal", cbc: 13.6, cbcStatus: "normal", bloodSugar: 89, bloodSugarStatus: "normal", urineProtein: 7, urineProteinStatus: "normal", acr: 6, acrStatus: "normal", abo: "O+", hlaTyping: "A1,A2,B8,B44,DR3,DR7", crossmatchVal: "Negative", crossmatchStatus: "normal", praVal: 3, praStatus: "normal", hiv: "Negative", infectionStatus: "normal" }),
   };
 
   const donorLabTrend = {
     labels: ["สัปดาห์ 1", "สัปดาห์ 2", "สัปดาห์ 3", "สัปดาห์ 4"],
-    creatinine: { "DNR-5521": [1.0, 0.95, 0.92, 0.9], "DNR-5522": [1.1, 1.05, 1.02, 1.0], "DNR-5523": [1.35, 1.3, 1.32, 1.3], "DNR-5524": [0.85, 0.82, 0.8, 0.8], "DNR-5525": [0.95, 0.92, 0.9, 0.9], "DNR-5526": [0.9, 0.88, 0.86, 0.85], "DNR-5527": [1.0, 0.98, 0.96, 0.95] },
-    egfr: { "DNR-5521": [90, 92, 94, 95], "DNR-5522": [93, 95, 96, 98], "DNR-5523": [74, 73, 72, 71], "DNR-5524": [105, 107, 109, 110], "DNR-5525": [97, 99, 100, 101], "DNR-5526": [95, 97, 99, 100], "DNR-5527": [88, 90, 91, 92] },
+    creatinine: { "DNR-5521": [1.0, 0.95, 0.92, 0.9], "DNR-5522": [1.1, 1.05, 1.02, 1.0], "DNR-5523": [1.35, 1.3, 1.32, 1.3], "DNR-5524": [0.85, 0.82, 0.8, 0.8], "DNR-5525": [0.95, 0.92, 0.9, 0.9], "DNR-5526": [0.9, 0.88, 0.86, 0.85], "DNR-5527": [1.0, 0.98, 0.96, 0.95], "DNR-9001": [0.9, 0.88, 0.86, 0.85] },
+    egfr: { "DNR-5521": [90, 92, 94, 95], "DNR-5522": [93, 95, 96, 98], "DNR-5523": [74, 73, 72, 71], "DNR-5524": [105, 107, 109, 110], "DNR-5525": [97, 99, 100, 101], "DNR-5526": [95, 97, 99, 100], "DNR-5527": [88, 90, 91, 92], "DNR-9001": [100, 102, 104, 105] },
   };
 
   // Donor Timeline — เหตุการณ์ตลอดวงจรชีวิตของผู้บริจาค (state: done / active / pending)
@@ -297,6 +409,15 @@ window.MOCK_DATA = (function () {
       { event: "Surgery", date: "-", state: "pending", desc: "" },
       { event: "Follow-up", date: "-", state: "pending", desc: "" },
     ],
+    "DNR-9001": [
+      { event: "Registered", date: "10 พ.ย. 2565", icon: "clipboard-list", color: "#2563eb", state: "done", desc: "ลงทะเบียนสมัครใจเป็นผู้บริจาคไตให้นายสมชาย ใจดี (พี่ชาย)" },
+      { event: "Screening Completed", date: "18 พ.ย. 2565", icon: "flask-conical", color: "#7c3aed", state: "done", desc: "ตรวจเลือด คัดกรองโรคติดเชื้อ และตรวจ HLA Typing ผลเข้ากันได้ดี" },
+      { event: "Lab Completed", date: "18 พ.ย. 2565", state: "done", desc: "ตรวจ Lab ครบทุกรายการตามมาตรฐานก่อนปลูกถ่าย" },
+      { event: "Evaluation Completed", date: "02 ธ.ค. 2565", icon: "heart-pulse", color: "#0f766e", state: "done", desc: "ผ่านการประเมินความพร้อมทางร่างกายและจิตใจโดยคณะกรรมการ" },
+      { event: "Approved", date: "20 ธ.ค. 2565", icon: "check-circle-2", color: "#16a34a", state: "done", desc: "ได้รับอนุมัติให้เป็นผู้บริจาคไตอย่างเป็นทางการ" },
+      { event: "Surgery", date: "18 ม.ค. 2566", icon: "bed", color: "#dc2626", state: "done", desc: "ผ่าตัดบริจาคไตซ้ายสำเร็จ พักฟื้นที่โรงพยาบาล 4 วัน" },
+      { event: "Follow-up", date: "ติดตามต่อเนื่อง", icon: "activity", color: "#2563eb", state: "active", desc: "ติดตามอาการและตรวจสุขภาพประจำปีตามมาตรฐานการดูแลผู้บริจาคไต ปัจจุบันเข้าสู่ปีที่ 3" },
+    ],
   };
 
   // Donor Assessment — สรุปผลความเหมาะสมโดยรวมของผู้บริจาค (อิสระจากการจับคู่ผู้ป่วยรายบุคคล)
@@ -305,54 +426,185 @@ window.MOCK_DATA = (function () {
     { donorId: "DNR-5522", date: "06 ก.ย. 2569", doctor: "นพ.ธนกร วัฒนสิน", result: "risk", reasons: ["ความดันโลหิตสูง"], note: "ควบคุมความดันโลหิตได้ดีด้วยยา แต่ต้องเฝ้าระวังเพิ่มเติมระหว่างและหลังผ่าตัด" },
     { donorId: "DNR-5523", date: "02 ก.ย. 2569", doctor: "นพ.ธนกร วัฒนสิน", result: "not-suitable", reasons: ["Positive Crossmatch", "เบาหวานชนิดที่ 2", "eGFR ต่ำกว่าเกณฑ์"], note: "พบข้อบ่งชี้ทางการแพทย์หลายด้านที่ไม่เหมาะสมสำหรับการบริจาค" },
     { donorId: "DNR-5524", date: "18 ส.ค. 2569", doctor: "นพ.ธนกร วัฒนสิน", result: "suitable", reasons: [], note: "เหมาะสมเป็นผู้บริจาคไต ดำเนินการผ่าตัดสำเร็จแล้ว" },
+    { donorId: "DNR-9001", date: "20 ธ.ค. 2565", doctor: "นพ.ธนกร วัฒนสิน", result: "suitable", reasons: [], note: "ผ่านเกณฑ์ทุกด้าน คณะกรรมการอนุมัติให้บริจาคไตซ้ายให้กับพี่ชาย ดำเนินการผ่าตัดสำเร็จแล้ว" },
   ];
 
-  // Donor Follow-up — ติดตามอาการผู้บริจาคหลังผ่าตัดตามช่วงเวลามาตรฐาน (2 สัปดาห์ / 1 เดือน / 6 เดือน / 1 ปี)
+  // Donor Follow-up (หลังปลูกถ่ายไต) — ติดตามอาการผู้บริจาคหลังผ่าตัดตามช่วงเวลามาตรฐาน (2 สัปดาห์ / 1 เดือน / 6 เดือน / 1 ปี / ทุกปี)
+  // complicationScreen: คัดกรองภาวะแทรกซ้อนระยะยาว (ความดันโลหิตสูง / โปรตีนรั่วในปัสสาวะ / การทำงานของไตลดลง) — ค่า true = ตรวจพบ
   const donorFollowups = [
-    { donorId: "DNR-5524", visit: "Post Surgery Visit (2 สัปดาห์หลังบริจาค)", date: "01 ก.ย. 2569", creatinine: 1.0, egfr: 88, bp: "120/78 mmHg", medication: "Prednisolone + ยาแก้ปวดตามแพทย์สั่ง", qualityOfLife: "ดี (ทำกิจวัตรประจำวันได้ตามปกติ)", complication: "ไม่มี", note: "แผลผ่าตัดหายดี ไม่มีภาวะแทรกซ้อน กลับไปใช้ชีวิตประจำวันได้ตามปกติ", by: "นพ.ธนกร วัฒนสิน", state: "done" },
-    { donorId: "DNR-5524", visit: "1 เดือนหลังบริจาค", date: "18 ก.ย. 2569", creatinine: 1.1, egfr: 85, bp: "118/76 mmHg", medication: "หยุดยาแก้ปวด เหลือเฝ้าระวังทั่วไป", qualityOfLife: "ดีมาก (กลับไปทำงานได้เต็มที่)", complication: "ไม่มี", note: "สุขภาพแข็งแรงดี กลับไปทำงานได้ตามปกติ", by: "นพ.ธนกร วัฒนสิน", state: "done" },
-    { donorId: "DNR-5524", visit: "6 เดือนหลังบริจาค", date: "18 ก.พ. 2570", creatinine: null, egfr: null, bp: "", medication: "", qualityOfLife: "", complication: "", note: "นัดตรวจติดตามการทำงานของไตที่เหลือและตรวจสุขภาพทั่วไป", by: "นพ.ธนกร วัฒนสิน", state: "active" },
-    { donorId: "DNR-5524", visit: "1 ปีหลังบริจาค", date: "18 ส.ค. 2570", creatinine: null, egfr: null, bp: "", medication: "", qualityOfLife: "", complication: "", note: "นัดตรวจติดตามระยะยาวตามมาตรฐานการดูแลผู้บริจาคไต", by: "นพ.ธนกร วัฒนสิน", state: "pending" },
+    { donorId: "DNR-5524", visit: "Post Surgery Visit (2 สัปดาห์หลังบริจาค)", date: "01 ก.ย. 2569", creatinine: 1.0, egfr: 88, bun: 14, uric: 5.2, electrolyte: "Na 140 / K 4.1 / Cl 102 (ปกติ)", ua: "ปกติ ไม่พบ Protein/Blood", upci: 0.05, bp: "120/78 mmHg", bw: 58, bmi: 22.1, medication: "Prednisolone + ยาแก้ปวดตามแพทย์สั่ง", qualityOfLife: "ดี (ทำกิจวัตรประจำวันได้ตามปกติ)", mentalHealth: "สภาพจิตใจปกติดี ไม่มีความกังวล", complication: "ไม่มี", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "แผลผ่าตัดหายดี ไม่มีภาวะแทรกซ้อน กลับไปใช้ชีวิตประจำวันได้ตามปกติ", by: "นพ.ธนกร วัฒนสิน", state: "done", nextAppointmentWeeks: 4 },
+    { donorId: "DNR-5524", visit: "1 เดือนหลังบริจาค", date: "18 ก.ย. 2569", creatinine: 1.1, egfr: 85, bun: 15, uric: 5.4, electrolyte: "Na 139 / K 4.3 / Cl 101 (ปกติ)", ua: "ปกติ", upci: 0.06, bp: "118/76 mmHg", bw: 58.5, bmi: 22.3, medication: "หยุดยาแก้ปวด เหลือเฝ้าระวังทั่วไป", qualityOfLife: "ดีมาก (กลับไปทำงานได้เต็มที่)", mentalHealth: "ปกติดี", complication: "ไม่มี", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "สุขภาพแข็งแรงดี กลับไปทำงานได้ตามปกติ", by: "นพ.ธนกร วัฒนสิน", state: "done", nextAppointmentWeeks: 24 },
+    { donorId: "DNR-5524", visit: "6 เดือนหลังบริจาค", date: "18 ก.พ. 2570", creatinine: null, egfr: null, bun: null, uric: null, electrolyte: "", ua: "", upci: null, bp: "", bw: null, bmi: null, medication: "", qualityOfLife: "", mentalHealth: "", complication: "", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "นัดตรวจติดตามการทำงานของไตที่เหลือและตรวจสุขภาพทั่วไป", by: "นพ.ธนกร วัฒนสิน", state: "active", nextAppointmentWeeks: 26 },
+    { donorId: "DNR-5524", visit: "1 ปีหลังบริจาค", date: "18 ส.ค. 2570", creatinine: null, egfr: null, bun: null, uric: null, electrolyte: "", ua: "", upci: null, bp: "", bw: null, bmi: null, medication: "", qualityOfLife: "", mentalHealth: "", complication: "", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "นัดตรวจติดตามระยะยาวตามมาตรฐานการดูแลผู้บริจาคไต", by: "นพ.ธนกร วัฒนสิน", state: "pending", nextAppointmentWeeks: 52 },
+    { donorId: "DNR-9001", visit: "ติดตามหลังผ่าตัด 2 สัปดาห์", date: "01 ก.พ. 2566", creatinine: 1.0, egfr: 88, bun: 15, uric: 5.1, electrolyte: "Na 140 / K 4.2 / Cl 102 (ปกติ)", ua: "ปกติ", upci: 0.05, bp: "120/78 mmHg", bw: 55, bmi: 21.5, medication: "ยาแก้ปวดตามแพทย์สั่ง", qualityOfLife: "ดี", mentalHealth: "ปกติดี", complication: "ไม่มี", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "แผลผ่าตัดหายดี ไม่มีภาวะแทรกซ้อน กลับไปใช้ชีวิตประจำวันเบาๆ ได้", by: "นพ.ธนกร วัฒนสิน", state: "done", nextAppointmentWeeks: 2 },
+    { donorId: "DNR-9001", visit: "ติดตาม 1 เดือนหลังบริจาค", date: "18 ก.พ. 2566", creatinine: 1.05, egfr: 85, bun: 15, uric: 5.2, electrolyte: "ปกติ", ua: "ปกติ", upci: 0.06, bp: "118/76 mmHg", bw: 55.2, bmi: 21.6, medication: "ไม่มี", qualityOfLife: "ดีมาก", mentalHealth: "ปกติดี", complication: "ไม่มี", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "สุขภาพแข็งแรงดี กลับไปทำงานได้ตามปกติ", by: "นพ.ธนกร วัฒนสิน", state: "done", nextAppointmentWeeks: 20 },
+    { donorId: "DNR-9001", visit: "ติดตาม 6 เดือนหลังบริจาค", date: "18 ก.ค. 2566", creatinine: 1.1, egfr: 82, bun: 16, uric: 5.4, electrolyte: "ปกติ", ua: "ปกติ", upci: 0.07, bp: "122/78 mmHg", bw: 56, bmi: 21.9, medication: "ไม่มี", qualityOfLife: "ดี", mentalHealth: "ปกติดี", complication: "ไม่มี", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "การทำงานของไตข้างที่เหลือปรับตัวดี ค่าการทำงานไตอยู่ในเกณฑ์ปกติ", by: "นพ.ธนกร วัฒนสิน", state: "done", nextAppointmentWeeks: 26 },
+    { donorId: "DNR-9001", visit: "ติดตาม 1 ปีหลังบริจาค", date: "18 ม.ค. 2567", creatinine: 1.1, egfr: 80, bun: 16, uric: 5.5, electrolyte: "ปกติ", ua: "ปกติ", upci: 0.07, bp: "120/80 mmHg", bw: 56.5, bmi: 22.0, medication: "ไม่มี", qualityOfLife: "ดี", mentalHealth: "ปกติดี พึงพอใจกับการตัดสินใจบริจาค", complication: "ไม่มี", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "ตรวจสุขภาพประจำปีครั้งแรก ผลเลือดและความดันโลหิตปกติดี", by: "นพ.ธนกร วัฒนสิน", state: "done", nextAppointmentWeeks: 52 },
+    { donorId: "DNR-9001", visit: "ติดตาม 2 ปีหลังบริจาค", date: "18 ม.ค. 2568", creatinine: 1.15, egfr: 79, bun: 17, uric: 5.6, electrolyte: "ปกติ", ua: "ปกติ", upci: 0.08, bp: "124/80 mmHg", bw: 57, bmi: 22.2, medication: "ไม่มี", qualityOfLife: "ดี", mentalHealth: "ปกติดี", complication: "ไม่มี", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "ค่าการทำงานไตคงที่ แนะนำดื่มน้ำให้เพียงพอและตรวจสุขภาพประจำปีต่อเนื่อง", by: "นพ.ธนกร วัฒนสิน", state: "done", nextAppointmentWeeks: 52 },
+    { donorId: "DNR-9001", visit: "ติดตาม 3 ปีหลังบริจาค", date: "18 ม.ค. 2569", creatinine: 1.1, egfr: 80, bun: 16, uric: 5.4, electrolyte: "ปกติ", ua: "ปกติ", upci: 0.07, bp: "118/78 mmHg", bw: 57, bmi: 22.2, medication: "ไม่มี", qualityOfLife: "ดี", mentalHealth: "ปกติดี", complication: "ไม่มี", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "สุขภาพโดยรวมแข็งแรงดี ไม่พบภาวะแทรกซ้อนระยะยาว", by: "นพ.ธนกร วัฒนสิน", state: "done", nextAppointmentWeeks: 34 },
+    { donorId: "DNR-9001", visit: "ตรวจสุขภาพประจำปีที่ 4", date: "20 ก.ย. 2569", creatinine: null, egfr: null, bun: null, uric: null, electrolyte: "", ua: "", upci: null, bp: "", bw: null, bmi: null, medication: "", qualityOfLife: "", mentalHealth: "", complication: "", complicationScreen: { hypertension: false, proteinuria: false, reducedFunction: false }, note: "นัดตรวจเลือดและพบแพทย์เพื่อติดตามสุขภาพประจำปีตามมาตรฐานการดูแลผู้บริจาคไตระยะยาว", by: "นพ.ธนกร วัฒนสิน", state: "active", nextAppointmentWeeks: 52 },
+  ];
+
+  // Transplant Case — เชื่อมโยงผู้บริจาค (donorId) กับผู้รับ (recipientHn) สำหรับระยะ "ขณะปลูกถ่าย" และ "ก่อนกลับบ้าน"
+  const transplantCases = [
+    {
+      caseId: "TXP-2566-001", donorId: "DNR-9001", recipientHn: "HN-102345", recipientName: "นายสมชาย ใจดี", ktDate: "18 ม.ค. 2566",
+      donorSurgery: {
+        startTime: "08:10", endTime: "11:05", side: "ไตซ้าย (Left Nephrectomy)", technique: "Laparoscopic Donor Nephrectomy",
+        vitals: [{ time: "08:10", bt: "36.8°C", pr: "76", bp: "118/74", rr: "16" }, { time: "09:30", bt: "36.9°C", pr: "80", bp: "122/78", rr: "16" }, { time: "11:05", bt: "36.7°C", pr: "74", bp: "116/72", rr: "14" }],
+        bloodLoss: "80 mL", fluids: "NSS 1,500 mL", crossClampTime: "4 นาที 20 วินาที", complication: "ไม่มี", crPre: "0.85 mg/dL", crPost: "1.05 mg/dL",
+      },
+      recipientSurgery: {
+        startTime: "09:00", endTime: "12:40", position: "Right Iliac Fossa", vascularAnastomosis: "External Iliac Artery/Vein (End-to-Side)", ureterAnastomosis: "Ureteroneocystostomy (Lich-Gregoir)",
+        coldIschemia: "1 ชม. 20 นาที", warmIschemia: "32 นาที", induction: "Basiliximab 20 mg IV",
+        vitals: [{ time: "09:00", bt: "36.9°C", pr: "82", bp: "128/80", rr: "16" }, { time: "10:30", bt: "37.0°C", pr: "88", bp: "132/84", rr: "18" }, { time: "12:40", bt: "36.8°C", pr: "80", bp: "122/78", rr: "16" }],
+        urineOutputAfterClamp: "150 mL ใน 30 นาทีแรก (ปัสสาวะออกทันทีหลังเปิด clamp)", complication: "ไม่มี",
+      },
+      donorDischarge: {
+        labs: [
+          { label: "Creatinine", date: "22 ม.ค. 2566", status: "pass", comment: "1.0 mg/dL (ปกติ)" },
+          { label: "BUN", date: "22 ม.ค. 2566", status: "pass", comment: "14 mg/dL (ปกติ)" },
+          { label: "eGFR", date: "22 ม.ค. 2566", status: "pass", comment: "88 mL/min/1.73m² (ปกติ)" },
+          { label: "Urine Protein", date: "22 ม.ค. 2566", status: "pass", comment: "Negative" },
+        ],
+        vitalsStable: true, woundStatus: "แผลแห้งดี ไม่มีลักษณะติดเชื้อ", sutureRemoved: true, noComplication: true,
+        medications: "Paracetamol PRN, Omeprazole 20 mg", advice: ["ดูแลตัวเองเมื่อมีไตข้างเดียว หลีกเลี่ยงกิจกรรมเสี่ยงกระแทกช่องท้อง", "หลีกเลี่ยงยากลุ่ม NSAIDs ตลอดชีวิต", "ควบคุมความดันโลหิต ควบคุมน้ำหนัก งดสูบบุหรี่", "หากมีไข้ ปัสสาวะผิดปกติ ปวดแผลรุนแรง หรือบวม ให้รีบมาโรงพยาบาลทันที"],
+        firstFollowupDate: "01 ก.พ. 2566", emergencyContact: "หน่วยปลูกถ่ายไต รพ.ศิริราช 02-419-XXXX", costSummary: "สิทธิการรักษา: ประกันสังคม — ไม่มีค่าใช้จ่ายส่วนเกิน",
+      },
+      recipientDischarge: {
+        graftFunction: [
+          { label: "Creatinine", date: "25 ม.ค. 2566", status: "pass", comment: "1.2 mg/dL" },
+          { label: "CrCl", date: "25 ม.ค. 2566", status: "pass", comment: "72 mL/min" },
+          { label: "BUN", date: "25 ม.ค. 2566", status: "pass", comment: "18 mg/dL" },
+          { label: "Urine Output", date: "25 ม.ค. 2566", status: "pass", comment: "2,400 mL/24 ชม." },
+          { label: "24 hr Urine Protein", date: "25 ม.ค. 2566", status: "pass", comment: "120 mg/24 ชม." },
+        ],
+        drugLevels: [
+          { drug: "TAC C0", target: "5 - 6 ng/mL", value: "5.8 ng/mL", status: "pass" },
+          { drug: "CSA C0/C2", target: "-", value: "N/A", status: "pass" },
+          { drug: "SRL C0", target: "-", value: "N/A", status: "pass" },
+          { drug: "EVL C0", target: "-", value: "N/A", status: "pass" },
+        ],
+        vitalsStable: true, woundStatus: "แผลแห้งดี ไม่มีลักษณะติดเชื้อ", noRejection: true,
+        immunosuppressionTeaching: ["กินยา Tacrolimus/MMF/Prednisolone ให้ตรงเวลาทุกวัน (08:00 / 20:00 น.)", "ห้ามขาดยาหรือปรับยาเองโดยเด็ดขาด", "ยาป้องกันการติดเชื้อ: Bactrim, Acyclovir ตามแผนการรักษา"],
+        homeMonitoringTeaching: ["บันทึก Home BP, น้ำหนักตัว, ปริมาณปัสสาวะ และอุณหภูมิร่างกายทุกวัน"],
+        infectionPreventionAndDiet: "แนะนำล้างมือบ่อยๆ หลีกเลี่ยงฝูงชน พบนักโภชนาการเพื่อวางแผนอาหารโซเดียมต่ำ โปรตีนพอดี",
+        medicationReview: "ทบทวนรายการยาทั้งหมดร่วมกับเภสัชกรก่อนกลับบ้านแล้ว",
+        firstFollowupDate: "01 ก.พ. 2566 (1-2 สัปดาห์)", emergencyContact: "หน่วยปลูกถ่ายไต รพ.ศิริราช 02-419-XXXX",
+      },
+    },
+    {
+      caseId: "TXP-2569-002", donorId: "DNR-5524", recipientHn: "HN-990219", recipientName: "นางประไพ วัฒนวงศ์", ktDate: "25 ส.ค. 2569",
+      donorSurgery: {
+        startTime: "07:45", endTime: "10:30", side: "ไตขวา (Right Nephrectomy)", technique: "Laparoscopic Donor Nephrectomy",
+        vitals: [{ time: "07:45", bt: "36.7°C", pr: "74", bp: "112/72", rr: "16" }, { time: "09:00", bt: "36.8°C", pr: "78", bp: "118/76", rr: "16" }, { time: "10:30", bt: "36.6°C", pr: "72", bp: "110/70", rr: "14" }],
+        bloodLoss: "60 mL", fluids: "NSS 1,200 mL", crossClampTime: "3 นาที 50 วินาที", complication: "ไม่มี", crPre: "0.8 mg/dL", crPost: "0.95 mg/dL",
+      },
+      recipientSurgery: {
+        startTime: "08:30", endTime: "11:50", position: "Left Iliac Fossa", vascularAnastomosis: "External Iliac Artery/Vein (End-to-Side)", ureterAnastomosis: "Ureteroneocystostomy (Lich-Gregoir)",
+        coldIschemia: "5 ชม. 55 นาที", warmIschemia: "35 นาที", induction: "Basiliximab 20 mg IV",
+        vitals: [{ time: "08:30", bt: "37.0°C", pr: "84", bp: "130/82", rr: "18" }, { time: "10:00", bt: "37.1°C", pr: "90", bp: "134/86", rr: "18" }, { time: "11:50", bt: "36.9°C", pr: "82", bp: "124/80", rr: "16" }],
+        urineOutputAfterClamp: "100 mL ใน 30 นาทีแรก", complication: "ไม่มี",
+      },
+      donorDischarge: {
+        labs: [
+          { label: "Creatinine", date: "-", status: "pending", comment: "รอผลตรวจก่อนกลับบ้าน" },
+          { label: "BUN", date: "-", status: "pending", comment: "" },
+          { label: "eGFR", date: "-", status: "pending", comment: "" },
+          { label: "Urine Protein", date: "-", status: "pending", comment: "" },
+        ],
+        vitalsStable: true, woundStatus: "แผลแห้งดี", sutureRemoved: false, noComplication: true,
+        medications: "Paracetamol PRN", advice: ["ดูแลตัวเองเมื่อมีไตข้างเดียว", "หลีกเลี่ยงยากลุ่ม NSAIDs ตลอดชีวิต", "ควบคุมความดันโลหิต / น้ำหนัก / งดสูบบุหรี่"],
+        firstFollowupDate: "08 ก.ย. 2569", emergencyContact: "หน่วยปลูกถ่ายไต รพ.ศิริราช 02-419-XXXX", costSummary: "อยู่ระหว่างสรุปค่าใช้จ่าย",
+      },
+      recipientDischarge: {
+        graftFunction: [
+          { label: "Creatinine", date: "-", status: "pending", comment: "รอผลตรวจก่อนกลับบ้าน" },
+          { label: "CrCl", date: "-", status: "pending", comment: "" },
+          { label: "BUN", date: "-", status: "pending", comment: "" },
+          { label: "Urine Output", date: "-", status: "pending", comment: "" },
+          { label: "24 hr Urine Protein", date: "-", status: "pending", comment: "" },
+        ],
+        drugLevels: [
+          { drug: "TAC C0", target: "8 - 10 ng/mL", value: "รอผล", status: "pending" },
+          { drug: "CSA C0/C2", target: "-", value: "N/A", status: "pending" },
+          { drug: "SRL C0", target: "-", value: "N/A", status: "pending" },
+          { drug: "EVL C0", target: "-", value: "N/A", status: "pending" },
+        ],
+        vitalsStable: true, woundStatus: "แผลแห้งดี", noRejection: true,
+        immunosuppressionTeaching: ["อยู่ระหว่างสอนการใช้ยากดภูมิ"], homeMonitoringTeaching: ["อยู่ระหว่างสอนการบันทึกที่บ้าน"],
+        infectionPreventionAndDiet: "นัดพบนักโภชนาการก่อนกลับบ้าน", medicationReview: "รอเภสัชกรทบทวนรายการยา",
+        firstFollowupDate: "08 ก.ย. 2569", emergencyContact: "หน่วยปลูกถ่ายไต รพ.ศิริราช 02-419-XXXX",
+      },
+    },
+  ];
+
+  // Patient Post-Transplant Follow-up Visits (หลังปลูกถ่ายไต — ฝั่งผู้รับ) — 1 รายการ = 1 ครั้งที่มา OPD ตาม OPD Card
+  const patientFollowupVisits = [
+    {
+      hn: "HN-102345", date: "02 ก.ย. 2569", doctor: "นพ.ธนกร วัฒนสิน", followupWeeks: 2, summary: "stable",
+      vitals: { bt: "36.7°C", pr: "76", bp: "128/82 mmHg", rr: "16", bw: "64 kg", bmi: 23.1, homeBp: "126/80 mmHg" },
+      physicalExam: { edema: "ไม่มี", tremor: "ไม่มี", oralUlcer: "ไม่มี" },
+      drugLevel: { tacC0: "6.2 ng/mL", csaC0C2: "-", srlC0: "-", evlC0: "-", drawTime: "ก่อนกินยามื้อเช้า", auc: "-", cv: "8%" },
+      cbc: { hb: 12.4, hct: 37.2, mcv: 88, rdw: 13.5, wbc: 6800, pmn: "62%", lymph: "28%", plt: 245000, ferritin: 110, tsat: "28%", reticulocyte: "1.2%" },
+      chem: { fbs: 92, hba1c: "5.4%", bun: 18, cr: 1.1, na: 139, k: 4.4, cl: 103, hco3: 24, ca: 9.2, po4: 3.4, mg: 1.9, uric: 5.8, alb: 4.2, glob: 2.8, tb: 0.6, db: 0.2, ast: 22, alt: 24, alp: 78, ipth: 45, vitD: 32, chol: 172, tg: 110, hdl: 52, ldl: 98, ptInr: "1.0", ptt: 30 },
+      urine24hr: { volume: "1,800 mL", totalCr: "1.1 g", totalUrea: "12 g", protein: "80 mg", dpi: "0.9 g/kg/day", crCl: 78, urineNa: "140 mEq/day" },
+      ua: { spGr: "1.018", protein: "Negative", sugar: "Negative", rbc: "0-1/HPF", wbcLeu: "0-1/HPF", upci: 0.08 },
+      virology: { cmvVL: "Not Detected", cmvLog: "-", bkVLBlood: "Not Detected", bkVLUrine: "Not Detected", bkLog: "-" },
+      medications: "Tacrolimus 2 mg BID, MMF 500 mg BID, Prednisolone 5 mg OD, Amlodipine 5 mg OD",
+      lastInvestigations: { usgDoppler: "Allograft perfusion ปกติ (18 ม.ค. 2566)", biopsy: "ไม่ได้ทำ (ไม่มีข้อบ่งชี้)", dsaDate: "18 ม.ค. 2566", dsaResult: "Negative" },
+      history: { abmr: "ไม่มี", dmHtDlp: "ไม่มี", cniToxicity: "ไม่มี", cmvDnaemia: "ไม่มี" },
+      clinicalNote: "ผู้ป่วยสบายดี ไม่มีไข้ ไม่มีอาการปัสสาวะผิดปกติ แผลผ่าตัดแห้งดี", pharmacistNote: "ทบทวนยาแล้ว ผู้ป่วยเข้าใจตารางการกินยา", dieticianNote: "แนะนำโซเดียมต่ำ โปรตีนพอดี ดื่มน้ำ 1.5-2 ลิตร/วัน",
+    },
+    {
+      hn: "HN-102345", date: "16 ก.ย. 2569", doctor: "นพ.ธนกร วัฒนสิน", followupWeeks: 2, summary: "stable",
+      vitals: { bt: "36.6°C", pr: "74", bp: "126/80 mmHg", rr: "16", bw: "64.5 kg", bmi: 23.3, homeBp: "124/78 mmHg" },
+      physicalExam: { edema: "ไม่มี", tremor: "ไม่มี", oralUlcer: "ไม่มี" },
+      drugLevel: { tacC0: "6.0 ng/mL", csaC0C2: "-", srlC0: "-", evlC0: "-", drawTime: "ก่อนกินยามื้อเช้า", auc: "-", cv: "7%" },
+      cbc: { hb: 12.6, hct: 37.8, mcv: 89, rdw: 13.2, wbc: 7000, pmn: "60%", lymph: "30%", plt: 250000, ferritin: 118, tsat: "30%", reticulocyte: "1.1%" },
+      chem: { fbs: 90, hba1c: "5.4%", bun: 17, cr: 1.1, na: 140, k: 4.3, cl: 102, hco3: 25, ca: 9.3, po4: 3.3, mg: 2.0, uric: 5.6, alb: 4.3, glob: 2.7, tb: 0.6, db: 0.2, ast: 21, alt: 23, alp: 76, ipth: 42, vitD: 33, chol: 168, tg: 105, hdl: 53, ldl: 95, ptInr: "1.0", ptt: 29 },
+      urine24hr: { volume: "1,900 mL", totalCr: "1.1 g", totalUrea: "12.4 g", protein: "70 mg", dpi: "0.9 g/kg/day", crCl: 79, urineNa: "145 mEq/day" },
+      ua: { spGr: "1.017", protein: "Negative", sugar: "Negative", rbc: "0-1/HPF", wbcLeu: "0-1/HPF", upci: 0.07 },
+      virology: { cmvVL: "Not Detected", cmvLog: "-", bkVLBlood: "Not Detected", bkVLUrine: "Not Detected", bkLog: "-" },
+      medications: "Tacrolimus 2 mg BID, MMF 500 mg BID, Prednisolone 5 mg OD, Amlodipine 5 mg OD",
+      lastInvestigations: { usgDoppler: "Allograft perfusion ปกติ", biopsy: "ไม่ได้ทำ", dsaDate: "18 ม.ค. 2566", dsaResult: "Negative" },
+      history: { abmr: "ไม่มี", dmHtDlp: "ไม่มี", cniToxicity: "ไม่มี", cmvDnaemia: "ไม่มี" },
+      clinicalNote: "อาการโดยรวมคงที่ดี แนะนำควบคุมอาหารโซเดียมต่ำต่อเนื่อง", pharmacistNote: "ไม่มีปัญหาการใช้ยา", dieticianNote: "รับประทานตามคำแนะนำได้ดี",
+    },
+    {
+      hn: "HN-102346", date: "11 ก.ย. 2569", doctor: "นพ.ธนกร วัฒนสิน", followupWeeks: 4, summary: "deteriorated",
+      vitals: { bt: "36.9°C", pr: "88", bp: "138/88 mmHg", rr: "18", bw: "70 kg", bmi: 26.4, homeBp: "136/86 mmHg" },
+      physicalExam: { edema: "ขาทั้งสองข้าง (1+)", tremor: "มือสั่นเล็กน้อย", oralUlcer: "ไม่มี" },
+      drugLevel: { tacC0: "9.4 ng/mL", csaC0C2: "-", srlC0: "-", evlC0: "-", drawTime: "ก่อนกินยามื้อเช้า", auc: "-", cv: "18%" },
+      cbc: { hb: 11.2, hct: 34.0, mcv: 86, rdw: 15.1, wbc: 8200, pmn: "68%", lymph: "22%", plt: 210000, ferritin: 85, tsat: "22%", reticulocyte: "1.6%" },
+      chem: { fbs: 118, hba1c: "6.1%", bun: 26, cr: 1.6, na: 137, k: 5.0, cl: 104, hco3: 21, ca: 8.8, po4: 4.1, mg: 1.7, uric: 7.2, alb: 3.8, glob: 3.1, tb: 0.7, db: 0.3, ast: 30, alt: 32, alp: 90, ipth: 68, vitD: 24, chol: 205, tg: 168, hdl: 42, ldl: 128, ptInr: "1.1", ptt: 31 },
+      urine24hr: { volume: "1,400 mL", totalCr: "0.9 g", totalUrea: "10 g", protein: "220 mg", dpi: "0.8 g/kg/day", crCl: 58, urineNa: "110 mEq/day" },
+      ua: { spGr: "1.021", protein: "1+", sugar: "Negative", rbc: "1-2/HPF", wbcLeu: "0-1/HPF", upci: 0.32 },
+      virology: { cmvVL: "Detected (Low)", cmvLog: "2.1 log", bkVLBlood: "Not Detected", bkVLUrine: "Not Detected", bkLog: "-" },
+      medications: "Tacrolimus 3 mg BID, MMF 500 mg BID, Prednisolone 5 mg OD, Amlodipine 10 mg OD, Valganciclovir 450 mg OD",
+      lastInvestigations: { usgDoppler: "Allograft perfusion ปกติ เล็กน้อย resistive index สูงขึ้น", biopsy: "ไม่ได้ทำ (นัดพิจารณาหากอาการไม่ดีขึ้น)", dsaDate: "20 ส.ค. 2569", dsaResult: "Negative" },
+      history: { abmr: "ไม่มี", dmHtDlp: "HT + เริ่มมีแนวโน้ม Pre-DM", cniToxicity: "สงสัยเล็กน้อยจากระดับยาสูง", cmvDnaemia: "พบ CMV DNAemia ระดับต่ำ" },
+      clinicalNote: "Tacrolimus level สูงกว่าเป้าหมาย ร่วมกับ eGFR ลดลงและ Proteinuria เพิ่มขึ้น ปรับลดยาและนัดติดตามถี่ขึ้น", pharmacistNote: "เน้นย้ำเวลากินยาให้ตรงเวลาทุกวัน", dieticianNote: "แนะนำลดโซเดียมและไขมันอิ่มตัวเพิ่มเติม",
+    },
   ];
 
   // ===== Donor Self-Service (LIFF) — ข้อมูลสำหรับผู้บริจาคไตที่ล็อกอินเข้าใช้งานแอปด้วยตนเอง =====
-  // primaryDonor: ผู้บริจาคตัวอย่างหลักของหน้า Donor LIFF ทั้งหมด (น้องสาวผู้บริจาคไตให้ primaryPatient เมื่อ ม.ค. 2566 ปัจจุบันติดตามระยะยาวปีที่ 3)
-  const primaryDonor = {
-    id: "DNR-9001", name: "นางสาวมณีรัตน์ ใจดี", age: 46, gender: "หญิง", blood: "O+",
-    type: "Living Related", relationship: "น้องสาวผู้บริจาค (Sibling Donor)",
-    recipientHn: "HN-102345", recipientName: "นายสมชาย ใจดี",
-    hospital: "รพ.ศิริราช", donationDate: "18 ม.ค. 2566",
-    phone: "089-765-4321", line: "maneerat_jd",
-    creatinine: 1.1, egfr: 80, risk: "low", status: "ติดตามระยะยาวปกติ (ปีที่ 3 หลังบริจาค)",
-  };
+  // ตัวแปรด้านล่างเป็น "มุมมอง" (view) ของชุดข้อมูลเดียวกับที่ทีมแพทย์/พยาบาลเห็นในหน้า Web (donors / donorTimeline / donorFollowups)
+  // เพื่อให้สิ่งที่ผู้บริจาคเห็นในแอปตรงกับสิ่งที่เจ้าหน้าที่บันทึกไว้เสมอ — donor หลักของ Donor LIFF คือ DNR-9001 (น้องสาวผู้บริจาคไตให้ primaryPatient)
+  const primaryDonor = donors.find((d) => d.id === "DNR-9001");
 
-  // Donor Follow-up Trend — แนวโน้มค่า Creatinine / eGFR ของ primaryDonor ตลอดการติดตามหลังบริจาค
+  // Donor Journey Timeline — เหตุการณ์ตลอดกระบวนการของ primaryDonor (ดึงจาก donorTimeline ชุดเดียวกับที่เจ้าหน้าที่ใช้)
+  const donorJourneyTimeline = donorTimeline[primaryDonor.id];
+
+  // Donor Follow-up Visits — ประวัติการติดตามอาการของ primaryDonor (ดึงจาก donorFollowups ชุดเดียวกับที่เจ้าหน้าที่บันทึก)
+  const donorFollowupVisits = donorFollowups.filter((f) => f.donorId === primaryDonor.id);
+
+  // Donor Follow-up Trend — แนวโน้มค่า Creatinine / eGFR ของ primaryDonor จากการติดตามที่เสร็จสิ้นแล้ว (6 ครั้งแรก)
   const donorFollowupTrend = {
     labels: ["2 สัปดาห์", "1 เดือน", "6 เดือน", "1 ปี", "2 ปี", "3 ปี"],
-    creatinine: [1.0, 1.05, 1.1, 1.1, 1.15, 1.1],
-    egfr: [88, 85, 82, 80, 79, 80],
+    creatinine: donorFollowupVisits.filter((v) => v.state === "done").map((v) => v.creatinine),
+    egfr: donorFollowupVisits.filter((v) => v.state === "done").map((v) => v.egfr),
   };
-
-  // Donor Follow-up Visits — ประวัติการติดตามอาการของ primaryDonor หลังผ่าตัดบริจาคไต
-  const donorFollowupVisits = [
-    { visit: "ติดตามหลังผ่าตัด 2 สัปดาห์", date: "01 ก.พ. 2566", creatinine: 1.0, egfr: 88, bp: "120/78 mmHg", complication: "ไม่มี", note: "แผลผ่าตัดหายดี ไม่มีภาวะแทรกซ้อน กลับไปใช้ชีวิตประจำวันเบาๆ ได้", state: "done" },
-    { visit: "ติดตาม 1 เดือนหลังบริจาค", date: "18 ก.พ. 2566", creatinine: 1.05, egfr: 85, bp: "118/76 mmHg", complication: "ไม่มี", note: "สุขภาพแข็งแรงดี กลับไปทำงานได้ตามปกติ", state: "done" },
-    { visit: "ติดตาม 6 เดือนหลังบริจาค", date: "18 ก.ค. 2566", creatinine: 1.1, egfr: 82, bp: "122/78 mmHg", complication: "ไม่มี", note: "การทำงานของไตข้างที่เหลือปรับตัวดี ค่าการทำงานไตอยู่ในเกณฑ์ปกติ", state: "done" },
-    { visit: "ติดตาม 1 ปีหลังบริจาค", date: "18 ม.ค. 2567", creatinine: 1.1, egfr: 80, bp: "120/80 mmHg", complication: "ไม่มี", note: "ตรวจสุขภาพประจำปีครั้งแรก ผลเลือดและความดันโลหิตปกติดี", state: "done" },
-    { visit: "ติดตาม 2 ปีหลังบริจาค", date: "18 ม.ค. 2568", creatinine: 1.15, egfr: 79, bp: "124/80 mmHg", complication: "ไม่มี", note: "ค่าการทำงานไตคงที่ แนะนำดื่มน้ำให้เพียงพอและตรวจสุขภาพประจำปีต่อเนื่อง", state: "done" },
-    { visit: "ติดตาม 3 ปีหลังบริจาค", date: "18 ม.ค. 2569", creatinine: 1.1, egfr: 80, bp: "118/78 mmHg", complication: "ไม่มี", note: "สุขภาพโดยรวมแข็งแรงดี ไม่พบภาวะแทรกซ้อนระยะยาว", state: "done" },
-    { visit: "ตรวจสุขภาพประจำปีที่ 4", date: "20 ก.ย. 2569", creatinine: null, egfr: null, bp: "", complication: "", note: "นัดตรวจเลือดและพบแพทย์เพื่อติดตามสุขภาพประจำปีตามมาตรฐานการดูแลผู้บริจาคไตระยะยาว", state: "active" },
-  ];
-
-  // Donor Journey Timeline — เหตุการณ์ตลอดกระบวนการของ primaryDonor ตั้งแต่ลงทะเบียนจนถึงติดตามหลังบริจาค
-  const donorJourneyTimeline = [
-    { date: "10 พ.ย. 2565", icon: "clipboard-list", color: "#2563eb", title: "ลงทะเบียนผู้บริจาค", desc: "ลงทะเบียนสมัครใจเป็นผู้บริจาคไตให้นายสมชาย ใจดี (พี่ชาย)", state: "done" },
-    { date: "18 พ.ย. 2565", icon: "flask-conical", color: "#7c3aed", title: "ตรวจคัดกรองและ HLA", desc: "ตรวจเลือด คัดกรองโรคติดเชื้อ และตรวจ HLA Typing ผลเข้ากันได้ดี", state: "done" },
-    { date: "02 ธ.ค. 2565", icon: "heart-pulse", color: "#0f766e", title: "ประเมินสุขภาพและสภาพจิตใจ", desc: "ผ่านการประเมินความพร้อมทางร่างกายและจิตใจโดยคณะกรรมการ", state: "done" },
-    { date: "20 ธ.ค. 2565", icon: "check-circle-2", color: "#16a34a", title: "คณะกรรมการอนุมัติ", desc: "ได้รับอนุมัติให้เป็นผู้บริจาคไตอย่างเป็นทางการ", state: "done" },
-    { date: "18 ม.ค. 2566", icon: "bed", color: "#dc2626", title: "ผ่าตัดบริจาคไต", desc: "ผ่าตัดบริจาคไตซ้ายสำเร็จ พักฟื้นที่โรงพยาบาล 4 วัน", state: "done" },
-    { date: "ติดตามต่อเนื่อง", icon: "activity", color: "#2563eb", title: "ติดตามสุขภาพระยะยาว", desc: "ติดตามอาการและตรวจสุขภาพประจำปีตามมาตรฐานการดูแลผู้บริจาคไต ปัจจุบันเข้าสู่ปีที่ 3", state: "active" },
-  ];
 
   // Donor Appointments — นัดหมายของ primaryDonor (แยกจาก appointments ของฝั่งผู้ป่วยรอปลูกถ่าย/ปลูกถ่ายแล้ว)
   const donorAppointments = [
@@ -476,9 +728,9 @@ window.MOCK_DATA = (function () {
 
   return {
     staff, patients, primaryPatient, labTrend, labParams, medications, doseHistory,
-    compliance, appointments, alerts, waitingList, donors, matchingResults, suitabilityAssessments, auditLogs,
+    compliance, appointments, alerts, waitingList, candidateWorkups, donors, matchingResults, suitabilityAssessments, auditLogs,
     questionnaireStatus, followupHistory, nurseTasks, notifications, chatThreads, knowledgeArticles,
-    timelineEvents, symptomQuestions,
+    timelineEvents, symptomQuestions, patientFollowupVisits, transplantCases,
     donorEvaluations, donorLabPanels, donorLabTrend, donorAssessments, donorFollowups, donorTimeline,
     primaryDonor, donorFollowupTrend, donorFollowupVisits, donorJourneyTimeline, donorAppointments,
     donorSymptomQuestions, donorKnowledgeArticles,

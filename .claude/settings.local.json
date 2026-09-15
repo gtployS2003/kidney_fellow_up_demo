@@ -5,7 +5,10 @@
       "Bash(python3 -c \"import datetime; print\\(datetime.date\\(2026,9,1\\).strftime\\('%A'\\)\\)\")",
       "Bash(mkdir -p /tmp/kt_shots)",
       "Bash(jobs)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(node -e \"global.window={}; require\\('./assets/js/data.js'\\); const D=window.MOCK_DATA; console.log\\('OK', Object.keys\\(D\\).length, 'keys'\\); console.log\\('donors', D.donors.length\\); console.log\\('primaryDonor', D.primaryDonor.id, D.primaryDonor.followupStatusText\\); console.log\\('donorFollowupVisits', D.donorFollowupVisits.length\\); console.log\\('donorJourneyTimeline', D.donorJourneyTimeline.length\\); console.log\\('candidateWorkups keys', Object.keys\\(D.candidateWorkups\\)\\); console.log\\('transplantCases', D.transplantCases.length\\); console.log\\('patientFollowupVisits', D.patientFollowupVisits.length\\); console.log\\('donorEvaluations', D.donorEvaluations.length\\);\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"try { require.resolve\\('jsdom'\\); console.log\\('jsdom available'\\); } catch\\(e\\) { console.log\\('jsdom NOT available'\\); }\")"
     ],
     "additionalDirectories": [
       "/private/tmp/kt_shots"

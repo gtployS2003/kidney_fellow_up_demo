@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ประเมินสุขภาพผู้บริจาค | Kidney Transplant Follow-up System</title>
+  <title>ก่อนปลูกถ่ายไต (ผู้บริจาค) | Kidney Transplant Follow-up System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -33,9 +33,9 @@
         <!-- Header -->
         <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
           <div>
-            <h2 class="text-xl font-bold text-slate-800">Donor Evaluation</h2>
-            <p class="text-sm text-slate-500 mt-0.5">Clinical Assessment Form — ประเมินสุขภาพร่างกาย, การทำงานของไต,
-              Imaging และสภาพจิตใจของผู้บริจาค</p>
+            <h2 class="text-xl font-bold text-slate-800">ก่อนปลูกถ่ายไต — ผู้บริจาค (Pre-Transplant Work-up)</h2>
+            <p class="text-sm text-slate-500 mt-0.5">Lab / Imaging / คัดกรองมะเร็ง / ปรึกษาแผนก / Vaccine — บันทึกวันที่
+              สถานะ และหมายเหตุของทุกรายการก่อนสรุปผลความเหมาะสม</p>
           </div>
           <a href="donor-dashboard.html"
             class="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition"><i
@@ -49,107 +49,31 @@
           <select id="donor-select"
             class="px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white min-w-[240px]"></select>
           <a id="link-lab" href="donor-laboratory.html"
-            class="ml-auto text-xs font-semibold text-primary hover:underline flex items-center gap-1">ดูผลตรวจ Lab <i
-              data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+            class="ml-auto text-xs font-semibold text-primary hover:underline flex items-center gap-1">ดูผลตรวจ Lab
+            แบบเต็ม <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
         </div>
+
+        <!-- Registration summary -->
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="user-round"
+              class="w-4 h-4 text-primary"></i> ลงทะเบียน / ข้อมูลพื้นฐาน</h3>
+          <div id="registration-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        </div>
+
+        <div id="quick-vitals" class="grid grid-cols-2 md:grid-cols-4 gap-4 fade-in"></div>
 
         <form id="evaluation-form" class="space-y-6">
 
-          <!-- Medical Assessment Checklist -->
-          <div class="card p-5 fade-in">
-            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i
-                data-lucide="clipboard-check" class="w-4 h-4 text-primary"></i> Evaluation Checklist — Medical
-              Assessment</h3>
-            <div id="medical-checklist" class="divide-y divide-slate-100"></div>
-          </div>
-
-          <!-- Kidney Function -->
-          <div class="card p-5 fade-in">
-            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="activity"
-                class="w-4 h-4 text-primary"></i> Kidney Function</h3>
-            <p class="text-xs text-slate-400 mb-3">ดึงค่าล่าสุดจากผลตรวจ Lab ของผู้บริจาคโดยอัตโนมัติ</p>
-            <div id="kidney-function-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-          </div>
-
-          <!-- Imaging -->
-          <div class="card p-5 fade-in">
-            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="scan"
-                class="w-4 h-4 text-primary"></i> Imaging</h3>
-            <div class="grid md:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">CT Kidney</label>
-                <input id="f-ct" type="text"
-                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Renal Anatomy</label>
-                <input id="f-anatomy" type="text"
-                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Kidney Size</label>
-                <input id="f-size" type="text"
-                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Psychological Assessment -->
-          <div class="card p-5 fade-in">
-            <h3 class="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><i data-lucide="brain"
-                class="w-4 h-4 text-primary"></i> Psychological Assessment</h3>
-            <div class="grid md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Donation Voluntary
-                  (สมัครใจบริจาคด้วยตนเอง)</label>
-                <select id="f-voluntary"
-                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                  <option value="pending">รอประเมิน</option>
-                  <option value="n/a">N/A</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Mental Readiness
-                  (ความพร้อมทางจิตใจ)</label>
-                <select id="f-readiness"
-                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-                  <option value="ready">Ready</option>
-                  <option value="pending">รอประเมิน</option>
-                  <option value="not-ready">Not Ready</option>
-                  <option value="n/a">N/A</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Family Pressure
-                  (แรงกดดันจากครอบครัว)</label>
-                <select id="f-pressure"
-                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-                  <option value="none">None</option>
-                  <option value="some">Some</option>
-                  <option value="significant">Significant</option>
-                  <option value="n/a">N/A</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Social Support
-                  (การสนับสนุนทางสังคม)</label>
-                <select id="f-support"
-                  class="w-full px-3.5 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white">
-                  <option value="strong">Strong</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="weak">Weak</option>
-                  <option value="n/a">N/A</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          <div id="section-labs"></div>
+          <div id="section-imaging"></div>
+          <div id="section-cancer"></div>
+          <div id="section-consults"></div>
+          <div id="section-vaccine"></div>
 
           <!-- Result -->
           <div class="card p-5 fade-in">
             <h3 class="font-semibold text-slate-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="flag"
-                class="w-4 h-4 text-primary"></i> Result</h3>
+                class="w-4 h-4 text-primary"></i> สรุปผลคณะกรรมการ (Committee Result)</h3>
             <div id="eval-result-options" class="grid sm:grid-cols-3 gap-3 mb-4"></div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">บันทึกเพิ่มเติม (Note)</label>
             <textarea id="f-note" rows="3"
@@ -194,7 +118,7 @@
   <script src="../assets/js/layout.js"></script>
   <script src="../assets/js/components.js"></script>
   <script>
-    StaffLayout.init({ role: "doctor", active: "donor-evaluation", title: "ประเมินสุขภาพผู้บริจาค" });
+    StaffLayout.init({ role: "doctor", active: "donor-evaluation", title: "ก่อนปลูกถ่ายไต — ผู้บริจาค" });
 
     const D = window.MOCK_DATA;
     const donors = D.donors;
@@ -208,45 +132,7 @@
 
     const stageBadge = { pending: '<span class="badge badge-slate">Pending</span>', "in-progress": '<span class="badge badge-blue">In Progress</span>', completed: '<span class="badge badge-green">Completed</span>' };
     const resultBadge = { suitable: '<span class="badge badge-green">Suitable</span>', risk: '<span class="badge badge-amber">Suitable with Risk</span>', "not-suitable": '<span class="badge badge-red">Not Suitable</span>', pending: '<span class="badge badge-slate">Pending</span>' };
-    const checklistLabels = { bloodPressure: "Blood Pressure", diabetesScreening: "Diabetes Screening", kidneyFunction: "Kidney Function", cardiacAssessment: "Cardiac Assessment", cancerScreening: "Cancer Screening", infectionScreening: "Infection Screening" };
-    const checklistOptions = [
-      { value: "normal", label: "ปกติ" },
-      { value: "abnormal", label: "ผิดปกติ" },
-      { value: "pending", label: "รอผล" },
-    ];
 
-    document.getElementById("medical-checklist").innerHTML = Object.keys(checklistLabels)
-      .map(
-        (key) => `
-    <div class="flex items-center justify-between gap-3 py-3">
-      <p class="text-sm font-medium text-slate-700">${checklistLabels[key]}</p>
-      <div class="flex gap-1.5" data-checklist-item="${key}">
-        ${checklistOptions.map((o) => `<button type="button" data-checklist-value="${o.value}" class="checklist-btn px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50">${o.label}</button>`).join("")}
-      </div>
-    </div>`
-      )
-      .join("");
-
-    function setChecklistValue(key, value) {
-      const wrap = document.querySelector(`[data-checklist-item="${key}"]`);
-      wrap.querySelectorAll(".checklist-btn").forEach((b) => {
-        const active = b.getAttribute("data-checklist-value") === value;
-        b.classList.toggle("bg-primary", active);
-        b.classList.toggle("text-white", active);
-        b.classList.toggle("border-primary", active);
-        b.classList.toggle("text-slate-500", !active);
-        b.classList.toggle("border-slate-200", !active);
-      });
-      wrap.dataset.value = value;
-    }
-    document.querySelectorAll(".checklist-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const wrap = btn.closest("[data-checklist-item]");
-        setChecklistValue(wrap.getAttribute("data-checklist-item"), btn.getAttribute("data-checklist-value"));
-      });
-    });
-
-    // ผลการประเมิน — Suitable / Suitable with Risk / Not Suitable (ใช้ร่วมกับ Committee Review)
     document.getElementById("eval-result-options").innerHTML = [
       { value: "suitable", title: "Suitable", desc: "ผ่านเกณฑ์ทุกด้าน" },
       { value: "risk", title: "Suitable with Risk", desc: "ผ่านเกณฑ์แต่มีความเสี่ยง", iconName: "alert-triangle" },
@@ -274,49 +160,6 @@
     renderHistory();
 
     const resultCards = document.querySelectorAll(".assessment-card");
-    function loadDonor(id) {
-      document.getElementById("link-lab").href = `donor-laboratory.html?id=${id}`;
-      const e = evaluations.find((ev) => ev.donorId === id);
-      const panel = D.donorLabPanels[id] || [];
-      const getVal = (name) => (panel.find((p) => p.name === name) || {}).value ?? "-";
-
-      document.getElementById("kidney-function-grid").innerHTML = [
-        { label: "Creatinine", value: `${getVal("Creatinine")} mg/dL` },
-        { label: "eGFR", value: `${getVal("eGFR")} mL/min/1.73m²` },
-        { label: "Urine Protein", value: `${getVal("Urine Protein")} mg/dL` },
-        { label: "ACR", value: `${getVal("ACR")} mg/g` },
-      ]
-        .map((f) => `<div class="rounded-xl border border-slate-100 p-3.5"><p class="text-xs text-slate-400">${f.label}</p><p class="text-base font-bold text-slate-800 mt-1">${f.value}</p></div>`)
-        .join("");
-
-      resultCards.forEach((c) => c.classList.remove("selected"));
-      if (!e) {
-        Object.keys(checklistLabels).forEach((key) => setChecklistValue(key, "pending"));
-        document.getElementById("f-ct").value = "";
-        document.getElementById("f-anatomy").value = "";
-        document.getElementById("f-size").value = "";
-        document.getElementById("f-voluntary").value = "pending";
-        document.getElementById("f-readiness").value = "pending";
-        document.getElementById("f-pressure").value = "none";
-        document.getElementById("f-support").value = "moderate";
-        document.getElementById("f-note").value = "";
-        document.querySelectorAll('input[name="assessment"]').forEach((r) => (r.checked = false));
-        return;
-      }
-      Object.keys(checklistLabels).forEach((key) => setChecklistValue(key, e.medicalChecklist[key]));
-      document.getElementById("f-ct").value = e.imaging.ctKidney;
-      document.getElementById("f-anatomy").value = e.imaging.renalAnatomy;
-      document.getElementById("f-size").value = e.imaging.kidneySize;
-      document.getElementById("f-voluntary").value = e.psychological.donationVoluntary;
-      document.getElementById("f-readiness").value = e.psychological.mentalReadiness;
-      document.getElementById("f-pressure").value = e.psychological.familyPressure;
-      document.getElementById("f-support").value = e.psychological.socialSupport;
-      document.getElementById("f-note").value = e.note;
-      document.querySelectorAll('input[name="assessment"]').forEach((r) => (r.checked = r.value === e.result));
-      const activeCard = document.querySelector(`.assessment-card[data-value="${e.result}"]`);
-      if (activeCard) activeCard.classList.add("selected");
-    }
-
     resultCards.forEach((card) => {
       card.addEventListener("click", () => {
         resultCards.forEach((c) => c.classList.remove("selected"));
@@ -324,6 +167,51 @@
         card.querySelector("input").checked = true;
       });
     });
+
+    function loadDonor(id) {
+      const donor = donors.find((d) => d.id === id);
+      document.getElementById("link-lab").href = `donor-laboratory.html?id=${id}`;
+      const e = evaluations.find((ev) => ev.donorId === id);
+
+      document.getElementById("registration-grid").innerHTML = [
+        { label: "ความสัมพันธ์กับผู้รับบริจาค", value: donor.relationship },
+        { label: "หมู่เลือด", value: donor.blood },
+        { label: "HLA Typing", value: donor.hla },
+        { label: "CDC Crossmatch", value: donor.crossmatch },
+        { label: "CMV IgG (Donor)", value: donor.cmvIgG },
+        { label: "ยินยอมบริจาค (Consent)", value: donor.consentSigned ? "ลงนามแล้ว" : "ยังไม่ลงนาม" },
+        { label: "ผ่านคณะกรรมการจริยธรรม/กฎหมาย", value: donor.ethicsApproved ? "ผ่านแล้ว" : "รอพิจารณา" },
+        { label: "คลินิก/OPD", value: donor.hospital },
+      ]
+        .map((f) => `<div class="rounded-xl border border-slate-100 p-3.5"><p class="text-xs text-slate-400">${f.label}</p><p class="text-sm font-bold text-slate-800 mt-1">${f.value}</p></div>`)
+        .join("");
+
+      document.getElementById("quick-vitals").innerHTML = [
+        { icon: "heart-pulse", title: "ความดันโลหิต", value: e ? e.bp : "-", iconBg: "bg-blue-50 text-primary" },
+        { icon: "scale", title: "BMI", value: e ? e.bmi : "-", iconBg: "bg-teal-50" },
+        { icon: "cigarette-off", title: "การสูบบุหรี่", value: e ? e.smoking : "-", iconBg: "bg-purple-100 text-purple-600" },
+        { icon: "user-round-check", title: "ผู้ประเมินล่าสุด", value: e ? e.evaluator : "-", iconBg: "bg-amber-100 text-amber-600" },
+      ].map((c) => Components.statCard(c)).join("");
+
+      const empty = { labs: [], imaging: [], cancerScreening: [], consults: [], vaccineOthers: [] };
+      const w = e || empty;
+      const editable = { editable: true };
+      document.getElementById("section-labs").innerHTML = Components.checklistSection({ title: "ขั้นที่ 1 · เจาะเลือด / Lab", icon: "flask-conical", items: w.labs }, editable);
+      document.getElementById("section-imaging").innerHTML = Components.checklistSection({ title: "ขั้นที่ 2 · X-ray / Imaging", icon: "scan", items: w.imaging }, editable);
+      document.getElementById("section-cancer").innerHTML = Components.checklistSection({ title: "คัดกรองมะเร็ง", icon: "shield-alert", items: w.cancerScreening }, editable);
+      document.getElementById("section-consults").innerHTML = Components.checklistSection({ title: "ขั้นที่ 3 · ปรึกษาแผนก (Consult)", icon: "users", items: w.consults }, editable);
+      document.getElementById("section-vaccine").innerHTML = Components.checklistSection({ title: "ขั้นที่ 4 · Vaccine / Others", icon: "syringe", items: w.vaccineOthers }, editable);
+
+      resultCards.forEach((c) => c.classList.remove("selected"));
+      document.querySelectorAll('input[name="assessment"]').forEach((r) => (r.checked = false));
+      document.getElementById("f-note").value = e ? e.note : "";
+      if (e) {
+        document.querySelectorAll('input[name="assessment"]').forEach((r) => (r.checked = r.value === e.result));
+        const activeCard = document.querySelector(`.assessment-card[data-value="${e.result}"]`);
+        if (activeCard) activeCard.classList.add("selected");
+      }
+      lucide.createIcons();
+    }
 
     document.getElementById("donor-select").addEventListener("change", (e) => loadDonor(e.target.value));
     loadDonor(initialId);

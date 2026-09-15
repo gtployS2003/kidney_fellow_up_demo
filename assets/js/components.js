@@ -427,6 +427,104 @@ window.Components = (function () {
       </a>`;
   }
 
+  // ---------- 4-Phase Transplant Flow ----------
+  // ก่อนปลูกถ่ายไต / ขณะปลูกถ่าย / ก่อนกลับบ้าน / หลังปลูกถ่ายไต — ใช้ร่วมกันทั้งฝั่ง Staff และ LIFF (donor/recipient)
+
+  // Checklist Status Badge — pass (ผ่าน) / fail (ไม่ผ่าน) / pending (รอผล)
+  function checklistStatusBadge(status) {
+    const map = {
+      pass: '<span class="badge badge-green">ผ่าน</span>',
+      fail: '<span class="badge badge-red">ไม่ผ่าน</span>',
+      pending: '<span class="badge badge-slate">รอผล</span>',
+    };
+    return map[status] || map.pending;
+  }
+
+  // Checklist Row — 1 รายการตรวจ { label, date, status, comment }
+  // opts.editable = true จะแสดงเป็น input (date/status/comment) สำหรับหน้าฟอร์มของเจ้าหน้าที่ · ไม่ส่ง = แสดงผลอย่างเดียว (ใช้ใน LIFF/สรุปผล)
+  function checklistRow(item, opts) {
+    opts = opts || {};
+    const { label, date, status = "pending", comment = "" } = item;
+    if (!opts.editable) {
+      return `
+      <div class="flex items-start justify-between gap-3 py-3">
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-slate-700">${label}</p>
+          <p class="text-xs text-slate-400 mt-0.5">${date && date !== "-" ? date : "ยังไม่มีนัด"}${comment ? " · " + comment : ""}</p>
+        </div>
+        <div class="shrink-0">${checklistStatusBadge(status)}</div>
+      </div>`;
+    }
+    return `
+      <div class="grid grid-cols-12 gap-2 items-center py-2.5" data-checklist-row data-label="${label}">
+        <div class="col-span-12 sm:col-span-3">
+          <p class="text-sm font-medium text-slate-700">${label}</p>
+        </div>
+        <div class="col-span-6 sm:col-span-3">
+          <input type="text" data-field="date" value="${date && date !== "-" ? date : ""}" placeholder="ว/ด/ปปปป" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+        </div>
+        <div class="col-span-6 sm:col-span-2">
+          <select data-field="status" class="checklist-status-select w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition">
+            <option value="pass" ${status === "pass" ? "selected" : ""}>ผ่าน</option>
+            <option value="fail" ${status === "fail" ? "selected" : ""}>ไม่ผ่าน</option>
+            <option value="pending" ${status === "pending" ? "selected" : ""}>รอผล</option>
+          </select>
+        </div>
+        <div class="col-span-12 sm:col-span-4">
+          <input type="text" data-field="comment" value="${comment}" placeholder="หมายเหตุ (ถ้ามี)" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition" />
+        </div>
+      </div>`;
+  }
+
+  // Checklist Section — การ์ดรวมรายการตรวจ 1 หมวด (Lab / Imaging / คัดกรองมะเร็ง / Consult / Vaccine ฯลฯ) พร้อมสรุปจำนวนผ่าน/ไม่ผ่าน/รอผล
+  function checklistSection({ title, icon: iconName, items = [] }, opts) {
+    const passCount = items.filter((i) => i.status === "pass").length;
+    const failCount = items.filter((i) => i.status === "fail").length;
+    const pendingCount = items.filter((i) => i.status === "pending").length;
+    return `
+      <div class="card p-5 fade-in">
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
+          <h3 class="font-semibold text-slate-800 text-sm flex items-center gap-2">${iconName ? icon(iconName, "w-4 h-4 text-primary") : ""} ${title}</h3>
+          <div class="flex items-center gap-1.5">
+            ${passCount ? `<span class="badge badge-green">ผ่าน ${passCount}</span>` : ""}
+            ${failCount ? `<span class="badge badge-red">ไม่ผ่าน ${failCount}</span>` : ""}
+            ${pendingCount ? `<span class="badge badge-slate">รอผล ${pendingCount}</span>` : ""}
+          </div>
+        </div>
+        <div class="${opts && opts.editable ? "divide-y divide-slate-100" : "divide-y divide-slate-50"} mt-3">
+          ${items.map((it) => checklistRow(it, opts)).join("")}
+        </div>
+      </div>`;
+  }
+
+  // Phase Stepper — 4 ขั้นตอนหลักของการปลูกถ่ายไต (ใช้ร่วมกันทั้งหน้า Staff และ LIFF ของ donor/recipient)
+  const TRANSPLANT_PHASES = [
+    { key: "pre", label: "ก่อนปลูกถ่าย", icon: "clipboard-list" },
+    { key: "surgery", label: "ขณะปลูกถ่าย", icon: "scissors" },
+    { key: "discharge", label: "ก่อนกลับบ้าน", icon: "home" },
+    { key: "followup", label: "หลังปลูกถ่ายไต", icon: "activity" },
+  ];
+  function phaseStepper(activeKey, links) {
+    links = links || {};
+    const activeIdx = TRANSPLANT_PHASES.findIndex((p) => p.key === activeKey);
+    return `
+      <div class="flex items-center w-full overflow-x-auto py-1">
+        ${TRANSPLANT_PHASES.map((p, i) => {
+          const state = activeIdx < 0 ? "pending" : i < activeIdx ? "done" : i === activeIdx ? "active" : "pending";
+          const color = state === "done" ? "#16a34a" : state === "active" ? "#2563eb" : "#cbd5e1";
+          const textColor = state === "pending" ? "text-slate-400" : "text-slate-800";
+          const nodeHtml = `
+          <div class="flex flex-col items-center shrink-0" style="min-width:84px">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style="background:${color}">${state === "done" ? icon("check", "w-4 h-4") : i + 1}</div>
+            <p class="text-[11px] font-semibold mt-1.5 text-center leading-tight ${textColor}">${p.label}</p>
+          </div>`;
+          const wrapped = links[p.key] ? `<a href="${links[p.key]}" class="hover:opacity-80 transition">${nodeHtml}</a>` : nodeHtml;
+          const connector = i < TRANSPLANT_PHASES.length - 1 ? `<div class="h-0.5 mx-1 shrink-0" style="background:${i < activeIdx ? "#16a34a" : "#e2e8f0"}; width:28px"></div>` : "";
+          return wrapped + connector;
+        }).join("")}
+      </div>`;
+  }
+
   // ---------- Loading State (Skeleton) ----------
   // ใช้ระหว่างรอโหลดข้อมูลจริงจาก backend — ปัจจุบัน mock data โหลดทันที จึงยังไม่ได้ผูกใช้งานจริงในหน้าใด
   // เตรียมไว้สำหรับขั้นตอนต่อ backend (แสดงระหว่างรอ fetch)
@@ -478,6 +576,7 @@ window.Components = (function () {
   return {
     statCard, patientCard, alertCard, timeline, medicalDataCard, taskCard, priorityBadge, statusPipeline, matchingScore, clinicalAssessmentCard,
     taskQueueCard, riskPatientCard, commStatusBadge, medicationReminderCard, articleCard,
+    checklistStatusBadge, checklistRow, checklistSection, phaseStepper,
     skeletonCard, skeletonTable, skeletonChart, emptyState, errorState,
   };
 })();

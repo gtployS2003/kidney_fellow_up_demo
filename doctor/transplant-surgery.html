@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ขณะปลูกถ่าย | Kidney Transplant Follow-up System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: { DEFAULT: '#2563EB', dark: '#1D4ED8' }, teal: { DEFAULT: '#0F766E' } },
+          fontFamily: { sans: ["'Segoe UI'", 'Arial', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <style>
+    .tab-btn { padding: .7rem 1.1rem; font-size: .8rem; font-weight: 600; color: #64748b; border-bottom: 2px solid transparent; white-space: nowrap; transition: all .15s ease; }
+    .tab-btn:hover { color: #1e293b; }
+    .tab-btn.tab-active { color: #2563eb; border-color: #2563eb; }
+    .field-label { display:block; font-size:.75rem; font-weight:600; color:#374151; margin-bottom:.35rem; }
+    .field-input { width:100%; padding:.55rem .7rem; font-size:.8rem; border-radius:.5rem; border:1px solid #cbd5e1; outline:none; transition:.15s; }
+    .field-input:focus { border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,.12); }
+  </style>
+</head>
+
+<body class="font-sans bg-bgapp text-slate-800">
+
+  <div class="flex min-h-screen">
+    <div id="app-sidebar"></div>
+
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div id="app-topbar"></div>
+
+      <main class="flex-1 p-4 lg:p-6 space-y-6 max-w-5xl w-full mx-auto">
+
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 fade-in">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">ขณะปลูกถ่าย — บันทึกผ่าตัด (Intra-operative Record)</h2>
+            <p class="text-sm text-slate-500 mt-0.5">ยืนยันตัวตน + เอกสารยินยอม, ผล Pre-op ล่าสุด, และบันทึกผ่าตัดของทั้ง
+              Donor Nephrectomy และ Kidney Transplantation ในเคสเดียวกัน</p>
+          </div>
+        </div>
+
+        <!-- Case selector -->
+        <div class="card p-4 fade-in flex flex-wrap items-center gap-3">
+          <span class="text-sm font-medium text-slate-600 flex items-center gap-1.5"><i data-lucide="link"
+              class="w-4 h-4 text-slate-400"></i> เลือกเคสปลูกถ่าย:</span>
+          <select id="case-select"
+            class="px-3.5 py-2 text-sm rounded-lg border border-slate-300 focus:border-primary focus:ring-2 focus:ring-blue-100 outline-none transition bg-white min-w-[320px]"></select>
+        </div>
+
+        <!-- Pre-op checklist -->
+        <div class="card p-5 fade-in">
+          <h3 class="font-semibold text-slate-800 text-sm mb-3 flex items-center gap-2"><i data-lucide="clipboard-check"
+              class="w-4 h-4 text-primary"></i> ยืนยันก่อนเข้าห้องผ่าตัด (Pre-op Checklist)</h3>
+          <div class="grid sm:grid-cols-2 gap-3 text-sm">
+            <label class="flex items-center gap-2.5 rounded-xl border border-slate-200 p-3"><input type="checkbox" checked class="w-4 h-4 text-primary rounded" /> ยืนยันตัวตนผู้บริจาค/ผู้รับ + เอกสารยินยอม</label>
+            <label class="flex items-center gap-2.5 rounded-xl border border-slate-200 p-3"><input type="checkbox" checked class="w-4 h-4 text-primary rounded" /> ผลตรวจ Pre-op ล่าสุด (Lab, CXR, EKG) ครบและไม่หมดอายุ</label>
+            <label class="flex items-center gap-2.5 rounded-xl border border-slate-200 p-3"><input type="checkbox" checked class="w-4 h-4 text-primary rounded" /> ยืนยัน Crossmatch / DSA ล่าสุดก่อนเข้าห้องผ่าตัด</label>
+            <label class="flex items-center gap-2.5 rounded-xl border border-slate-200 p-3"><input type="checkbox" checked class="w-4 h-4 text-primary rounded" /> ยืนยัน KT Date <span id="pf-kt-date" class="font-semibold text-slate-800 ml-1"></span></label>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card fade-in overflow-hidden">
+          <div data-tabs data-tabs-target="#tab-panels" class="flex overflow-x-auto border-b border-slate-200 px-2">
+            <button data-tab-btn="donor" class="tab-btn tab-active">ผู้บริจาค · Donor Nephrectomy</button>
+            <button data-tab-btn="recipient" class="tab-btn">ผู้รับ · Kidney Transplantation</button>
+          </div>
+
+          <div id="tab-panels" class="p-5">
+            <div data-tab-panel="donor">
+              <div id="donor-surgery-panel" class="space-y-5"></div>
+            </div>
+            <div data-tab-panel="recipient" class="hidden">
+              <div id="recipient-surgery-panel" class="space-y-5"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button id="btn-save" type="button"
+            class="px-5 py-2 text-sm rounded-lg bg-primary hover:bg-primary-dark text-white font-medium flex items-center gap-2"><i
+              data-lucide="save" class="w-4 h-4"></i> บันทึกบันทึกผ่าตัด</button>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/data.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script>
+    StaffLayout.init({ role: "doctor", active: "transplant-surgery", title: "ขณะปลูกถ่าย" });
+
+    const D = window.MOCK_DATA;
+    const cases = D.transplantCases;
+
+    const params = new URLSearchParams(window.location.search);
+    const initialCaseId = params.get("case") && cases.some((c) => c.caseId === params.get("case")) ? params.get("case") : cases[0].caseId;
+
+    document.getElementById("case-select").innerHTML = cases
+      .map((c) => `<option value="${c.caseId}">${c.caseId} · ${D.donors.find((d) => d.id === c.donorId).name} → ${c.recipientName}</option>`)
+      .join("");
+    document.getElementById("case-select").value = initialCaseId;
+
+    function vitalsTable(vitals) {
+      return `
+      <div class="overflow-x-auto">
+        <table class="table-modern">
+          <thead><tr><th>เวลา</th><th>BT</th><th>PR</th><th>BP</th><th>RR</th></tr></thead>
+          <tbody>
+            ${vitals.map((v) => `<tr><td class="font-medium text-slate-700">${v.time}</td><td>${v.bt}</td><td>${v.pr}</td><td>${v.bp}</td><td>${v.rr}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`;
+    }
+
+    function field(label, value) {
+      return `<div><label class="field-label">${label}</label><input type="text" class="field-input" value="${value ?? ""}" /></div>`;
+    }
+
+    function loadCase(caseId) {
+      const c = cases.find((x) => x.caseId === caseId);
+      const donor = D.donors.find((d) => d.id === c.donorId);
+      document.getElementById("pf-kt-date").textContent = c.ktDate;
+
+      document.getElementById("donor-surgery-panel").innerHTML = `
+      <div class="rounded-xl border border-slate-100 p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0" style="color:#0f766e"><i data-lucide="heart-handshake" class="w-5 h-5"></i></div>
+        <div><p class="font-bold text-slate-800">${donor.name}</p><p class="text-xs text-slate-500">${donor.id} · ${donor.type}</p></div>
+      </div>
+      <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+        ${field("เวลาเริ่มผ่าตัด", c.donorSurgery.startTime)}
+        ${field("เวลาสิ้นสุดผ่าตัด", c.donorSurgery.endTime)}
+        ${field("ข้างที่นำไตออก", c.donorSurgery.side)}
+        ${field("วิธีผ่าตัด (Technique)", c.donorSurgery.technique)}
+        ${field("ปริมาณเลือดที่เสีย", c.donorSurgery.bloodLoss)}
+        ${field("สารน้ำที่ได้รับ", c.donorSurgery.fluids)}
+        ${field("Cross-clamp Time", c.donorSurgery.crossClampTime)}
+        ${field("Creatinine ก่อนผ่าตัด", c.donorSurgery.crPre)}
+        ${field("Creatinine หลังผ่าตัดทันที", c.donorSurgery.crPost)}
+      </div>
+      <div>${field("ภาวะแทรกซ้อนระหว่างผ่าตัด (ถ้ามี)", c.donorSurgery.complication)}</div>
+      <div>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Vital Sign ระหว่างผ่าตัด</p>
+        ${vitalsTable(c.donorSurgery.vitals)}
+      </div>`;
+
+      document.getElementById("recipient-surgery-panel").innerHTML = `
+      <div class="rounded-xl border border-slate-100 p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-primary flex items-center justify-center shrink-0"><i data-lucide="user-round" class="w-5 h-5"></i></div>
+        <div><p class="font-bold text-slate-800">${c.recipientName}</p><p class="text-xs text-slate-500">${c.recipientHn} · KT Date ${c.ktDate}</p></div>
+      </div>
+      <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+        ${field("เวลาเริ่มผ่าตัด", c.recipientSurgery.startTime)}
+        ${field("เวลาสิ้นสุดผ่าตัด", c.recipientSurgery.endTime)}
+        ${field("ตำแหน่งที่วางไต", c.recipientSurgery.position)}
+        ${field("การต่อหลอดเลือด (Vascular)", c.recipientSurgery.vascularAnastomosis)}
+        ${field("การต่อท่อไต (Ureter)", c.recipientSurgery.ureterAnastomosis)}
+        ${field("Cold Ischemia Time", c.recipientSurgery.coldIschemia)}
+        ${field("Warm Ischemia Time", c.recipientSurgery.warmIschemia)}
+        ${field("Induction Immunosuppression", c.recipientSurgery.induction)}
+        ${field("Urine Output หลังเปิด Clamp", c.recipientSurgery.urineOutputAfterClamp)}
+      </div>
+      <div>${field("ภาวะแทรกซ้อนระหว่างผ่าตัด (ถ้ามี)", c.recipientSurgery.complication)}</div>
+      <div>
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Vital Sign ระหว่างผ่าตัด</p>
+        ${vitalsTable(c.recipientSurgery.vitals)}
+      </div>`;
+
+      lucide.createIcons();
+    }
+
+    document.getElementById("case-select").addEventListener("change", (e) => loadCase(e.target.value));
+    loadCase(initialCaseId);
+
+    document.getElementById("btn-save").addEventListener("click", () => {
+      UI.toast("บันทึกข้อมูลการผ่าตัดเรียบร้อยแล้ว", "success");
+    });
+
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>
