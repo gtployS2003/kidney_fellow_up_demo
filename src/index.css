@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-font-smoothing: antialiased; }
+  body { @apply bg-slate-100 font-sans text-slate-900; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+}
+
+/* หน้าแรก (คงหน้าตาเดิมจาก index.html) */
+.home-bg { background: linear-gradient(135deg, #0f172a, #2563eb); }
+.home-mesh::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle at 15% 15%, rgba(255,255,255,.16) 0, transparent 45%),
+              radial-gradient(circle at 85% 30%, rgba(255,255,255,.12) 0, transparent 40%);
+}
+.card-glass { background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.5); backdrop-filter: blur(14px); }
+
+/* สำเนาสำหรับพิมพ์ / Export — ซ่อนบนหน้าจอ แสดงเฉพาะตอนพิมพ์ */
+.print-only { display: none; }
+@media print {
+  @page { size: A4; margin: 10mm; }
+  body { background: #fff !important; }
+  #root { display: none !important; }
+  .print-only { display: block; }
+  .print-only .a4-page { width: auto !important; min-height: 0 !important; padding: 0 !important; }
+}
