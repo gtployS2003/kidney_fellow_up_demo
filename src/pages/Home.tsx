@@ -18,8 +18,7 @@ interface Entry {
 const ENTRIES: Entry[] = [
   { title: 'Use Case Diagram', desc: 'ภาพรวม Actor และฟังก์ชันการทำงานทั้งระบบ', icon: Workflow, color: '#4338ca', bg: '#eef2ff', href: `${import.meta.env.BASE_URL}legacy/usecase-diagram.html`, legacy: true },
   { title: 'แพทย์และพยาบาล', desc: 'แดชบอร์ดและเครื่องมือของทีมแพทย์และพยาบาล', icon: Stethoscope, color: '#2563eb', bg: '#dbeafe', href: '/clinical/recipients' },
-  { title: 'Patient UI', desc: 'แอปสำหรับผู้ป่วยผ่าน LINE LIFF', icon: Smartphone, color: '#0f766e', bg: '#ccfbf1', href: `${import.meta.env.BASE_URL}legacy/liff/home.html`, legacy: true },
-  { title: 'Donor UI', desc: 'แอปสำหรับผู้บริจาคไตผ่าน LINE LIFF', icon: Gift, color: '#e11d48', bg: '#ffe4e6', href: `${import.meta.env.BASE_URL}legacy/donor-liff/home.html`, legacy: true },
+  { title: 'LINE OA (ผู้รับ & ผู้บริจาค)', desc: 'เดโมจำลองแชท LINE · Rich menu · แจ้งเตือน · หน้า LIFF', icon: Smartphone, color: '#06c755', bg: '#dcfce7', href: '/line' },
 ];
 
 export default function Home() {

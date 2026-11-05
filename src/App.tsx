@@ -17,11 +17,16 @@ import MatchHistory from '@/modules/matching/pages/MatchHistory';
 import AppointmentCalendar from '@/modules/appointments/pages/AppointmentCalendar';
 import ReportsHub from '@/modules/reports/pages/ReportsHub';
 import ReportDetail from '@/modules/reports/pages/ReportDetail';
+import ArticleList from '@/modules/articles/pages/ArticleList';
+import ArticleEditor from '@/modules/articles/pages/ArticleEditor';
+import LineSimulator from '@/modules/line/LineSimulator';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      {/* เดโม LINE OA (จำลอง ไม่เชื่อม LINE จริง) */}
+      <Route path="/line" element={<LineSimulator />} />
       <Route path="/clinical" element={<AppShell />}>
         <Route index element={<Navigate to="recipients" replace />} />
         {/* Module: Recipient */}
@@ -44,6 +49,9 @@ export default function App() {
         <Route path="appointments" element={<AppointmentCalendar />} />
         <Route path="reports" element={<ReportsHub />} />
         <Route path="reports/:key" element={<ReportDetail />} />
+        {/* Phase 1: บทความความรู้ (แสดงใน LINE OA) */}
+        <Route path="articles" element={<ArticleList />} />
+        <Route path="articles/:id" element={<ArticleEditor />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

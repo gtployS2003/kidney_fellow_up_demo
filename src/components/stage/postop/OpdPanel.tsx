@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { A4Page, LogoBox, Row, tableStyle, td, th } from '@/components/paper/Paper';
 import { cn, fullName, thaiDate } from '@/lib/format';
 import { SubNav, usePostop } from './common';
+import { FollowupRounds } from './FollowupRounds';
 
 interface P {
   person: PersonRef;
@@ -40,11 +41,14 @@ export function OpdPanel({ person, kind, filled }: P) {
     { key: 'comp', num: '3', title: 'ภาวะแทรกซ้อน / Admit ซ้ำ', sub: 'Rejection, ติดเชื้อ, อื่นๆ', icon: AlertTriangle, tint: '#ffedd5', fg: '#c2410c' },
   ];
   return (
-    <SubNav items={items} sel={sel} onSel={setSel}>
-      {sel === 'visits' && <Visits person={person} kind={kind} filled={filled} />}
-      {sel === 'meds' && <MedsAdj person={person} kind={kind} filled={filled} />}
-      {sel === 'comp' && <Comps person={person} kind={kind} filled={filled} />}
-    </SubNav>
+    <>
+      <FollowupRounds person={person} kind={kind} />
+      <SubNav items={items} sel={sel} onSel={setSel}>
+        {sel === 'visits' && <Visits person={person} kind={kind} filled={filled} />}
+        {sel === 'meds' && <MedsAdj person={person} kind={kind} filled={filled} />}
+        {sel === 'comp' && <Comps person={person} kind={kind} filled={filled} />}
+      </SubNav>
+    </>
   );
 }
 

@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { LabPanel } from '@/components/lab/LabPanel';
 import { PersonAppointments } from '@/components/lab/PersonAppointments';
 import { PersonTimeline } from '@/components/patient/PersonTimeline';
+import { LineDataPanel } from '@/components/patient/LineDataPanel';
+import { LineBadge } from '@/components/patient/LineBadge';
 import { FormsReport, type OpenFormFn } from '@/components/patient/FormsReport';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -39,7 +41,7 @@ import { cn, durationSince, fullName, initials, thaiDate } from '@/lib/format';
 import { ProcessStepper } from '@/components/stage/ProcessStepper';
 import { StagePanel } from '@/components/stage/StagePanel';
 
-const TABS = ['ภาพรวม', 'ผลตรวจ Lab', 'นัดหมาย', 'Timeline', 'รายงานฟอร์ม'] as const;
+const TABS = ['ภาพรวม', 'ผลตรวจ Lab', 'นัดหมาย', 'Timeline', 'รายงานฟอร์ม', 'ข้อมูลจาก LINE'] as const;
 
 export default function PatientSummary() {
   const { id = '' } = useParams();
@@ -106,6 +108,7 @@ export default function PatientSummary() {
               <h1 className="text-[22px] font-bold">{fullName(rec)}</h1>
               <CaseBadge caseType={rec.caseType} />
               <StatusBadge status={rec.status} />
+              <LineBadge id={rec.id} lineId={rec.lineId} />
             </div>
             <p className="mt-1 text-sm text-slate-500">
               HN {rec.hn} · อายุ {rec.age} ปี ({rec.sex === 'male' ? 'ชาย' : 'หญิง'}) · ลงทะเบียน {thaiDate(rec.registeredAt)}
@@ -188,6 +191,8 @@ export default function PatientSummary() {
                   <PersonAppointments kind="recipient" id={rec.id} />
                 ) : tab === 'Timeline' ? (
                   <PersonTimeline person={rec} kind="recipient" />
+                ) : tab === 'ข้อมูลจาก LINE' ? (
+                  <LineDataPanel person={rec} kind="recipient" />
                 ) : (
                   <FormsReport person={rec} kind="recipient" onOpen={openForm} />
                 )}

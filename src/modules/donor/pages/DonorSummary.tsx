@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { LabPanel } from '@/components/lab/LabPanel';
 import { PersonAppointments } from '@/components/lab/PersonAppointments';
 import { PersonTimeline } from '@/components/patient/PersonTimeline';
+import { LineDataPanel } from '@/components/patient/LineDataPanel';
+import { LineBadge } from '@/components/patient/LineBadge';
 import { FormsReport, type OpenFormFn } from '@/components/patient/FormsReport';
 import { cn } from '@/lib/format';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -32,7 +34,7 @@ export default function DonorSummary() {
   const fromAppt = params.get('from') === 'appt' ? params.get('date') : null;
   const [stage, setStage] = useState<StageKey | null>(params.get('tab') ? null : 'preop');
   const [openSub, setOpenSub] = useState<{ key: string; mode: 'edit' | 'preview'; n: number } | null>(null);
-  const [tab, setTab] = useState<'ภาพรวม' | 'ผลตรวจ Lab' | 'นัดหมาย' | 'Timeline' | 'รายงานฟอร์ม'>(params.get('tab') === 'lab' ? 'ผลตรวจ Lab' : 'ภาพรวม');
+  const [tab, setTab] = useState<'ภาพรวม' | 'ผลตรวจ Lab' | 'นัดหมาย' | 'Timeline' | 'รายงานฟอร์ม' | 'ข้อมูลจาก LINE'>(params.get('tab') === 'lab' ? 'ผลตรวจ Lab' : 'ภาพรวม');
 
   const openForm: OpenFormFn = (key, mode) => {
     if (key === 'register') {
@@ -82,6 +84,7 @@ export default function DonorSummary() {
               <Badge label="ผู้บริจาค" tone={TONES.blue} />
               <CaseBadge caseType={d.caseType} />
               <StatusBadge status={d.status} />
+              <LineBadge id={d.id} lineId={d.lineId} />
             </div>
             <p className="mt-1 text-sm text-slate-500">
               HN {d.hn} · อายุ {d.age} ปี ({d.sex === 'male' ? 'ชาย' : 'หญิง'}) · ลงทะเบียน {thaiDate(d.registeredAt)}
@@ -136,7 +139,7 @@ export default function DonorSummary() {
         </div>
         {/* แท็บข้อมูลผู้ป่วย — กดได้ทุกเมื่อ ไม่ว่าจะอยู่ขั้นตอนไหน */}
         <div className="flex gap-1 overflow-x-auto border-t border-slate-200 px-4">
-          {(['ภาพรวม', 'ผลตรวจ Lab', 'นัดหมาย', 'Timeline', 'รายงานฟอร์ม'] as const).map((t) => {
+          {(['ภาพรวม', 'ผลตรวจ Lab', 'นัดหมาย', 'Timeline', 'รายงานฟอร์ม', 'ข้อมูลจาก LINE'] as const).map((t) => {
             const active = stage === null && tab === t;
             return (
               <button
@@ -172,6 +175,8 @@ export default function DonorSummary() {
               <PersonAppointments kind="donor" id={d.id} />
             ) : tab === 'Timeline' ? (
               <PersonTimeline person={d} kind="donor" />
+            ) : tab === 'ข้อมูลจาก LINE' ? (
+              <LineDataPanel person={d} kind="donor" />
             ) : tab === 'รายงานฟอร์ม' ? (
               <FormsReport person={d} kind="donor" onOpen={openForm} />
             ) : (

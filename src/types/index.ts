@@ -402,3 +402,68 @@ export interface LabResultDto {
   items: LabItemDto[];
   pending: { name: string; sentAt: string }[];
 }
+
+// ===== Phase 1: บทความความรู้ (แสดงใน LINE OA) =====
+export type ArticleAudience = 'recipient' | 'donor';
+export type ArticlePhase = 'all' | 'preop' | 'postop';
+export type ArticleSex = 'all' | 'female' | 'male';
+export type ArticleStatus = 'draft' | 'published';
+export interface ArticleDto {
+  id: string;
+  title: string;
+  category: string;
+  readMin: number;
+  audience: ArticleAudience[];
+  phase: ArticlePhase;
+  sex: ArticleSex;
+  featured: boolean;
+  status: ArticleStatus;
+  /** ชื่อไฟล์ภาพปก (เดโม: ไม่อัปโหลดจริง) */
+  cover?: string;
+  content: string;
+  todos: string[];
+  updatedAt: string;
+  updatedBy: string;
+}
+
+// ===== Phase 1: ข้อมูลที่ผู้ป่วยบันทึกผ่าน LINE =====
+export interface BpEntry {
+  at: string;
+  sys: number;
+  dia: number;
+  pulse: number;
+}
+export interface FluidDay {
+  date: string;
+  intake: number;
+  urine: number;
+}
+export interface WeightEntry {
+  date: string;
+  kg: number;
+}
+export interface AdherenceWeek {
+  label: string;
+  pct: number;
+}
+export interface LineAbnormal {
+  at: string;
+  text: string;
+}
+export interface LineDataDto {
+  lastLoggedAt?: string;
+  bp: BpEntry[];
+  fluid: FluidDay[];
+  weight: WeightEntry[];
+  temp: { at: string; c: number }[];
+  adherence: AdherenceWeek[];
+  missedDoses: number;
+  abnormal: LineAbnormal[];
+}
+/** ตั้งค่าการแจ้งเตือนรายผู้ป่วย (มีค่าเริ่มต้นจากระบบ) */
+export interface NotifySettingsDto {
+  fluidTargetMl: number;
+  medTimes: string[];
+  fluidIsDefault: boolean;
+  medTimesIsDefault: boolean;
+}

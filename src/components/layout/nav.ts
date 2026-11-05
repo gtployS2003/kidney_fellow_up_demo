@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, Link2, User, UserPlus, type LucideIcon } from 'lucide-react';
+import { BarChart3, BookOpen, CalendarDays, Link2, User, UserPlus, type LucideIcon } from 'lucide-react';
 
 export interface NavGroup {
   key: string;
@@ -49,4 +49,5 @@ export const NAV: NavGroup[] = [
   },
   { key: 'appointments', label: 'นัดหมาย', icon: CalendarDays, base: '/clinical/appointments', to: '/clinical/appointments' },
   { key: 'reports', label: 'รายงาน', icon: BarChart3, base: '/clinical/reports', to: '/clinical/reports' },
+  { key: 'articles', label: 'บทความความรู้', icon: BookOpen, base: '/clinical/articles', to: '/clinical/articles' },
 ];
