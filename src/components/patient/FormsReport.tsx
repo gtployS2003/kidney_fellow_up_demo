@@ -96,11 +96,9 @@ export function FormsReport({ person, kind, onOpen }: { person: PersonRef; kind:
                   <td className="px-2 py-3 text-slate-500">{r.state === 'empty' ? '—' : r.by}</td>
                   <td className="px-4 py-3">
                     <span className="flex justify-end gap-2">
-                      {r.key !== 'register' && (
-                        <Button size="sm" variant="secondary" icon={Eye} disabled={r.state === 'empty'} onClick={() => onOpen(r.key, 'preview')}>
-                          Preview / Export
-                        </Button>
-                      )}
+                      <Button size="sm" variant="secondary" icon={Eye} disabled={r.state === 'empty'} onClick={() => onOpen(r.key, 'preview')}>
+                        Preview / Export
+                      </Button>
                       <Button size="sm" variant="ghost" icon={Pencil} onClick={() => onOpen(r.key, 'edit')}>
                         {r.key === 'register' ? 'ดูข้อมูล' : r.state === 'empty' ? 'กรอกฟอร์ม' : 'เปิดฟอร์ม'}
                       </Button>

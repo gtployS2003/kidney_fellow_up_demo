@@ -16,7 +16,7 @@ interface Entry {
 
 // เหลือ 4 ปุ่มตามที่กำหนด — หน้าตาเหมือน index.html เดิม
 const ENTRIES: Entry[] = [
-  { title: 'Use Case Diagram', desc: 'ภาพรวม Actor และฟังก์ชันการทำงานทั้งระบบ', icon: Workflow, color: '#4338ca', bg: '#eef2ff', href: `${import.meta.env.BASE_URL}legacy/usecase-diagram.html`, legacy: true },
+  { title: 'Use Case Diagram', desc: 'ภาพรวม Actor และฟังก์ชันการทำงานทั้งระบบ', icon: Workflow, color: '#4338ca', bg: '#eef2ff', href: '/usecase' },
   { title: 'แพทย์และพยาบาล', desc: 'แดชบอร์ดและเครื่องมือของทีมแพทย์และพยาบาล', icon: Stethoscope, color: '#2563eb', bg: '#dbeafe', href: '/clinical/recipients' },
   { title: 'LINE OA (ผู้รับ & ผู้บริจาค)', desc: 'เดโมจำลองแชท LINE · Rich menu · แจ้งเตือน · หน้า LIFF', icon: Smartphone, color: '#06c755', bg: '#dcfce7', href: '/line' },
 ];

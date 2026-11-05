@@ -24,3 +24,17 @@ export function exportWord(fileName: string) {
 }
 
 export { PRINT_ROOT_ID };
+
+/** ดาวน์โหลดตารางเป็น CSV (มี BOM ให้ Excel อ่านภาษาไทยได้) */
+export function downloadCsv(fileName: string, headers: string[], rows: (string | number)[][]) {
+  const esc = (v: string | number) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [headers, ...rows].map((r) => r.map(esc).join(',')).join('\r\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${fileName}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+}

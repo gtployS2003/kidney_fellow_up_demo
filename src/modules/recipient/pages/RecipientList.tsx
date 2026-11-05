@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useAsync } from '@/hooks/useAsync';
 import { recipientApi } from '@/services/api/recipientApi';
 import { STATUS_META } from '@/lib/status';
+import { downloadCsv } from '@/components/forms/exporters';
 import { cn, fullName, thaiDate } from '@/lib/format';
 
 const PAGE_SIZE = 8;
@@ -52,7 +53,7 @@ export default function RecipientList() {
         subtitle={`ผู้ป่วยที่ลงทะเบียน ${rows.length} ราย · คลิกชื่อเพื่อดูสรุปข้อมูลผู้ป่วย`}
         actions={
           <>
-            <Button variant="secondary" icon={Download}>
+            <Button variant="secondary" icon={Download} onClick={() => downloadCsv(`KT-recipients-${new Date().toISOString().slice(0, 10)}`, ['HN', 'ชื่อ-นามสกุล', 'อายุ', 'กรุ๊ปเลือด', 'ประเภท', 'สถานะ', 'ลงทะเบียน'], rows.map((r) => [r.hn, `${r.prefix}${r.firstName} ${r.lastName}`, r.age, `${r.bloodGroup}${r.rh}`, r.caseType === 'living' ? 'มีคู่แล้ว' : 'สภากาชาด', STATUS_META[r.status].label, thaiDate(r.registeredAt)]))}>
               ส่งออก
             </Button>
             <Button icon={Plus} to="/clinical/recipients/register">

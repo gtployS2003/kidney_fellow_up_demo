@@ -14,6 +14,7 @@ import { useAsync } from '@/hooks/useAsync';
 import { donorApi } from '@/services/api/donorApi';
 import { STATUS_META } from '@/lib/status';
 import { cn, thaiDate } from '@/lib/format';
+import { downloadCsv } from '@/components/forms/exporters';
 
 const PAGE_SIZE = 9;
 
@@ -51,7 +52,7 @@ export default function DonorList() {
         subtitle={`ผู้บริจาคทั้งหมด ${rows.length} ราย · คลิกชื่อเพื่อดูสรุปข้อมูล · คลิกชื่อผู้รับเพื่อไปหน้าผู้รับ`}
         actions={
           <>
-            <Button variant="secondary" icon={Download}>
+            <Button variant="secondary" icon={Download} onClick={() => downloadCsv(`KT-donors-${new Date().toISOString().slice(0, 10)}`, ['HN', 'ชื่อ / รหัส', 'อายุ', 'เพศ', 'กรุ๊ปเลือด', 'ประเภท', 'สถานะ', 'ผู้รับ', 'ความสัมพันธ์'], rows.map((d) => [d.hn, d.caseType === 'redcross' ? d.redCrossCode ?? '' : `${d.prefix}${d.firstName} ${d.lastName}`, d.age, d.sex === 'male' ? 'ชาย' : 'หญิง', `${d.bloodGroup}${d.rh}`, d.caseType === 'living' ? 'มีคู่แล้ว' : 'สภากาชาด', STATUS_META[d.status].label, d.recipient.name, d.relation]))}>
               ส่งออก
             </Button>
             <Button icon={Plus} to="/clinical/donors/register">

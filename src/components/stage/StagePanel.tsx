@@ -21,6 +21,11 @@ import type { FormProps } from '@/modules/evaluation/forms/types';
 import { SurgeryPanel } from './postop/SurgeryPanel';
 import { DischargePanel } from './postop/DischargePanel';
 import { OpdPanel } from './postop/OpdPanel';
+import { Modal } from '@/components/ui/Modal';
+import { PrintArea } from '@/components/forms/PrintArea';
+import { exportWord, printForm } from '@/components/forms/exporters';
+import { A4Page, LogoBox, Row, tableStyle, td } from '@/components/paper/Paper';
+import { FileText, Printer } from 'lucide-react';
 
 type FormComp = (p: FormProps) => ReactElement;
 interface EvalForm {
@@ -116,7 +121,7 @@ export function StagePanel({
       />
     );
   }
-  if (stage === 'register') return <RegisterPanel rows={registerRows} date={registerDate} kind={kind} />;
+  if (stage === 'register') return <RegisterPanel key={initialSub === 'register' ? `reg-${initialMode}` : 'reg'} rows={registerRows} date={registerDate} kind={kind} person={person} openPreview={initialSub === 'register' && initialMode === 'preview'} />;
   if (stage === 'preop') return <PreopPanel key={initialSub ?? 'default'} rec={person} kind={kind} initialSub={initialSub} initialMode={initialMode} />;
   // ขั้นตอนหลังผ่าตัด — แบบฟอร์มจริงยังรอกำหนด (ใช้ตามดีไซน์ใน Figma)
   if (stage === 'surgery') return <SurgeryPanel person={person} kind={kind} filled />;
@@ -252,10 +257,91 @@ export function FormArea({ title, desc, icon: Icon }: { title: string; desc: str
   );
 }
 
-function RegisterPanel({ rows, date, kind }: { rows: [string, string][][]; date: string; kind: PersonKind }) {
+/** ขั้นตอนลงทะเบียน: แสดงข้อมูล + Preview A4 + Export (PDF / Word / พิมพ์) */
+function RegisterPanel({ rows, date, kind, person, openPreview }: { rows: [string, string][][]; date: string; kind: PersonKind; person: PersonRef; openPreview?: boolean }) {
+  const [preview, setPreview] = useState(!!openPreview);
+  const [menu, setMenu] = useState(false);
+  const title = kind === 'donor' ? 'แบบฟอร์มลงทะเบียนผู้บริจาค' : 'แบบฟอร์มลงทะเบียน';
+  const fileName = `KT-${kind === 'donor' ? 'D' : 'R'}-registration-${person.hn}`;
+  const GROUPS = ['ข้อมูลส่วนตัว', 'ข้อมูลการติดต่อ', kind === 'donor' ? 'ผู้รับไต' : 'ข้อมูลการรักษา / ผู้ประสงค์บริจาค'];
+  const paper = (
+    <A4Page>
+      <Row gap={14} style={{ alignItems: 'center' }}>
+        <LogoBox />
+        <div style={{ flex: 1, textAlign: 'center', fontWeight: 600, fontSize: 14 }}>
+          Naresuan University Hospital Kidney Transplantation {kind === 'donor' ? 'Donor ' : ''}Registration Form
+          <br />
+          {title}
+        </div>
+        <div style={{ width: 110, textAlign: 'right' }}>วันที่ {thaiDate(date)}</div>
+      </Row>
+      {rows.map((g, gi) => (
+        <div key={gi}>
+          <div style={{ fontWeight: 600, padding: '6px 0 4px' }}>
+            {gi + 1}. {GROUPS[gi] ?? ''}
+          </div>
+          <table style={tableStyle}>
+            <tbody>
+              {g.map(([k, v]) => (
+                <tr key={k}>
+                  <td style={{ ...td, width: 200, background: '#f8fafc' }}>{k}</td>
+                  <td style={td}>{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+      <Row gap={20} style={{ paddingTop: 28, justifyContent: 'flex-end' }}>
+        <div style={{ width: 150, height: 70, border: '1px solid #64748b', display: 'grid', placeItems: 'center', fontSize: 11 }}>Sticker Recipient</div>
+        <div style={{ width: 150, height: 70, border: '1px solid #64748b', display: 'grid', placeItems: 'center', fontSize: 11 }}>Sticker Donor</div>
+      </Row>
+    </A4Page>
+  );
+  const run = (fn: () => void) => {
+    setMenu(false);
+    setTimeout(fn, 50);
+  };
   return (
     <div className="flex flex-col gap-4">
-      <FormHeaderStatic title={kind === 'donor' ? 'แบบฟอร์มลงทะเบียนผู้บริจาค' : 'แบบฟอร์มลงทะเบียน'} desc={`ขั้นตอนนี้ไม่มีขั้นตอนย่อย · ลงทะเบียนเมื่อ ${thaiDate(date)}`} icon={UserCheck} />
+      <div className="flex flex-wrap items-center gap-3.5 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-5 py-3.5">
+        <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white">
+          <UserCheck className="h-[22px] w-[22px]" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[17px] font-bold text-indigo-800">{title}</p>
+          <p className="text-[12.5px] text-slate-600">ขั้นตอนนี้ไม่มีขั้นตอนย่อย · ลงทะเบียนเมื่อ {thaiDate(date)}</p>
+        </div>
+        <Button variant="secondary" icon={Eye} size="sm" onClick={() => setPreview(true)}>
+          Preview
+        </Button>
+        <div className="relative">
+          <Button variant="secondary" icon={Download} size="sm" className="!border-indigo-200 !text-brand-indigo" onClick={() => setMenu(!menu)}>
+            Export
+          </Button>
+          <AnimatePresence>
+            {menu && (
+              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute right-0 z-30 mt-2 w-[200px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-pop">
+                {(
+                  [
+                    ['PDF', 'Save as PDF', FileText, printForm],
+                    ['Word (.doc)', 'แก้ไขต่อได้', FileText, () => exportWord(fileName)],
+                    ['พิมพ์', 'ส่งไปเครื่องพิมพ์', Printer, printForm],
+                  ] as const
+                ).map(([t, d, I, fn]) => (
+                  <button key={t} type="button" onClick={() => run(fn)} className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-slate-50">
+                    <I className="h-4 w-4 text-slate-500" />
+                    <span>
+                      <span className="block text-[13px] font-semibold">{t}</span>
+                      <span className="block text-[11px] text-slate-400">{d}</span>
+                    </span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
       <div className="grid gap-4 lg:grid-cols-3">
         {rows.map((group, gi) => (
           <motion.div key={gi} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0, transition: { delay: gi * 0.06 } }} className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -268,6 +354,21 @@ function RegisterPanel({ rows, date, kind }: { rows: [string, string][][]; date:
           </motion.div>
         ))}
       </div>
+      <Modal open={preview} onClose={() => setPreview(false)} width={860}>
+        <div className="mb-3 flex items-center gap-2">
+          <p className="flex-1 text-base font-bold">Preview · A4</p>
+          <Button size="sm" variant="secondary" icon={Printer} onClick={() => run(printForm)}>
+            พิมพ์ / PDF
+          </Button>
+          <Button size="sm" variant="secondary" icon={FileText} onClick={() => run(() => exportWord(fileName))}>
+            Word
+          </Button>
+        </div>
+        <div className="max-h-[70vh] overflow-auto rounded-xl bg-slate-200 p-4">
+          <div className="mx-auto w-fit shadow-[0_4px_16px_rgba(0,0,0,.12)]">{paper}</div>
+        </div>
+      </Modal>
+      <PrintArea>{paper}</PrintArea>
     </div>
   );
 }

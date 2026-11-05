@@ -20,6 +20,7 @@ import ReportDetail from '@/modules/reports/pages/ReportDetail';
 import ArticleList from '@/modules/articles/pages/ArticleList';
 import ArticleEditor from '@/modules/articles/pages/ArticleEditor';
 import LineSimulator from '@/modules/line/LineSimulator';
+import UseCasePage from '@/modules/usecase/UseCasePage';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
       <Route path="/" element={<Home />} />
       {/* เดโม LINE OA (จำลอง ไม่เชื่อม LINE จริง) */}
       <Route path="/line" element={<LineSimulator />} />
+      <Route path="/usecase" element={<UseCasePage />} />
       <Route path="/clinical" element={<AppShell />}>
         <Route index element={<Navigate to="recipients" replace />} />
         {/* Module: Recipient */}

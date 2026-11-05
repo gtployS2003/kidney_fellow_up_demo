@@ -56,7 +56,7 @@ export default function PatientSummary() {
 
   const openForm: OpenFormFn = (key, mode) => {
     if (key === 'register') {
-      setOpenSub(null);
+      setOpenSub({ key, mode, n: Date.now() });
       setStage('register');
     } else {
       setOpenSub({ key, mode, n: Date.now() });
