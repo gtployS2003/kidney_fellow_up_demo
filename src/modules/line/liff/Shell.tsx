@@ -31,7 +31,7 @@ export function LiffShell({ title, sub, onClose, onBack, children, hero }: { tit
           <path d="M0 28 C 80 44 140 16 210 28 C 280 40 330 22 390 30 L390 40 L0 40 Z" fill="#f5f7fb" />
         </svg>
       </div>
-      <div className="-mt-6 flex-1 overflow-y-auto px-4 pb-6">{children}</div>
+      <div className="relative z-10 -mt-6 flex-1 overflow-y-auto px-4 pb-6 pt-1">{children}</div>
     </div>
   );
 }
