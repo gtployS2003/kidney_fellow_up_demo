@@ -5,3 +5,5 @@ dist
 .env
 .env.example
 .claude
+
+round10-lottie.patch

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ArrowLeft, MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/format';
+import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
 
 /** หน้า LIFF: หัวคลื่นไล่สีฟ้า (ธีมเดียวกับดีไซน์) + เนื้อหาการ์ดซ้อนบนคลื่น */
 export function LiffShell({ title, sub, onClose, onBack, children, hero }: { title?: string; sub?: string; onClose: () => void; onBack?: () => void; children: ReactNode; hero?: ReactNode }) {
@@ -74,4 +75,14 @@ export function LBtn({ children, onClick, kind = 'primary', disabled, className 
 export function Chip({ children, tone = 'blue' }: { children: ReactNode; tone?: 'blue' | 'green' | 'amber' | 'orange' | 'slate' }) {
   const t = { blue: 'bg-blue-100 text-blue-700', green: 'bg-green-100 text-green-700', amber: 'bg-yellow-100 text-yellow-800', orange: 'bg-orange-100 text-orange-700', slate: 'bg-slate-100 text-slate-600' }[tone];
   return <span className={cn('inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold', t)}>{children}</span>;
+}
+
+/** สถานะกำลังโหลดในหน้า LIFF (Kidney Buddy · loading) */
+export function LiffLoading({ text = 'กำลังโหลดข้อมูล…' }: { text?: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1 rounded-[20px] bg-white py-4 text-[12.5px] text-slate-500 shadow-[0_8px_22px_-10px_rgba(15,23,42,.18)]">
+      <KidneyBuddy pose="loading" size={130} />
+      {text}
+    </div>
+  );
 }

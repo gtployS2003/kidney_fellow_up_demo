@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle, Check, Download, IdCard, Phone, ShieldCheck, Smartphone, Undo2 } from 'lucide-react';
 import { useSim } from '../store';
 import { PERSONAS, findByNationalId, fullName, type Persona } from '../personas';
-import { Mascot } from '../Mascot';
+import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
 import { LBtn, LCard, LiffShell } from './Shell';
 import { cn } from '@/lib/format';
 
@@ -31,8 +31,8 @@ export function RegisterPage() {
       <Progress step={n} />
       {step === 'start' && (
         <div className="relative flex justify-center pt-3">
-          <span className="grid h-36 w-36 place-items-center rounded-full bg-white/25">
-            <Mascot size={118} />
+          <span className="grid h-40 w-40 place-items-center rounded-full bg-white/25">
+            <KidneyBuddy pose="register" size={150} />
           </span>
         </div>
       )}
@@ -42,7 +42,12 @@ export function RegisterPage() {
           <span className="text-[12.5px] font-semibold">คำขอใช้ข้อมูล (จำลองในเดโม)</span>
         </div>
       )}
-      {(step === 'confirm' || step === 'notfound') && p !== undefined && (
+      {step === 'notfound' && (
+        <div className="relative flex justify-center pt-2">
+          <KidneyBuddy pose="not_found" size={150} />
+        </div>
+      )}
+      {step === 'confirm' && p !== undefined && (
         <div className="relative flex justify-center pt-4">
           <span className="grid h-24 w-24 place-items-center rounded-full bg-white shadow-lg">
             {step === 'confirm' && p ? <span className="grid h-20 w-20 place-items-center rounded-full bg-blue-50 text-[26px] font-bold text-primary">{p.ini}</span> : <AlertTriangle className="h-10 w-10 text-orange-500" />}
@@ -50,12 +55,8 @@ export function RegisterPage() {
         </div>
       )}
       {step === 'success' && (
-        <div className="relative flex justify-center pt-8 pb-6">
-          <span className="grid h-28 w-28 place-items-center rounded-full bg-white/30">
-            <span className="grid h-20 w-20 place-items-center rounded-full bg-white">
-              <Check className="h-10 w-10 text-green-600" strokeWidth={3} />
-            </span>
-          </span>
+        <div className="relative flex justify-center pt-4 pb-4">
+          <KidneyBuddy pose="success" size={190} />
         </div>
       )}
     </>
@@ -177,7 +178,7 @@ export function RegisterPage() {
       )}
 
       {step === 'notfound' && (
-        <div className="flex flex-col gap-3 pt-14">
+        <div className="flex flex-col gap-3 pt-6">
           <div className="text-center">
             <p className="text-[19px] font-bold">ไม่พบข้อมูลการลงทะเบียน</p>
             <p className="text-[13px] text-slate-500">ยืนยันตัวตนสำเร็จ แต่ยังไม่พบข้อมูลของท่าน<br />ในระบบศูนย์ปลูกถ่ายไต</p>

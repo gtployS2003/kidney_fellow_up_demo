@@ -5,6 +5,7 @@ import { useSim } from './store';
 import { FlexCard } from './FlexCard';
 import { RichMenu } from './RichMenu';
 import { Mascot } from './Mascot';
+import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
 import { RegisterPage } from './liff/RegisterPage';
 import { AppointmentsPage, FollowUpPage, HealthPage, KidneyPage, KnowledgePage, MedsPage, ProfilePage, SettingsPage } from './liff/Pages';
 import { cn } from '@/lib/format';
@@ -64,6 +65,8 @@ export function ChatPhone() {
                   )}
                   {m.type === 'flex' ? (
                     <FlexCard d={m.data} answered={m.answered} onPress={(i) => pressButton(m.id, i)} />
+                  ) : m.type === 'sticker' ? (
+                    <KidneyBuddy pose={m.pose} size={128} />
                   ) : (
                     <span className={cn('max-w-[250px] whitespace-pre-line rounded-[18px] px-3.5 py-2 text-[13px] leading-5', m.from === 'user' ? 'bg-[#8de055]' : 'bg-white')}>{m.text}</span>
                   )}

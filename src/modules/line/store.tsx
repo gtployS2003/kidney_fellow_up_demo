@@ -1,11 +1,14 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PERSONAS, fullName, type Persona, type PersonaKey } from './personas';
 import { buildNotify, type FlexData, type LiffPage } from './notify';
+import type { BuddyPose } from '@/components/brand/KidneyBuddy';
 
 export type Msg =
   | { id: string; from: 'bot' | 'user'; type: 'text'; text: string; time: string }
   | { id: string; from: 'bot'; type: 'flex'; data: FlexData; time: string; answered?: string }
-  | { id: string; type: 'date'; text: string };
+  | { id: string; type: 'date'; text: string }
+  /** สติกเกอร์ Kidney Buddy (Lottie) */
+  | { id: string; from: 'bot'; type: 'sticker'; pose: BuddyPose; time: string };
 export interface LogEvent {
   time: string;
   who: string;
@@ -18,11 +21,13 @@ const today = () => new Date().toLocaleDateString('th-TH', { weekday: 'long', da
 
 const welcomeGuest = (): Msg[] => [
   { id: uid(), type: 'date', text: today() },
+  { id: uid(), from: 'bot', type: 'sticker', pose: 'welcome', time: now() },
   { id: uid(), from: 'bot', type: 'text', text: 'สวัสดีค่ะ 🙏 ยินดีต้อนรับสู่ LINE ศูนย์ปลูกถ่ายไต โรงพยาบาลมหาวิทยาลัยนเรศวร', time: now() },
   { id: uid(), from: 'bot', type: 'text', text: 'กรุณากด “ลงทะเบียน” ด้านล่าง เพื่อยืนยันตัวตนด้วย ThaiD และเชื่อมต่อ LINE ค่ะ', time: now() },
 ];
 const welcomeLinked = (p: Persona): Msg[] => [
   { id: uid(), type: 'date', text: today() },
+  { id: uid(), from: 'bot', type: 'sticker', pose: 'success', time: now() },
   { id: uid(), from: 'bot', type: 'text', text: `เชื่อมต่อสำเร็จ ✅ ${fullName(p)} (${p.kind === 'donor' ? 'ผู้บริจาคไต' : 'ผู้รับไต'})\nเมนูด้านล่างเปลี่ยนเป็นเมนูสำหรับ${p.kind === 'donor' ? 'ผู้บริจาคไต' : 'ผู้รับไต'}แล้วค่ะ`, time: now() },
 ];
 

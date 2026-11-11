@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, CalendarCheck, FlaskConical, Hand, HeartPulse, Pill, Stethoscope, User, type LucideIcon } from 'lucide-react';
 import type { PersonKind } from '@/types';
 import type { LiffPage } from './notify';
-import { Mascot } from './Mascot';
+import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
 
 interface Item {
   cap: string;
@@ -36,7 +36,7 @@ export function RichMenu({ kind, onOpen }: { kind: PersonKind | null; onOpen: (p
         {deco}
         <motion.button whileTap={{ scale: 0.98 }} type="button" onClick={() => onOpen('register')} className="relative flex h-[calc(100%-26px)] w-full items-center gap-2 rounded-2xl bg-white px-3 shadow-[0_6px_16px_-6px_rgba(30,58,138,.35)]">
           <span className="grid h-[118px] w-[118px] shrink-0 place-items-center rounded-full bg-blue-50">
-            <Mascot size={104} />
+            <KidneyBuddy pose="register" size={112} />
           </span>
           <span className="flex flex-col items-start gap-1.5 text-left">
             <span className="text-[26px] font-bold leading-8 text-blue-900">ลงทะเบียน</span>

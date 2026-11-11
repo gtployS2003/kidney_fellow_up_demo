@@ -4,8 +4,8 @@ import { AlertTriangle, ArrowRight, Bandage, Bell, BookOpen, CalendarCheck, Chec
 import type { ArticleDto } from '@/types';
 import { useSim } from '../store';
 import { fullName, type Persona } from '../personas';
-import { Mascot } from '../Mascot';
-import { Chip, LBtn, LCard, LTabs, LiffShell } from './Shell';
+import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
+import { Chip, LBtn, LCard, LTabs, LiffLoading, LiffShell } from './Shell';
 import { useAsync } from '@/hooks/useAsync';
 import { appointmentApi, labApi } from '@/services/api/appointmentApi';
 import { articleApi } from '@/services/api/articleApi';
@@ -34,7 +34,9 @@ export function AppointmentsPage({ p }: { p: Persona }) {
   return (
     <LiffShell title="นัดหมาย" sub={`${fullName(p)} · ${p.stage}`} onClose={closeLiff}>
       <div className="flex flex-col gap-3">
-        {next ? (
+        {!data ? (
+          <LiffLoading />
+        ) : next ? (
           <LCard className="flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <span className="flex w-14 flex-col items-center rounded-2xl bg-primary py-1.5 text-white">
@@ -59,7 +61,10 @@ export function AppointmentsPage({ p }: { p: Persona }) {
             </LBtn>
           </LCard>
         ) : (
-          <LCard className="text-center text-[13px] text-slate-400">ยังไม่มีนัดในช่วงนี้</LCard>
+          <LCard className="flex flex-col items-center gap-1 text-center text-[13px] text-slate-400">
+            <KidneyBuddy pose="not_found" size={120} />
+            ยังไม่มีนัดในช่วงนี้
+          </LCard>
         )}
         {!p.postop && <LTabs items={[['all', 'นัดทั้งหมด'], ['tests', 'ตรวจที่ต้องไป']]} value={tab} onChange={setTab} />}
         {tab === 'all'
@@ -242,7 +247,8 @@ export function KidneyPage({ p }: { p: Persona }) {
   return (
     <LiffShell title="ค่าไต" sub={data ? `ผลล่าสุด ${thaiDate(data.reportedAt)} · จาก iMed` : '…'} onClose={closeLiff}>
       <div className="flex flex-col gap-3">
-        <LCard className="grid grid-cols-2 gap-2.5">
+        {!data && <LiffLoading />}
+        <LCard className={cn('grid grid-cols-2 gap-2.5', !data && 'hidden')}>
           {[cr, egfr].map(
             (x) =>
               x && (
@@ -755,12 +761,18 @@ export function KnowledgePage({ p }: { p: Persona }) {
               <span className="rounded-full bg-primary px-4 py-1.5 text-[12px] font-bold text-white">อ่านเลย</span>
             </span>
             <span className="relative ml-auto">
-              <Mascot size={118} />
+              <KidneyBuddy pose="welcome" size={128} />
             </span>
           </button>
         )}
         <p className="pt-1 text-[14px] font-bold">หัวข้อความรู้</p>
-        {shown.length === 0 && <p className="text-center text-[12.5px] text-slate-400">ไม่พบบทความ</p>}
+        {!data && <LiffLoading />}
+        {data && shown.length === 0 && (
+          <div className="flex flex-col items-center text-[12.5px] text-slate-400">
+            <KidneyBuddy pose="not_found" size={120} />
+            ไม่พบบทความ
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2.5">
           {shown.map((a) => {
             const I = CAT_ICON[a.category] ?? BookOpen;
