@@ -1,3 +1,4 @@
+import { SuccessDialog } from '@/components/brand/BuddyStates';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -39,6 +40,7 @@ export default function ArticleEditor() {
   const [a, setA] = useState<ArticleDto | null>(isNew ? empty() : null);
   const [saving, setSaving] = useState<'' | 'draft' | 'published'>('');
   const [toast, setToast] = useState('');
+  const [published, setPublished] = useState(false);
   const [newTodo, setNewTodo] = useState('');
   useCrumbs(['บทความความรู้', isNew ? 'เขียนบทความ' : a?.title || '…']);
   useEffect(() => {
@@ -55,8 +57,11 @@ export default function ArticleEditor() {
     const v = await articleApi.save({ ...a, status });
     setSaving('');
     setA(v);
-    setToast(status === 'published' ? 'เผยแพร่แล้ว · แสดงใน LINE OA' : 'บันทึกร่างแล้ว');
-    setTimeout(() => setToast(''), 2200);
+    if (status === 'published') setPublished(true);
+    else {
+      setToast('บันทึกร่างแล้ว');
+      setTimeout(() => setToast(''), 2200);
+    }
     if (isNew) navigate(`/clinical/articles/${v.id}`, { replace: true });
   }
   async function remove() {
@@ -212,6 +217,7 @@ export default function ArticleEditor() {
           </Card>
         </div>
       </div>
+      <SuccessDialog open={published} onClose={() => setPublished(false)} title="เผยแพร่บทความแล้ว" desc="บทความแสดงในหน้า “ความรู้” ของ LINE OA ตามกลุ่มผู้อ่านที่เลือก" actions={<><Button variant="secondary" onClick={() => setPublished(false)}>ปิด</Button><Button to="/clinical/articles">กลับไปรายการบทความ</Button></>} />
       <AnimatePresence>
         {toast && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="fixed bottom-6 right-6 z-50 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-pop">

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { CaseBadge, StatusBadge } from '@/components/ui/Badge';
 import { Checkbox, ChoiceChips, DataTag, Field, TextInput, Textarea } from '@/components/ui/Form';
 import { Modal } from '@/components/ui/Modal';
+import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
 import { stagger } from '@/components/ui/motion';
 import { Section, SubHeading } from '@/components/forms/RegSection';
 import { useAsync } from '@/hooks/useAsync';
@@ -444,10 +445,7 @@ export default function DonorRegister() {
       <Modal open={!!saved} onClose={() => setSaved(null)}>
         {saved && (
           <div className="flex flex-col items-center gap-3 text-center">
-            <motion.svg width="72" height="72" viewBox="0 0 72 72" initial="hidden" animate="show">
-              <motion.circle cx="36" cy="36" r="32" fill="#dcfce7" variants={{ hidden: { scale: 0 }, show: { scale: 1, transition: { type: 'spring', stiffness: 260, damping: 16 } } }} />
-              <motion.path d="M22 37 L32 47 L51 27" fill="none" stroke="#16a34a" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" variants={{ hidden: { pathLength: 0 }, show: { pathLength: 1, transition: { delay: 0.25, duration: 0.45 } } }} />
-            </motion.svg>
+            <KidneyBuddy pose="success" size={160} />
             <h3 className="text-xl font-bold">ลงทะเบียนผู้บริจาคสำเร็จ</h3>
             <p className="text-sm text-slate-600">
               {fullName(saved)} · HN {saved.hn}

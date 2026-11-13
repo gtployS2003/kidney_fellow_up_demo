@@ -9,6 +9,10 @@ import { USE_MOCK, http, mockDelay, toQuery } from './client';
 export const appointmentApi = {
   async range(from: string, to: string, personId?: string): Promise<AppointmentDto[]> {
     if (!USE_MOCK) return http(`/appointments${toQuery({ from, to, personId })}`);
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demoError') === 'imed') {
+      await mockDelay(null, 500);
+      throw new Error('IMED-504');
+    }
     const rows = appointmentsInRange(from, to);
     return mockDelay(personId ? rows.filter((r) => r.personId === personId) : rows, 300);
   },
