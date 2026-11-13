@@ -1,0 +1,541 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 4d53a3f..91dcf9c 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -21,6 +21,7 @@ import ArticleList from '@/modules/articles/pages/ArticleList';
+ import ArticleEditor from '@/modules/articles/pages/ArticleEditor';
+ import LineSimulator from '@/modules/line/LineSimulator';
+ import UseCasePage from '@/modules/usecase/UseCasePage';
++import NotFound from '@/pages/NotFound';
+ 
+ export default function App() {
+   return (
+@@ -54,8 +55,9 @@ export default function App() {
+         {/* Phase 1: บทความความรู้ (แสดงใน LINE OA) */}
+         <Route path="articles" element={<ArticleList />} />
+         <Route path="articles/:id" element={<ArticleEditor />} />
++        <Route path="*" element={<NotFound />} />
+       </Route>
+-      <Route path="*" element={<Navigate to="/" replace />} />
++      <Route path="*" element={<NotFound standalone />} />
+     </Routes>
+   );
+ }
+diff --git a/src/components/brand/BuddyStates.tsx b/src/components/brand/BuddyStates.tsx
+new file mode 100644
+index 0000000..95da979
+--- /dev/null
++++ b/src/components/brand/BuddyStates.tsx
+@@ -0,0 +1,81 @@
++import { useEffect, useState, type ReactNode } from 'react';
++import { motion } from 'framer-motion';
++import { RefreshCw } from 'lucide-react';
++import { Modal } from '@/components/ui/Modal';
++import { Button } from '@/components/ui/Button';
++import { KidneyBuddy } from './KidneyBuddy';
++
++/** กล่องยืนยันเมื่อบันทึกผลสำคัญสำเร็จ (MRB ผ่าน · ได้รับไต · ส่งรายชื่อ · เผยแพร่บทความ) */
++export function SuccessDialog({ open, onClose, title, desc, actions }: { open: boolean; onClose: () => void; title: string; desc?: ReactNode; actions?: ReactNode }) {
++  return (
++    <Modal open={open} onClose={onClose} width={460}>
++      <div className="flex flex-col items-center gap-2 text-center">
++        <KidneyBuddy pose="success" size={140} />
++        <h3 className="text-xl font-bold">{title}</h3>
++        {desc && <p className="text-sm text-slate-600">{desc}</p>}
++        <div className="mt-3 flex w-full flex-wrap justify-center gap-2">
++          {actions ?? (
++            <Button variant="secondary" onClick={onClose}>
++              ปิด
++            </Button>
++          )}
++        </div>
++      </div>
++    </Modal>
++  );
++}
++
++/** กล่องรอสำหรับงานที่ใช้เวลา (Export · ค้นหา HLA) · แสดงหลังรอเกิน delay เพื่อไม่ให้กระพริบ */
++export function BusyDialog({ open, title, desc, delay = 300 }: { open: boolean; title: string; desc?: string; delay?: number }) {
++  const [show, setShow] = useState(false);
++  useEffect(() => {
++    if (!open) {
++      setShow(false);
++      return;
++    }
++    const t = setTimeout(() => setShow(true), delay);
++    return () => clearTimeout(t);
++  }, [open, delay]);
++  return (
++    <Modal open={show} onClose={() => undefined} width={380}>
++      <div className="flex flex-col items-center gap-2 text-center" role="status" aria-live="polite">
++        <KidneyBuddy pose="loading" size={120} />
++        <h3 className="text-lg font-bold">{title}</h3>
++        {desc && <p className="text-sm text-slate-500">{desc}</p>}
++        <div className="mt-2 h-1.5 w-full max-w-[280px] overflow-hidden rounded-full bg-slate-100">
++          <motion.div className="h-full w-1/3 rounded-full bg-primary" animate={{ x: ['-100%', '300%'] }} transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }} />
++        </div>
++      </div>
++    </Modal>
++  );
++}
++
++/** รันงาน export โดยแสดง BusyDialog อย่างน้อย minMs แล้วค่อยเรียกงานจริง */
++export function useBusyRun(minMs = 900) {
++  const [busy, setBusy] = useState<string | null>(null);
++  const run = (title: string, fn: () => void) => {
++    setBusy(title);
++    setTimeout(() => {
++      setBusy(null);
++      setTimeout(fn, 80);
++    }, minMs);
++  };
++  return { busy, run };
++}
++
++/** โหลดข้อมูลไม่สำเร็จ / เชื่อมต่อไม่ได้ */
++export function ErrorState({ title, desc, onRetry, code }: { title: string; desc?: string; onRetry?: () => void; code?: string }) {
++  return (
++    <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center" role="alert">
++      <KidneyBuddy pose="error" size={150} />
++      <h3 className="text-lg font-bold text-slate-900">{title}</h3>
++      {desc && <p className="max-w-md text-sm text-slate-500">{desc}</p>}
++      {onRetry && (
++        <Button icon={RefreshCw} onClick={onRetry} className="mt-2">
++          ลองใหม่
++        </Button>
++      )}
++      {code && <p className="mt-2 text-xs text-slate-400">รหัสอ้างอิง: {code} · {new Date().toLocaleString('th-TH')} · แจ้งฝ่าย IT หากยังไม่หาย</p>}
++    </div>
++  );
++}
+diff --git a/src/components/forms/FormShell.tsx b/src/components/forms/FormShell.tsx
+index ba07ec0..7ad0244 100644
+--- a/src/components/forms/FormShell.tsx
++++ b/src/components/forms/FormShell.tsx
+@@ -1,3 +1,4 @@
++import { BusyDialog, useBusyRun } from '@/components/brand/BuddyStates';
+ import { useEffect, useRef, useState, type ReactNode } from 'react';
+ import { createPortal } from 'react-dom';
+ import { AnimatePresence, motion } from 'framer-motion';
+@@ -35,6 +36,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
+   const [menu, setMenu] = useState(false);
+   const [saving, setSaving] = useState<null | 'draft' | 'final'>(null);
+   const [toast, setToast] = useState<string | null>(null);
++  const { busy, run } = useBusyRun();
+   const menuRef = useRef<HTMLDivElement>(null);
+ 
+   useEffect(() => {
+@@ -105,7 +107,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
+                     type="button"
+                     onClick={() => {
+                       setMenu(false);
+-                      setTimeout(o.fn, 50);
++                      run(o.t === 'พิมพ์' ? 'กำลังเตรียมเอกสาร…' : `กำลังสร้างไฟล์ ${o.t.split(' ')[0]}…`, o.fn);
+                     }}
+                     className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-slate-50"
+                   >
+@@ -188,6 +190,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
+           </motion.div>
+         )}
+       </AnimatePresence>
++      <BusyDialog open={!!busy} title={busy ?? ''} desc={title} delay={0} />
+     </div>
+   );
+ }
+diff --git a/src/components/patient/LineDataPanel.tsx b/src/components/patient/LineDataPanel.tsx
+index 318927a..8944ef3 100644
+--- a/src/components/patient/LineDataPanel.tsx
++++ b/src/components/patient/LineDataPanel.tsx
+@@ -1,3 +1,5 @@
++import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
++import { isLineLinked } from '@/services/api/lineApi';
+ import { useEffect, useState } from 'react';
+ import { motion } from 'framer-motion';
+ import { AlertTriangle, Clock, Droplet, HeartPulse, Info, Pencil, Pill, Scale, Settings2, Thermometer, X } from 'lucide-react';
+@@ -23,6 +25,7 @@ export function LineDataPanel({ person, kind }: { person: PersonRef; kind: Perso
+   const { data } = useAsync(() => lineApi.data(kind, person.id, Number(days)), [kind, person.id, days]);
+   const recipient = kind === 'recipient';
+ 
++  if (!isLineLinked(person.id, (person as { lineId?: string }).lineId)) return <NotLinked />;
+   if (!data) return <Skeleton className="h-[600px] rounded-2xl" />;
+   const avg = (a: number[]) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0);
+   const over = data.bp.filter((b) => b.sys > BP_LIMIT.sys || b.dia > BP_LIMIT.dia).length;
+@@ -236,3 +239,22 @@ function NotifySettingsCard({ person, kind }: { person: PersonRef; kind: PersonK
+     </Card>
+   );
+ }
++
++/** ผู้ป่วยยังไม่เชื่อม LINE OA — แทนกราฟเปล่า และบอกวิธีลงทะเบียน */
++function NotLinked() {
++  return (
++    <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center">
++      <KidneyBuddy pose="register" size={150} />
++      <h3 className="text-lg font-bold">ผู้ป่วยยังไม่ได้เชื่อม LINE OA</h3>
++      <p className="max-w-lg text-sm text-slate-500">เมื่อผู้ป่วยลงทะเบียนแล้ว ความดัน น้ำเข้า–ออก น้ำหนัก และการกินยาที่บันทึกผ่าน LINE จะแสดงที่นี่</p>
++      <div className="mt-2 flex flex-wrap justify-center gap-2">
++        {['เพิ่มเพื่อน LINE OA ศูนย์ปลูกถ่ายไต', 'กด “ลงทะเบียน” ในเมนู', 'ยืนยันตัวตนด้วย ThaiD'].map((t, i) => (
++          <span key={t} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-[13px]">
++            <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-xs font-bold text-white">{i + 1}</span>
++            {t}
++          </span>
++        ))}
++      </div>
++    </div>
++  );
++}
+diff --git a/src/components/stage/StagePanel.tsx b/src/components/stage/StagePanel.tsx
+index 249998c..e8e9173 100644
+--- a/src/components/stage/StagePanel.tsx
++++ b/src/components/stage/StagePanel.tsx
+@@ -1,3 +1,4 @@
++import { BusyDialog, useBusyRun } from '@/components/brand/BuddyStates';
+ import { useState, type ReactElement, type ReactNode } from 'react';
+ import { AnimatePresence, motion } from 'framer-motion';
+ import { Building2, Check, ChevronsLeft, ClipboardCheck, Download, Eye, Hammer, Lock, Pencil, Scissors, UserCheck, type LucideIcon } from 'lucide-react';
+@@ -298,9 +299,10 @@ function RegisterPanel({ rows, date, kind, person, openPreview }: { rows: [strin
+       </Row>
+     </A4Page>
+   );
++  const busyRun = useBusyRun();
+   const run = (fn: () => void) => {
+     setMenu(false);
+-    setTimeout(fn, 50);
++    busyRun.run('กำลังสร้างไฟล์…', fn);
+   };
+   return (
+     <div className="flex flex-col gap-4">
+@@ -369,6 +371,7 @@ function RegisterPanel({ rows, date, kind, person, openPreview }: { rows: [strin
+         </div>
+       </Modal>
+       <PrintArea>{paper}</PrintArea>
++      <BusyDialog open={!!busyRun.busy} title={busyRun.busy ?? ''} desc={title} delay={0} />
+     </div>
+   );
+ }
+diff --git a/src/components/ui/EmptyState.tsx b/src/components/ui/EmptyState.tsx
+index ba0fb08..90b50a3 100644
+--- a/src/components/ui/EmptyState.tsx
++++ b/src/components/ui/EmptyState.tsx
+@@ -1,22 +1,15 @@
+ import type { ReactNode } from 'react';
+ import type { LucideIcon } from 'lucide-react';
+-import { motion } from 'framer-motion';
++import { KidneyBuddy, type BuddyPose } from '@/components/brand/KidneyBuddy';
+ 
+-/** หน้าว่าง — ภายหลังสามารถสลับไอคอนเป็น Lottie (@lottiefiles/dotlottie-react) ได้ที่ไฟล์นี้ไฟล์เดียว */
+-export function EmptyState({ icon: Icon, title, description, action }: { icon: LucideIcon; title: string; description?: string; action?: ReactNode }) {
++/** หน้าว่าง / ค้นหาไม่พบ — ใช้ Kidney Buddy (Lottie) ท่า not_found เป็นค่าเริ่มต้น · icon เก็บไว้เพื่อความเข้ากันได้ */
++export function EmptyState({ title, description, action, pose = 'not_found' }: { icon?: LucideIcon; title: string; description?: string; action?: ReactNode; pose?: BuddyPose }) {
+   return (
+-    <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+-      <motion.span
+-        className="grid h-16 w-16 place-items-center rounded-full bg-slate-100 text-slate-400"
+-        initial={{ scale: 0.8, opacity: 0 }}
+-        animate={{ scale: 1, opacity: 1 }}
+-        transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+-      >
+-        <Icon className="h-7 w-7" />
+-      </motion.span>
++    <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
++      <KidneyBuddy pose={pose} size={120} />
+       <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+       {description && <p className="max-w-md text-sm text-slate-500">{description}</p>}
+-      {action}
++      {action && <div className="mt-1">{action}</div>}
+     </div>
+   );
+ }
+diff --git a/src/modules/appointments/pages/AppointmentCalendar.tsx b/src/modules/appointments/pages/AppointmentCalendar.tsx
+index 914507e..fd8afe4 100644
+--- a/src/modules/appointments/pages/AppointmentCalendar.tsx
++++ b/src/modules/appointments/pages/AppointmentCalendar.tsx
+@@ -1,3 +1,4 @@
++import { ErrorState } from '@/components/brand/BuddyStates';
+ import { useEffect, useMemo, useState, type ReactNode } from 'react';
+ import { useNavigate, useSearchParams } from 'react-router-dom';
+ import { AnimatePresence, motion } from 'framer-motion';
+@@ -50,7 +51,7 @@ export default function AppointmentCalendar() {
+     });
+   }, [cursor]);
+ 
+-  const { data, loading, reload } = useAsync(() => appointmentApi.range(grid[0], grid[grid.length - 1]), [grid[0]]);
++  const { data, loading, error, reload } = useAsync(() => appointmentApi.range(grid[0], grid[grid.length - 1]), [grid[0]]);
+   const all = data ?? [];
+   const stages = [...new Set(all.map((a) => a.stage))];
+   const rows = all.filter((a) => (kind === 'all' || a.personKind === kind) && (stage === 'all' || a.stage === stage));
+@@ -94,6 +95,11 @@ export default function AppointmentCalendar() {
+         }
+       />
+ 
++      {error && (
++        <div className="mb-4">
++          <ErrorState title="โหลดนัดหมายจาก iMed ไม่สำเร็จ" desc="ระบบ iMed ไม่ตอบสนองในขณะนี้ · ข้อมูลที่บันทึกในระบบยังปลอดภัย" onRetry={reload} code={error} />
++        </div>
++      )}
+       <div className="flex items-start gap-5">
+         <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px]">
+           <div className="flex flex-wrap items-center gap-2.5">
+diff --git a/src/modules/articles/pages/ArticleEditor.tsx b/src/modules/articles/pages/ArticleEditor.tsx
+index 337f81e..2325759 100644
+--- a/src/modules/articles/pages/ArticleEditor.tsx
++++ b/src/modules/articles/pages/ArticleEditor.tsx
+@@ -1,3 +1,4 @@
++import { SuccessDialog } from '@/components/brand/BuddyStates';
+ import { useEffect, useState, type ReactNode } from 'react';
+ import { useNavigate, useParams } from 'react-router-dom';
+ import { AnimatePresence, motion } from 'framer-motion';
+@@ -39,6 +40,7 @@ export default function ArticleEditor() {
+   const [a, setA] = useState<ArticleDto | null>(isNew ? empty() : null);
+   const [saving, setSaving] = useState<'' | 'draft' | 'published'>('');
+   const [toast, setToast] = useState('');
++  const [published, setPublished] = useState(false);
+   const [newTodo, setNewTodo] = useState('');
+   useCrumbs(['บทความความรู้', isNew ? 'เขียนบทความ' : a?.title || '…']);
+   useEffect(() => {
+@@ -55,8 +57,11 @@ export default function ArticleEditor() {
+     const v = await articleApi.save({ ...a, status });
+     setSaving('');
+     setA(v);
+-    setToast(status === 'published' ? 'เผยแพร่แล้ว · แสดงใน LINE OA' : 'บันทึกร่างแล้ว');
+-    setTimeout(() => setToast(''), 2200);
++    if (status === 'published') setPublished(true);
++    else {
++      setToast('บันทึกร่างแล้ว');
++      setTimeout(() => setToast(''), 2200);
++    }
+     if (isNew) navigate(`/clinical/articles/${v.id}`, { replace: true });
+   }
+   async function remove() {
+@@ -212,6 +217,7 @@ export default function ArticleEditor() {
+           </Card>
+         </div>
+       </div>
++      <SuccessDialog open={published} onClose={() => setPublished(false)} title="เผยแพร่บทความแล้ว" desc="บทความแสดงในหน้า “ความรู้” ของ LINE OA ตามกลุ่มผู้อ่านที่เลือก" actions={<><Button variant="secondary" onClick={() => setPublished(false)}>ปิด</Button><Button to="/clinical/articles">กลับไปรายการบทความ</Button></>} />
+       <AnimatePresence>
+         {toast && (
+           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="fixed bottom-6 right-6 z-50 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-pop">
+diff --git a/src/modules/donor/pages/DonorRegister.tsx b/src/modules/donor/pages/DonorRegister.tsx
+index e95f16f..59e450f 100644
+--- a/src/modules/donor/pages/DonorRegister.tsx
++++ b/src/modules/donor/pages/DonorRegister.tsx
+@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
+ import { CaseBadge, StatusBadge } from '@/components/ui/Badge';
+ import { Checkbox, ChoiceChips, DataTag, Field, TextInput, Textarea } from '@/components/ui/Form';
+ import { Modal } from '@/components/ui/Modal';
++import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
+ import { stagger } from '@/components/ui/motion';
+ import { Section, SubHeading } from '@/components/forms/RegSection';
+ import { useAsync } from '@/hooks/useAsync';
+@@ -444,10 +445,7 @@ export default function DonorRegister() {
+       <Modal open={!!saved} onClose={() => setSaved(null)}>
+         {saved && (
+           <div className="flex flex-col items-center gap-3 text-center">
+-            <motion.svg width="72" height="72" viewBox="0 0 72 72" initial="hidden" animate="show">
+-              <motion.circle cx="36" cy="36" r="32" fill="#dcfce7" variants={{ hidden: { scale: 0 }, show: { scale: 1, transition: { type: 'spring', stiffness: 260, damping: 16 } } }} />
+-              <motion.path d="M22 37 L32 47 L51 27" fill="none" stroke="#16a34a" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" variants={{ hidden: { pathLength: 0 }, show: { pathLength: 1, transition: { delay: 0.25, duration: 0.45 } } }} />
+-            </motion.svg>
++            <KidneyBuddy pose="success" size={160} />
+             <h3 className="text-xl font-bold">ลงทะเบียนผู้บริจาคสำเร็จ</h3>
+             <p className="text-sm text-slate-600">
+               {fullName(saved)} · HN {saved.hn}
+diff --git a/src/modules/evaluation/forms/MrbForm.tsx b/src/modules/evaluation/forms/MrbForm.tsx
+index bc6fe28..5af7b5c 100644
+--- a/src/modules/evaluation/forms/MrbForm.tsx
++++ b/src/modules/evaluation/forms/MrbForm.tsx
+@@ -1,3 +1,5 @@
++import { useState } from 'react';
++import { SuccessDialog } from '@/components/brand/BuddyStates';
+ import { motion } from 'framer-motion';
+ import { ArrowRight, Building2, CircleCheck, CircleHelp, CircleX, Flag } from 'lucide-react';
+ import { FormShell } from '@/components/forms/FormShell';
+@@ -11,6 +13,7 @@ import { KIND_LABEL, type FormProps } from './types';
+ export function MrbForm({ rec, kind, done, onSaved, initialMode }: FormProps) {
+   const who = KIND_LABEL[kind];
+   const { form: f, patch, save, info } = useFormRecord<F>(rec, kind, 'mrb', done, onSaved);
++  const [passed, setPassed] = useState(false);
+   if (!f) return <FormLoading />;
+   const needReason = f.result === 'fail' && !f.note.trim();
+ 
+@@ -59,6 +62,7 @@ export function MrbForm({ rec, kind, done, onSaved, initialMode }: FormProps) {
+       onSave={async (draft) => {
+         if (!draft && needReason) throw new Error('กรุณาระบุเหตุผล');
+         await save(draft);
++        if (!draft && f.result === 'pass') setPassed(true);
+       }}
+       savedInfo={info}
+       fileName={`${FORM_META.mrb.fileName}-${rec.hn}`}
+@@ -111,6 +115,7 @@ export function MrbForm({ rec, kind, done, onSaved, initialMode }: FormProps) {
+           <CircleHelp className="h-4 w-4" /> ไม่ผ่าน → สถานะถัดไปยังรอกำหนด (เช่น กลับไป Evaluation / ยุติ) — รอถามหน้างาน
+         </p>
+       )}
++      <SuccessDialog open={passed} onClose={() => setPassed(false)} title="บันทึกผล MRB: ผ่าน" desc={kind === 'donor' ? 'สถานะผู้บริจาคเปลี่ยนเป็น “รอผ่าตัด” อัตโนมัติ' : 'สถานะเปลี่ยนเป็นขั้นถัดไปอัตโนมัติ (มีคู่แล้ว → รอผ่าตัด · ไม่มีคู่ → รอไตจากสภากาชาด)'} />
+     </FormShell>
+   );
+ }
+diff --git a/src/modules/matching/pages/HlaSearch.tsx b/src/modules/matching/pages/HlaSearch.tsx
+index e47f0ab..6763b75 100644
+--- a/src/modules/matching/pages/HlaSearch.tsx
++++ b/src/modules/matching/pages/HlaSearch.tsx
+@@ -1,3 +1,4 @@
++import { BusyDialog } from '@/components/brand/BuddyStates';
+ import { useState, type ReactNode } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { AnimatePresence, motion } from 'framer-motion';
+@@ -264,6 +265,7 @@ export default function HlaSearch() {
+           )}
+         </AnimatePresence>
+       </div>
++      <BusyDialog open={loading} title="กำลังค้นหาคู่ที่เข้ากันได้…" desc="เทียบ ABO และ HLA กับผู้รอไตทั้งหมด" />
+     </>
+   );
+ }
+diff --git a/src/modules/matching/pages/InProgress.tsx b/src/modules/matching/pages/InProgress.tsx
+index f6b603f..3cd9ba1 100644
+--- a/src/modules/matching/pages/InProgress.tsx
++++ b/src/modules/matching/pages/InProgress.tsx
+@@ -1,3 +1,4 @@
++import { SuccessDialog } from '@/components/brand/BuddyStates';
+ import { useEffect, useState } from 'react';
+ import { Link, useSearchParams } from 'react-router-dom';
+ import { AnimatePresence, motion } from 'framer-motion';
+@@ -262,6 +263,7 @@ function RedCrossTab({ rows, reload }: { rows: MatchingInProgressDto[] | null; r
+   const [note, setNote] = useState('');
+   const [saving, setSaving] = useState(false);
+   const [done, setDone] = useState<string | null>(null);
++  const [received, setReceived] = useState<string | null>(null);
+ 
+   useEffect(() => {
+     if (rows?.length && !rows.find((r) => r.recipientId === selId)) setSelId(rows[0].recipientId);
+@@ -283,12 +285,14 @@ function RedCrossTab({ rows, reload }: { rows: MatchingInProgressDto[] | null; r
+     await matchingApi.recordResult(sel.recipientId, result, text);
+     setSaving(false);
+     setDone(`${sel.name} → ${result === 'received' ? '“รอผ่าตัด”' : '“รอไตจากสภากาชาด”'}`);
++    if (result === 'received') setReceived(sel.name);
+     setSelId(null);
+     reload();
+   }
+ 
+   return (
+     <div className="flex flex-col gap-4">
++      <SuccessDialog open={!!received} onClose={() => setReceived(null)} title="บันทึกผล: ได้รับไต" desc={<>{received} → สถานะ “รอผ่าตัด” · บันทึกลงประวัติการจับคู่แล้ว</>} />
+       <AnimatePresence>
+         {done && (
+           <motion.p initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+diff --git a/src/modules/matching/pages/SendList.tsx b/src/modules/matching/pages/SendList.tsx
+index 1d4aa1a..caa93d8 100644
+--- a/src/modules/matching/pages/SendList.tsx
++++ b/src/modules/matching/pages/SendList.tsx
+@@ -1,3 +1,4 @@
++import { SuccessDialog } from '@/components/brand/BuddyStates';
+ import { useEffect, useMemo, useState } from 'react';
+ import { AnimatePresence, motion } from 'framer-motion';
+ import { AlertTriangle, ChevronDown, Database, Download, Eye, FileText, History, Info, Printer, Search, Send } from 'lucide-react';
+@@ -29,7 +30,8 @@ export default function SendList() {
+   const [onlyNew, setOnlyNew] = useState(false);
+   const [preview, setPreview] = useState(false);
+   const [menu, setMenu] = useState(false);
+-  const [toast, setToast] = useState<string | null>(null);
++  const [toast] = useState<string | null>(null);
++  const [sentCount, setSentCount] = useState(0);
+   const [viewRound, setViewRound] = useState<string | null>(null);
+ 
+   useEffect(() => {
+@@ -56,8 +58,7 @@ export default function SendList() {
+     await matchingApi.markSent(chosen.map((c) => c.recipientId), 'Excel');
+     rounds.reload();
+     cands.reload();
+-    setToast(`บันทึกการส่งแล้ว ${chosen.length} ราย`);
+-    setTimeout(() => setToast(null), 2400);
++    setSentCount(chosen.length);
+   }
+ 
+   const paper = (
+@@ -267,6 +268,7 @@ export default function SendList() {
+       </Modal>
+ 
+       <PrintArea>{paper}</PrintArea>
++      <SuccessDialog open={sentCount > 0} onClose={() => setSentCount(0)} title="บันทึกการส่งรายชื่อแล้ว" desc={`ส่งรายชื่อ ${sentCount} ราย ให้สภากาชาดไทย · บันทึกเป็นรอบการส่งแล้ว`} />
+ 
+       <AnimatePresence>
+         {toast && (
+diff --git a/src/modules/recipient/pages/RecipientRegister.tsx b/src/modules/recipient/pages/RecipientRegister.tsx
+index 89631b7..8864767 100644
+--- a/src/modules/recipient/pages/RecipientRegister.tsx
++++ b/src/modules/recipient/pages/RecipientRegister.tsx
+@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
+ import { Card } from '@/components/ui/Card';
+ import { Checkbox, ChoiceChips, Field, TextInput, Textarea } from '@/components/ui/Form';
+ import { Modal } from '@/components/ui/Modal';
++import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
+ import { stagger } from '@/components/ui/motion';
+ import { Section, SubHeading } from '@/components/forms/RegSection';
+ import { recipientApi } from '@/services/api/recipientApi';
+@@ -472,19 +473,7 @@ function SuccessModal({ rec, onClose, onSummary, onDonor, onNew }: { rec: Recipi
+     <Modal open={!!rec} onClose={onClose}>
+       {rec && (
+         <div className="flex flex-col items-center gap-3 text-center">
+-          {/* ภายหลังเปลี่ยนเป็น Lottie “success” ได้ */}
+-          <motion.svg width="72" height="72" viewBox="0 0 72 72" initial="hidden" animate="show">
+-            <motion.circle cx="36" cy="36" r="32" fill="#dcfce7" variants={{ hidden: { scale: 0 }, show: { scale: 1, transition: { type: 'spring', stiffness: 260, damping: 16 } } }} />
+-            <motion.path
+-              d="M22 37 L32 47 L51 27"
+-              fill="none"
+-              stroke="#16a34a"
+-              strokeWidth="5"
+-              strokeLinecap="round"
+-              strokeLinejoin="round"
+-              variants={{ hidden: { pathLength: 0 }, show: { pathLength: 1, transition: { delay: 0.25, duration: 0.45 } } }}
+-            />
+-          </motion.svg>
++          <KidneyBuddy pose="success" size={160} />
+           <h3 className="text-xl font-bold">ลงทะเบียนสำเร็จ</h3>
+           <p className="text-sm text-slate-600">
+             {rec.prefix}
+diff --git a/src/pages/NotFound.tsx b/src/pages/NotFound.tsx
+new file mode 100644
+index 0000000..12d3517
+--- /dev/null
++++ b/src/pages/NotFound.tsx
+@@ -0,0 +1,27 @@
++import { useNavigate } from 'react-router-dom';
++import { ArrowLeft, Home } from 'lucide-react';
++import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
++import { Button } from '@/components/ui/Button';
++
++/** 404 · ใช้ทั้งในระบบ (/clinical/*) และนอกระบบ */
++export default function NotFound({ standalone }: { standalone?: boolean }) {
++  const navigate = useNavigate();
++  return (
++    <div className={standalone ? 'grid min-h-screen place-items-center bg-slate-100 p-6' : 'py-6'}>
++      <div className="mx-auto flex max-w-xl flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white px-8 py-14 text-center">
++        <KidneyBuddy pose="not_found" size={190} />
++        <p className="text-sm font-semibold text-slate-400">404</p>
++        <h1 className="text-2xl font-bold">ไม่พบหน้าที่ต้องการ</h1>
++        <p className="text-sm text-slate-500">ลิงก์อาจไม่ถูกต้อง หรือข้อมูลนี้ถูกย้าย/ลบแล้ว</p>
++        <div className="mt-3 flex gap-2">
++          <Button variant="secondary" icon={ArrowLeft} onClick={() => navigate(-1)}>
++            ย้อนกลับ
++          </Button>
++          <Button icon={Home} to={standalone ? '/' : '/clinical/recipients'}>
++            {standalone ? 'หน้าแรก' : 'ไปหน้ารายชื่อผู้รับ'}
++          </Button>
++        </div>
++      </div>
++    </div>
++  );
++}
+diff --git a/src/services/api/appointmentApi.ts b/src/services/api/appointmentApi.ts
+index a3dd450..597a179 100644
+--- a/src/services/api/appointmentApi.ts
++++ b/src/services/api/appointmentApi.ts
+@@ -9,6 +9,10 @@ import { USE_MOCK, http, mockDelay, toQuery } from './client';
+ export const appointmentApi = {
+   async range(from: string, to: string, personId?: string): Promise<AppointmentDto[]> {
+     if (!USE_MOCK) return http(`/appointments${toQuery({ from, to, personId })}`);
++    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demoError') === 'imed') {
++      await mockDelay(null, 500);
++      throw new Error('IMED-504');
++    }
+     const rows = appointmentsInRange(from, to);
+     return mockDelay(personId ? rows.filter((r) => r.personId === personId) : rows, 300);
+   },
