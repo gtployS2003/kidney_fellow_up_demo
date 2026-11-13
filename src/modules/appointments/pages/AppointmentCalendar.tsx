@@ -1,3 +1,4 @@
+import { ErrorState } from '@/components/brand/BuddyStates';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -50,7 +51,7 @@ export default function AppointmentCalendar() {
     });
   }, [cursor]);
 
-  const { data, loading, reload } = useAsync(() => appointmentApi.range(grid[0], grid[grid.length - 1]), [grid[0]]);
+  const { data, loading, error, reload } = useAsync(() => appointmentApi.range(grid[0], grid[grid.length - 1]), [grid[0]]);
   const all = data ?? [];
   const stages = [...new Set(all.map((a) => a.stage))];
   const rows = all.filter((a) => (kind === 'all' || a.personKind === kind) && (stage === 'all' || a.stage === stage));
@@ -94,6 +95,11 @@ export default function AppointmentCalendar() {
         }
       />
 
+      {error && (
+        <div className="mb-4">
+          <ErrorState title="โหลดนัดหมายจาก iMed ไม่สำเร็จ" desc="ระบบ iMed ไม่ตอบสนองในขณะนี้ · ข้อมูลที่บันทึกในระบบยังปลอดภัย" onRetry={reload} code={error} />
+        </div>
+      )}
       <div className="flex items-start gap-5">
         <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px]">
           <div className="flex flex-wrap items-center gap-2.5">
