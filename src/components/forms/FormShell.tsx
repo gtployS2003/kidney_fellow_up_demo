@@ -1,3 +1,4 @@
+import { BusyDialog, useBusyRun } from '@/components/brand/BuddyStates';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -35,6 +36,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
   const [menu, setMenu] = useState(false);
   const [saving, setSaving] = useState<null | 'draft' | 'final'>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const { busy, run } = useBusyRun();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
                     type="button"
                     onClick={() => {
                       setMenu(false);
-                      setTimeout(o.fn, 50);
+                      run(o.t === 'พิมพ์' ? 'กำลังเตรียมเอกสาร…' : `กำลังสร้างไฟล์ ${o.t.split(' ')[0]}…`, o.fn);
                     }}
                     className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-slate-50"
                   >
@@ -188,6 +190,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
           </motion.div>
         )}
       </AnimatePresence>
+      <BusyDialog open={!!busy} title={busy ?? ''} desc={title} delay={0} />
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { SuccessDialog } from '@/components/brand/BuddyStates';
 import { motion } from 'framer-motion';
 import { ArrowRight, Building2, CircleCheck, CircleHelp, CircleX, Flag } from 'lucide-react';
 import { FormShell } from '@/components/forms/FormShell';
@@ -11,6 +13,7 @@ import { KIND_LABEL, type FormProps } from './types';
 export function MrbForm({ rec, kind, done, onSaved, initialMode }: FormProps) {
   const who = KIND_LABEL[kind];
   const { form: f, patch, save, info } = useFormRecord<F>(rec, kind, 'mrb', done, onSaved);
+  const [passed, setPassed] = useState(false);
   if (!f) return <FormLoading />;
   const needReason = f.result === 'fail' && !f.note.trim();
 
@@ -59,6 +62,7 @@ export function MrbForm({ rec, kind, done, onSaved, initialMode }: FormProps) {
       onSave={async (draft) => {
         if (!draft && needReason) throw new Error('กรุณาระบุเหตุผล');
         await save(draft);
+        if (!draft && f.result === 'pass') setPassed(true);
       }}
       savedInfo={info}
       fileName={`${FORM_META.mrb.fileName}-${rec.hn}`}
@@ -111,6 +115,7 @@ export function MrbForm({ rec, kind, done, onSaved, initialMode }: FormProps) {
           <CircleHelp className="h-4 w-4" /> ไม่ผ่าน → สถานะถัดไปยังรอกำหนด (เช่น กลับไป Evaluation / ยุติ) — รอถามหน้างาน
         </p>
       )}
+      <SuccessDialog open={passed} onClose={() => setPassed(false)} title="บันทึกผล MRB: ผ่าน" desc={kind === 'donor' ? 'สถานะผู้บริจาคเปลี่ยนเป็น “รอผ่าตัด” อัตโนมัติ' : 'สถานะเปลี่ยนเป็นขั้นถัดไปอัตโนมัติ (มีคู่แล้ว → รอผ่าตัด · ไม่มีคู่ → รอไตจากสภากาชาด)'} />
     </FormShell>
   );
 }

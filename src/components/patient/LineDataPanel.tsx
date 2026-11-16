@@ -1,3 +1,5 @@
+import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
+import { isLineLinked } from '@/services/api/lineApi';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Clock, Droplet, HeartPulse, Info, Pencil, Pill, Scale, Settings2, Thermometer, X } from 'lucide-react';
@@ -23,6 +25,7 @@ export function LineDataPanel({ person, kind }: { person: PersonRef; kind: Perso
   const { data } = useAsync(() => lineApi.data(kind, person.id, Number(days)), [kind, person.id, days]);
   const recipient = kind === 'recipient';
 
+  if (!isLineLinked(person.id, (person as { lineId?: string }).lineId)) return <NotLinked />;
   if (!data) return <Skeleton className="h-[600px] rounded-2xl" />;
   const avg = (a: number[]) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0);
   const over = data.bp.filter((b) => b.sys > BP_LIMIT.sys || b.dia > BP_LIMIT.dia).length;
@@ -234,5 +237,24 @@ function NotifySettingsCard({ person, kind }: { person: PersonRef; kind: PersonK
         </div>
       </Modal>
     </Card>
+  );
+}
+
+/** ผู้ป่วยยังไม่เชื่อม LINE OA — แทนกราฟเปล่า และบอกวิธีลงทะเบียน */
+function NotLinked() {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center">
+      <KidneyBuddy pose="register" size={150} />
+      <h3 className="text-lg font-bold">ผู้ป่วยยังไม่ได้เชื่อม LINE OA</h3>
+      <p className="max-w-lg text-sm text-slate-500">เมื่อผู้ป่วยลงทะเบียนแล้ว ความดัน น้ำเข้า–ออก น้ำหนัก และการกินยาที่บันทึกผ่าน LINE จะแสดงที่นี่</p>
+      <div className="mt-2 flex flex-wrap justify-center gap-2">
+        {['เพิ่มเพื่อน LINE OA ศูนย์ปลูกถ่ายไต', 'กด “ลงทะเบียน” ในเมนู', 'ยืนยันตัวตนด้วย ThaiD'].map((t, i) => (
+          <span key={t} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-[13px]">
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-xs font-bold text-white">{i + 1}</span>
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
