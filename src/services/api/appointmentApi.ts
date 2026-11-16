@@ -1,5 +1,6 @@
-import type { AppointmentCreateDto, AppointmentDto, LabResultDto, PersonKind } from '@/types';
+import type { AppointmentCreateDto, AppointmentDto, DoseLogDayDto, DrugLevelDto, LabHistoryDto, LabResultDto, PersonKind } from '@/types';
 import { addManual, appointmentsInRange, labFor, peopleForPicker, removeManual, updateManual } from '@/mocks/appointments';
+import { doseLogFor, drugLevelFor, labHistoryFor } from '@/mocks/labs';
 import { STATUS_META } from '@/lib/status';
 import { recipientsDb } from '@/mocks/recipients';
 import { donorsDb } from '@/mocks/donors';
@@ -9,10 +10,6 @@ import { USE_MOCK, http, mockDelay, toQuery } from './client';
 export const appointmentApi = {
   async range(from: string, to: string, personId?: string): Promise<AppointmentDto[]> {
     if (!USE_MOCK) return http(`/appointments${toQuery({ from, to, personId })}`);
-    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demoError') === 'imed') {
-      await mockDelay(null, 500);
-      throw new Error('IMED-504');
-    }
     const rows = appointmentsInRange(from, to);
     return mockDelay(personId ? rows.filter((r) => r.personId === personId) : rows, 300);
   },
@@ -64,5 +61,23 @@ export const labApi = {
   async latest(kind: PersonKind, id: string, date?: string): Promise<LabResultDto> {
     if (!USE_MOCK) return http(`/${kind === 'recipient' ? 'recipients' : 'donors'}/${id}/labs${toQuery({ date })}`);
     return mockDelay(labFor(kind, id, date), 300);
+  },
+  /** ผลแล็บย้อนหลังทุกครั้ง (สำหรับกราฟแนวโน้ม): /api/{kind}/{id}/labs/history */
+  async history(kind: PersonKind, id: string): Promise<LabHistoryDto> {
+    if (!USE_MOCK) return http(`/${kind === 'recipient' ? 'recipients' : 'donors'}/${id}/labs/history`);
+    return mockDelay(labHistoryFor(kind, id), 350);
+  },
+};
+
+/** ระดับยาที่ต้องตรวจ + ขนาดยา + การกินยาจาก LINE: /api/{recipients|donors}/{id}/drug-levels (null = ไม่มี/ยังไม่ผ่าตัด) */
+export const drugApi = {
+  async levels(id: string, kind: PersonKind = 'recipient'): Promise<DrugLevelDto | null> {
+    if (!USE_MOCK) return http(`/${kind === 'recipient' ? 'recipients' : 'donors'}/${id}/drug-levels`);
+    return mockDelay(kind === 'recipient' ? drugLevelFor(id) : null, 350);
+  },
+  /** บันทึกการกินยาจาก LINE รายวัน: /api/{kind}/{id}/dose-log?days= */
+  async doseLog(kind: PersonKind, id: string, days: number): Promise<DoseLogDayDto[]> {
+    if (!USE_MOCK) return http(`/${kind === 'recipient' ? 'recipients' : 'donors'}/${id}/dose-log?days=${days}`);
+    return mockDelay(kind === 'recipient' ? doseLogFor(id, days) : [], 200);
   },
 };

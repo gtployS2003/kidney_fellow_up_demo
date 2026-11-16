@@ -1,4 +1,3 @@
-import { SuccessDialog } from '@/components/brand/BuddyStates';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -263,7 +262,6 @@ function RedCrossTab({ rows, reload }: { rows: MatchingInProgressDto[] | null; r
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState<string | null>(null);
-  const [received, setReceived] = useState<string | null>(null);
 
   useEffect(() => {
     if (rows?.length && !rows.find((r) => r.recipientId === selId)) setSelId(rows[0].recipientId);
@@ -285,14 +283,12 @@ function RedCrossTab({ rows, reload }: { rows: MatchingInProgressDto[] | null; r
     await matchingApi.recordResult(sel.recipientId, result, text);
     setSaving(false);
     setDone(`${sel.name} → ${result === 'received' ? '“รอผ่าตัด”' : '“รอไตจากสภากาชาด”'}`);
-    if (result === 'received') setReceived(sel.name);
     setSelId(null);
     reload();
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <SuccessDialog open={!!received} onClose={() => setReceived(null)} title="บันทึกผล: ได้รับไต" desc={<>{received} → สถานะ “รอผ่าตัด” · บันทึกลงประวัติการจับคู่แล้ว</>} />
       <AnimatePresence>
         {done && (
           <motion.p initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { LabPanel } from '@/components/lab/LabPanel';
+import { DrugLevelPanel } from '@/components/lab/DrugLevelPanel';
 import { PersonAppointments } from '@/components/lab/PersonAppointments';
 import { PersonTimeline } from '@/components/patient/PersonTimeline';
 import { LineDataPanel } from '@/components/patient/LineDataPanel';
@@ -34,7 +35,7 @@ export default function DonorSummary() {
   const fromAppt = params.get('from') === 'appt' ? params.get('date') : null;
   const [stage, setStage] = useState<StageKey | null>(params.get('tab') ? null : 'preop');
   const [openSub, setOpenSub] = useState<{ key: string; mode: 'edit' | 'preview'; n: number } | null>(null);
-  const [tab, setTab] = useState<'ภาพรวม' | 'ผลตรวจ Lab' | 'นัดหมาย' | 'Timeline' | 'รายงานฟอร์ม' | 'ข้อมูลจาก LINE'>(params.get('tab') === 'lab' ? 'ผลตรวจ Lab' : 'ภาพรวม');
+  const [tab, setTab] = useState<'ภาพรวม' | 'ผลตรวจ Lab' | 'ระดับยากดภูมิ' | 'นัดหมาย' | 'Timeline' | 'รายงานฟอร์ม' | 'ข้อมูลจาก LINE'>(params.get('tab') === 'lab' ? 'ผลตรวจ Lab' : params.get('tab') === 'drug' ? 'ระดับยากดภูมิ' : 'ภาพรวม');
 
   const openForm: OpenFormFn = (key, mode) => {
     if (key === 'register') {
@@ -139,7 +140,7 @@ export default function DonorSummary() {
         </div>
         {/* แท็บข้อมูลผู้ป่วย — กดได้ทุกเมื่อ ไม่ว่าจะอยู่ขั้นตอนไหน */}
         <div className="flex gap-1 overflow-x-auto border-t border-slate-200 px-4">
-          {(['ภาพรวม', 'ผลตรวจ Lab', 'นัดหมาย', 'Timeline', 'รายงานฟอร์ม', 'ข้อมูลจาก LINE'] as const).map((t) => {
+          {(['ภาพรวม', 'ผลตรวจ Lab', 'ระดับยากดภูมิ', 'นัดหมาย', 'Timeline', 'รายงานฟอร์ม', 'ข้อมูลจาก LINE'] as const).map((t) => {
             const active = stage === null && tab === t;
             return (
               <button
@@ -170,7 +171,9 @@ export default function DonorSummary() {
         ) : (
           <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
             {tab === 'ผลตรวจ Lab' ? (
-              <LabPanel kind="donor" id={d.id} />
+              <LabPanel kind="donor" id={d.id} onOpenDrug={() => setTab('ระดับยากดภูมิ')} />
+            ) : tab === 'ระดับยากดภูมิ' ? (
+              <DrugLevelPanel kind="donor" id={d.id} />
             ) : tab === 'นัดหมาย' ? (
               <PersonAppointments kind="donor" id={d.id} />
             ) : tab === 'Timeline' ? (

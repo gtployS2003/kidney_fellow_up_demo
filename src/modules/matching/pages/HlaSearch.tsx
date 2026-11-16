@@ -1,4 +1,3 @@
-import { BusyDialog } from '@/components/brand/BuddyStates';
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -265,7 +264,6 @@ export default function HlaSearch() {
           )}
         </AnimatePresence>
       </div>
-      <BusyDialog open={loading} title="กำลังค้นหาคู่ที่เข้ากันได้…" desc="เทียบ ABO และ HLA กับผู้รอไตทั้งหมด" />
     </>
   );
 }

@@ -1,4 +1,3 @@
-import { BusyDialog, useBusyRun } from '@/components/brand/BuddyStates';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Building2, Check, ChevronsLeft, ClipboardCheck, Download, Eye, Hammer, Lock, Pencil, Scissors, UserCheck, type LucideIcon } from 'lucide-react';
@@ -299,10 +298,9 @@ function RegisterPanel({ rows, date, kind, person, openPreview }: { rows: [strin
       </Row>
     </A4Page>
   );
-  const busyRun = useBusyRun();
   const run = (fn: () => void) => {
     setMenu(false);
-    busyRun.run('กำลังสร้างไฟล์…', fn);
+    setTimeout(fn, 50);
   };
   return (
     <div className="flex flex-col gap-4">
@@ -371,7 +369,6 @@ function RegisterPanel({ rows, date, kind, person, openPreview }: { rows: [strin
         </div>
       </Modal>
       <PrintArea>{paper}</PrintArea>
-      <BusyDialog open={!!busyRun.busy} title={busyRun.busy ?? ''} desc={title} delay={0} />
     </div>
   );
 }

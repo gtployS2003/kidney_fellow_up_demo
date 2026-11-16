@@ -94,7 +94,7 @@ export const PACKAGES: Pkg[] = [
       { id: 'U1', name: 'ลงทะเบียน / ยืนยันตัวตน', desc: 'ยืนยันด้วย ThaiD → ดึงข้อมูลที่เจ้าหน้าที่ลงทะเบียนไว้ → ผูก LINE + เปลี่ยน Rich menu ตามประเภท', actors: P, ext: ['thaid', 'line'], link: '/line', who: ['R', 'D'] },
       { id: 'U2', name: 'ดูนัด / ยืนยันมาตามนัด', desc: 'นัดถัดไป + การเตรียมตัว · ตรวจที่ต้องไป (ช่วง Evaluation) · ไม่มีขอเลื่อนนัด', actors: P, link: '/line', who: ['R', 'D'] },
       { id: 'U3', name: 'การกินยา (กดกินแล้ว)', desc: 'ยาวันนี้ · ยากดภูมิ (หลังผ่าตัด) · ยาทั้งหมด', actors: P, link: '/line', who: ['R', 'D'] },
-      { id: 'U4', name: 'ดูค่าไต', desc: 'Cr · eGFR (· Tacrolimus) จาก iMed', actors: P, ext: ['imed'], link: '/line', who: ['R', 'D'] },
+      { id: 'U4', name: 'ดูผลตรวจของฉัน', desc: 'ผลแล็บ 11 รายการ + กราฟแนวโน้ม · ระดับยา (สถานะ) · trend ที่บันทึกใน LINE', actors: P, ext: ['imed'], link: '/line', who: ['R', 'D'] },
       { id: 'U5', name: 'บันทึกสุขภาพ', desc: 'ผู้รับ: น้ำเข้า–ออก · ความดัน · น้ำหนัก · อุณหภูมิ / ผู้บริจาค: ความดัน · น้ำหนัก', actors: P, link: '/line', who: ['R', 'D'] },
       { id: 'U6', name: 'อ่านความรู้', desc: 'บทความที่เผยแพร่ตามกลุ่มผู้อ่าน (ผู้บริจาค: ปุ่มหลัก · ผู้รับ: ผ่าน Profile)', actors: P, link: '/line', who: ['R', 'D'] },
       { id: 'U7', name: 'ติดตามอาการ', desc: 'สถานะการรักษา · อาการที่ต้องรีบมาโรงพยาบาล', actors: P, link: '/line', who: ['R', 'D'] },

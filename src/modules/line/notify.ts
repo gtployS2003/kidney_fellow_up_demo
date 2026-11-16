@@ -1,6 +1,6 @@
 import type { Persona } from './personas';
 
-export type LiffPage = 'register' | 'appointments' | 'meds' | 'kidney' | 'health' | 'followup' | 'profile' | 'settings' | 'knowledge';
+export type LiffPage = 'register' | 'appointments' | 'meds' | 'results' | 'health' | 'followup' | 'profile' | 'settings' | 'knowledge';
 export interface FlexButton {
   label: string;
   primary?: boolean;

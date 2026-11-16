@@ -403,6 +403,86 @@ export interface LabResultDto {
   pending: { name: string; sentAt: string }[];
 }
 
+// ===== Trend ผลแล็บย้อนหลัง (จาก iMed) =====
+/** ค่าย้อนหลังของแล็บ 1 รายการ — values เรียงตาม LabHistoryDto.dates (เก่า → ใหม่), null = ไม่ได้ตรวจวันนั้น */
+export interface LabSeriesDto {
+  key: string;
+  group: string;
+  name: string;
+  /** ชื่อภาษาไทยที่ผู้ป่วยเข้าใจ (ใช้ใน LINE OA) */
+  thai: string;
+  unit: string;
+  ref: string;
+  lo: number;
+  /** null = ไม่มีเพดาน เช่น eGFR > 60 */
+  hi: number | null;
+  /** true = เป็นช่วงเป้าหมายของยา ไม่ใช่ค่าปกติ */
+  target?: boolean;
+  /** ผลแบบระดับ เช่น ['Negative','Trace','1+','2+','3+'] — values เป็น index */
+  ordinal?: string[];
+  decimals: number;
+  values: (number | null)[];
+}
+export interface LabHistoryDto {
+  dates: string[];
+  surgeryDate?: string;
+  series: LabSeriesDto[];
+  pending: { name: string; sentAt: string }[];
+}
+
+// ===== ระดับยากดภูมิ =====
+export interface DrugTargetRange {
+  fromDay: number;
+  toDay: number | null;
+  lo: number;
+  hi: number;
+  label: string;
+}
+export interface DrugLevelPointDto {
+  date: string;
+  pod: number;
+  level: number;
+  hoursSinceDose: number;
+  /** false = ไม่ใช่ trough (เจาะหลังกินยา) — ไม่ใช้ตัดสินปรับยา */
+  trough: boolean;
+  doseMgDay: number;
+  lo: number;
+  hi: number;
+  note?: string;
+}
+export interface DrugDoseChangeDto {
+  date: string;
+  mgDay: number;
+  perDose: number;
+  note: string;
+}
+export interface DrugRegimenDto {
+  name: string;
+  dose: string;
+  monitored: boolean;
+  since?: string;
+}
+export interface DoseLogDayDto {
+  date: string;
+  am: boolean;
+  pm: boolean;
+}
+export interface DrugLevelDto {
+  drug: string;
+  unit: string;
+  surgeryDate: string;
+  points: DrugLevelPointDto[];
+  doses: DrugDoseChangeDto[];
+  regimen: DrugRegimenDto[];
+  /** ช่วงเป้าตามระยะหลังผ่าตัด — ตั้งค่าหลังบ้าน (ค่าตัวอย่าง) */
+  targets: DrugTargetRange[];
+  interactions: { name: string; from: string; to: string; effect: string }[];
+  /** มื้อที่ลืมกินยา (จากการบันทึกใน LINE) */
+  missed: { date: string; slot: 'เช้า' | 'เย็น' }[];
+  adherence30: { taken: number; total: number };
+  nextTest?: string;
+}
+
 // ===== Phase 1: บทความความรู้ (แสดงใน LINE OA) =====
 export type ArticleAudience = 'recipient' | 'donor';
 export type ArticlePhase = 'all' | 'preop' | 'postop';

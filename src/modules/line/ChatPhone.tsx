@@ -7,7 +7,8 @@ import { RichMenu } from './RichMenu';
 import { Mascot } from './Mascot';
 import { KidneyBuddy } from '@/components/brand/KidneyBuddy';
 import { RegisterPage } from './liff/RegisterPage';
-import { AppointmentsPage, FollowUpPage, HealthPage, KidneyPage, KnowledgePage, MedsPage, ProfilePage, SettingsPage } from './liff/Pages';
+import { AppointmentsPage, FollowUpPage, HealthPage, KnowledgePage, MedsPage, ProfilePage, SettingsPage } from './liff/Pages';
+import { MyResultsPage } from './liff/ResultsPage';
 import { cn } from '@/lib/format';
 
 /** หน้าจอ LINE จำลอง: แชท · Rich menu · หน้า LIFF (เปิดซ้อนในโทรศัพท์) */
@@ -119,7 +120,7 @@ export function ChatPhone() {
               {needPersona && <p className="p-8 text-center text-sm text-slate-500">กรุณาลงทะเบียนก่อน</p>}
               {persona && page === 'appointments' && <AppointmentsPage p={persona} />}
               {persona && page === 'meds' && <MedsPage p={persona} tab={liff?.tab} />}
-              {persona && page === 'kidney' && <KidneyPage p={persona} />}
+              {persona && page === 'results' && <MyResultsPage p={persona} tab={liff?.tab} />}
               {persona && page === 'health' && <HealthPage p={persona} tab={liff?.tab} />}
               {persona && page === 'followup' && <FollowUpPage p={persona} />}
               {persona && page === 'profile' && <ProfilePage p={persona} />}

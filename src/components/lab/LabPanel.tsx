@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Clock, FlaskConical } from 'lucide-react';
 import type { PersonKind } from '@/types';
@@ -7,9 +7,20 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useAsync } from '@/hooks/useAsync';
 import { labApi } from '@/services/api/appointmentApi';
 import { cn, thaiDate } from '@/lib/format';
+import { Segmented } from '@/components/ui/Segmented';
+import { LabTrend } from './LabTrend';
 
-/** ผลตรวจ Lab ล่าสุด (ดึงจาก iMed) — ใช้ในแท็บ “ผลตรวจ Lab” ของผู้รับ/ผู้บริจาค */
-export function LabPanel({ kind, id }: { kind: PersonKind; id: string }) {
+type View = 'table' | 'trend';
+
+/** ผลตรวจ Lab (ดึงจาก iMed) — แท็บ “ผลตรวจ Lab” ของผู้รับ/ผู้บริจาค · สลับดูแบบตาราง (ล่าสุด) หรือแนวโน้ม */
+export function LabPanel({ kind, id, onOpenDrug, initialView = 'table' }: { kind: PersonKind; id: string; onOpenDrug?: () => void; initialView?: View }) {
+  const [view, setView] = useState<View>(initialView);
+  const toggle = <Segmented size="sm" value={view} onChange={setView} options={[{ value: 'table', label: 'ตาราง' }, { value: 'trend', label: 'แนวโน้ม' }]} />;
+  if (view === 'trend') return <LabTrend kind={kind} id={id} toggle={toggle} onOpenDrug={onOpenDrug} />;
+  return <LabTable kind={kind} id={id} toggle={toggle} />;
+}
+
+function LabTable({ kind, id, toggle }: { kind: PersonKind; id: string; toggle: ReactNode }) {
   const [date, setDate] = useState<string | undefined>(undefined);
   const { data, loading } = useAsync(() => labApi.latest(kind, id, date), [kind, id, date]);
 
@@ -34,6 +45,7 @@ export function LabPanel({ kind, id }: { kind: PersonKind; id: string }) {
               </option>
             ))}
           </Select>
+          {toggle}
         </div>
         <div className="overflow-x-auto rounded-[10px] border border-slate-200">
           <table className="w-full min-w-[680px] text-left text-[13px]">

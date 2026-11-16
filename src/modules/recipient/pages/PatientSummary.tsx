@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { LabPanel } from '@/components/lab/LabPanel';
+import { DrugLevelPanel } from '@/components/lab/DrugLevelPanel';
 import { PersonAppointments } from '@/components/lab/PersonAppointments';
 import { PersonTimeline } from '@/components/patient/PersonTimeline';
 import { LineDataPanel } from '@/components/patient/LineDataPanel';
@@ -41,7 +42,7 @@ import { cn, durationSince, fullName, initials, thaiDate } from '@/lib/format';
 import { ProcessStepper } from '@/components/stage/ProcessStepper';
 import { StagePanel } from '@/components/stage/StagePanel';
 
-const TABS = ['ภาพรวม', 'ผลตรวจ Lab', 'นัดหมาย', 'Timeline', 'รายงานฟอร์ม', 'ข้อมูลจาก LINE'] as const;
+const TABS = ['ภาพรวม', 'ผลตรวจ Lab', 'ระดับยากดภูมิ', 'นัดหมาย', 'Timeline', 'รายงานฟอร์ม', 'ข้อมูลจาก LINE'] as const;
 
 export default function PatientSummary() {
   const { id = '' } = useParams();
@@ -52,7 +53,7 @@ export default function PatientSummary() {
   const fromAppt = params.get('from') === 'appt' ? params.get('date') : null;
   const [stage, setStage] = useState<StageKey | null>(null);
   const [openSub, setOpenSub] = useState<{ key: string; mode: 'edit' | 'preview'; n: number } | null>(null);
-  const [tab, setTab] = useState<(typeof TABS)[number]>(params.get('tab') === 'lab' ? 'ผลตรวจ Lab' : 'ภาพรวม');
+  const [tab, setTab] = useState<(typeof TABS)[number]>(params.get('tab') === 'lab' ? 'ผลตรวจ Lab' : params.get('tab') === 'drug' ? 'ระดับยากดภูมิ' : 'ภาพรวม');
 
   const openForm: OpenFormFn = (key, mode) => {
     if (key === 'register') {
@@ -186,7 +187,9 @@ export default function PatientSummary() {
                 {tab === 'ภาพรวม' ? (
                   <Overview rec={rec} onOpenPreop={() => setStage('preop')} />
                 ) : tab === 'ผลตรวจ Lab' ? (
-                  <LabPanel kind="recipient" id={rec.id} />
+                  <LabPanel kind="recipient" id={rec.id} onOpenDrug={() => setTab('ระดับยากดภูมิ')} />
+                ) : tab === 'ระดับยากดภูมิ' ? (
+                  <DrugLevelPanel id={rec.id} />
                 ) : tab === 'นัดหมาย' ? (
                   <PersonAppointments kind="recipient" id={rec.id} />
                 ) : tab === 'Timeline' ? (

@@ -21,7 +21,6 @@ import ArticleList from '@/modules/articles/pages/ArticleList';
 import ArticleEditor from '@/modules/articles/pages/ArticleEditor';
 import LineSimulator from '@/modules/line/LineSimulator';
 import UseCasePage from '@/modules/usecase/UseCasePage';
-import NotFound from '@/pages/NotFound';
 
 export default function App() {
   return (
@@ -55,9 +54,8 @@ export default function App() {
         {/* Phase 1: บทความความรู้ (แสดงใน LINE OA) */}
         <Route path="articles" element={<ArticleList />} />
         <Route path="articles/:id" element={<ArticleEditor />} />
-        <Route path="*" element={<NotFound />} />
       </Route>
-      <Route path="*" element={<NotFound standalone />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

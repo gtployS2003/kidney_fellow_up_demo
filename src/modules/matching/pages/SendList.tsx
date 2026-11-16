@@ -1,4 +1,3 @@
-import { SuccessDialog } from '@/components/brand/BuddyStates';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, ChevronDown, Database, Download, Eye, FileText, History, Info, Printer, Search, Send } from 'lucide-react';
@@ -30,8 +29,7 @@ export default function SendList() {
   const [onlyNew, setOnlyNew] = useState(false);
   const [preview, setPreview] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [toast] = useState<string | null>(null);
-  const [sentCount, setSentCount] = useState(0);
+  const [toast, setToast] = useState<string | null>(null);
   const [viewRound, setViewRound] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,7 +56,8 @@ export default function SendList() {
     await matchingApi.markSent(chosen.map((c) => c.recipientId), 'Excel');
     rounds.reload();
     cands.reload();
-    setSentCount(chosen.length);
+    setToast(`บันทึกการส่งแล้ว ${chosen.length} ราย`);
+    setTimeout(() => setToast(null), 2400);
   }
 
   const paper = (
@@ -268,7 +267,6 @@ export default function SendList() {
       </Modal>
 
       <PrintArea>{paper}</PrintArea>
-      <SuccessDialog open={sentCount > 0} onClose={() => setSentCount(0)} title="บันทึกการส่งรายชื่อแล้ว" desc={`ส่งรายชื่อ ${sentCount} ราย ให้สภากาชาดไทย · บันทึกเป็นรอบการส่งแล้ว`} />
 
       <AnimatePresence>
         {toast && (

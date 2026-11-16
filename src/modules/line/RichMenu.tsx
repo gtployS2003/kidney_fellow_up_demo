@@ -13,7 +13,7 @@ interface Item {
 const COMMON: Item[] = [
   { cap: 'Appointment', label: 'นัดหมาย', icon: CalendarCheck, page: 'appointments' },
   { cap: 'Medication', label: 'การกินยา', icon: Pill, page: 'meds' },
-  { cap: 'Kidney', label: 'ค่าไต', icon: FlaskConical, page: 'kidney' },
+  { cap: 'My results', label: 'ผลตรวจของฉัน', icon: FlaskConical, page: 'results' },
 ];
 const TAIL: Item[] = [
   { cap: 'Follow-up', label: 'ติดตามอาการ', icon: Stethoscope, page: 'followup' },

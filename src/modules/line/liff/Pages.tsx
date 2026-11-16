@@ -236,66 +236,6 @@ export function MedsPage({ p, tab: initial }: { p: Persona; tab?: string }) {
   );
 }
 
-// =============== ค่าไต ===============
-export function KidneyPage({ p }: { p: Persona }) {
-  const { closeLiff } = useSim();
-  const { data } = useAsync(() => labApi.latest(p.kind, p.id), [p.id]);
-  const pick = (n: string) => data?.items.find((i) => i.name.startsWith(n));
-  const cr = pick('Creatinine');
-  const egfr = pick('eGFR');
-  const tac = pick('Tacrolimus');
-  return (
-    <LiffShell title="ค่าไต" sub={data ? `ผลล่าสุด ${thaiDate(data.reportedAt)} · จาก iMed` : '…'} onClose={closeLiff}>
-      <div className="flex flex-col gap-3">
-        {!data && <LiffLoading />}
-        <LCard className={cn('grid grid-cols-2 gap-2.5', !data && 'hidden')}>
-          {[cr, egfr].map(
-            (x) =>
-              x && (
-                <div key={x.name} className="flex flex-col gap-1 rounded-2xl bg-slate-50 p-3">
-                  <span className="text-[12px] text-slate-500">{x.name}</span>
-                  <b className="text-[24px] leading-7 text-blue-900">
-                    {x.value} <span className="text-[10.5px] font-normal text-slate-400">{x.unit}</span>
-                  </b>
-                  <Chip tone={x.flag ? 'orange' : 'green'}>{x.flag ? 'ผิดปกติ' : 'ปกติ'}</Chip>
-                </div>
-              ),
-          )}
-          {tac && (
-            <div className="col-span-2 flex items-center gap-2.5 rounded-2xl bg-orange-50 p-3">
-              <FlaskConical className="h-5 w-5 text-orange-600" />
-              <span>
-                <b className="block text-[13.5px]">
-                  Tacrolimus {tac.value} {tac.unit}
-                </b>
-                <span className="text-[11.5px] text-orange-800">{tac.ref}</span>
-              </span>
-            </div>
-          )}
-        </LCard>
-        {cr && (
-          <LCard className="flex flex-col gap-3">
-            <b className="text-[13.5px]">Creatinine 5 ครั้งล่าสุด</b>
-            <div className="flex h-[120px] items-end gap-3 px-2">
-              {cr.trend.map((v, i) => {
-                const max = Math.max(...cr.trend);
-                return (
-                  <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                    <span className="text-[10.5px] font-semibold text-slate-500">{v}</span>
-                    <motion.span initial={{ height: 0 }} animate={{ height: (v / max) * 80 }} className={cn('w-6 rounded-lg', i === cr.trend.length - 1 ? 'bg-primary' : 'bg-blue-200')} />
-                    <span className="text-[10px] text-slate-400">{data!.dates[cr.trend.length - 1 - i] ? thaiDate(data!.dates[cr.trend.length - 1 - i]).slice(0, 6) : ''}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </LCard>
-        )}
-        {p.kind === 'donor' && <LCard className="text-[12.5px] text-green-800 !bg-green-50">หลังบริจาค ค่า Cr สูงขึ้นเล็กน้อยเป็นเรื่องปกติ · อยู่ในเกณฑ์ที่คาดไว้</LCard>}
-      </div>
-    </LiffShell>
-  );
-}
-
 // =============== บันทึกสุขภาพ ===============
 type Sheet = null | 'water' | 'urine' | 'weight' | 'bp';
 export function HealthPage({ p, tab: initial }: { p: Persona; tab?: string }) {
