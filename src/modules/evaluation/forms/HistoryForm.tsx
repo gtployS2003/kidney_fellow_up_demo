@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Pill, Plus, Search, Stethoscope, X } from 'lucide-react';
@@ -6,7 +7,7 @@ import { Box, FSection, FormLoading, Seg, useFormRecord } from '@/components/for
 import { TextInput } from '@/components/ui/Form';
 import { Badge, TONES } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { A4Page, Chk, RegHeader, tableStyle, td, th, Val } from '@/components/paper/Paper';
+import { Brand, Line, Opt, Page, PatientHead, RULE, TableHead, Title, VALUE, bt, headBg, tbl } from '@/components/paper/Sheet';
 import { cn, thaiDate } from '@/lib/format';
 import { CONDITIONS, ESRD_CAUSES, FORM_META, type HistoryForm as F } from './data';
 import type { FormProps } from './types';
@@ -20,63 +21,82 @@ export function HistoryForm({ rec, kind, done, onSaved, initialMode }: FormProps
   const setCond = (k: string, p: Partial<F['conditions'][string]>) => patch({ conditions: { ...f.conditions, [k]: { ...f.conditions[k], ...p } } });
   const setMed = (i: number, p: Partial<F['meds'][number]>) => patch({ meds: f.meds.map((m, j) => (j === i ? { ...m, ...p } : m)) });
 
+  const B = `1px solid ${RULE}`;
+  const cellTd: CSSProperties = { border: B, padding: '0 10px', height: 26, verticalAlign: 'middle' };
   const preview = (
-    <A4Page>
-      <RegHeader title="Naresuan University Hospital Kidney Transplantation Registration From" date={thaiDate(f.date)} blood={rec.bloodGroup} name={`${rec.prefix}${rec.firstName}`} surname={rec.lastName} age={rec.age} hn={rec.hn} />
-      <table style={tableStyle}>
-        <tbody>
-          <tr>
-            <td style={td} colSpan={3}>
-              Cause of ESRD
-            </td>
-          </tr>
-          <tr>
-            {ESRD_CAUSES.map((col, i) => (
-              <td key={i} style={{ ...td, borderRight: i < 2 ? 'none' : td.border, borderLeft: i > 0 ? 'none' : td.border }}>
-                {col.map((c) => (
-                  <div key={c}>
-                    <Chk
-                      on={f.causes.includes(c)}
-                      label={c === 'Allograft dysfunction' ? `Allograft dysfunction (Due to ${f.allograftDueTo || '…………'})` : c === 'Other' ? `Other ${f.otherCause || '…………'}` : c}
-                    />
-                  </div>
-                ))}
-              </td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th style={{ ...th, width: 180 }}>Medical conditions</th>
-            <th style={th}>Details (if available)</th>
-            <th style={{ ...th, width: 200 }}>Current medications</th>
-          </tr>
-        </thead>
-        <tbody>
-          {CONDITIONS.map((c, i) => (
-            <tr key={c}>
-              <td style={td}>{c}</td>
-              <td style={td}>
-                <Val>{f.conditions[c]?.has ? f.conditions[c].detail || 'มี' : ''}</Val>
-              </td>
-              {i === 0 && (
-                <td style={td} rowSpan={CONDITIONS.length}>
-                  {f.meds.map((m, j) => (
-                    <div key={j}>
-                      <Val>
-                        {m.name} {m.dose} {m.how}
-                      </Val>
-                    </div>
-                  ))}
-                </td>
-              )}
-            </tr>
+    <Page>
+      <Brand />
+      <Title>Naresuan University Hospital Kidney Transplantation Registration Form</Title>
+      <PatientHead date={thaiDate(f.date)} blood={rec.bloodGroup} first={`${rec.prefix}${rec.firstName}`} last={rec.lastName} age={rec.age} hn={rec.hn} />
+      <div style={{ height: 4 }} />
+      <div style={tbl}>
+        <TableHead first>Cause of ESRD</TableHead>
+        <div style={{ ...bt, display: 'flex', padding: '8px 10px', gap: 0 }}>
+          {ESRD_CAUSES.map((col, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, width: i === 0 ? 211 : i === 1 ? 248 : undefined, flex: i === 2 ? 1 : 'none' }}>
+              {col.map((c) => (
+                <div key={c} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {c === 'Other' ? (
+                    <span style={{ display: 'flex', alignItems: 'flex-end', gap: 5 }}>
+                      <Opt on={f.causes.includes(c)} label="Other" />
+                      <Line value={f.otherCause} grow />
+                    </span>
+                  ) : (
+                    <Opt on={f.causes.includes(c)} label={c} />
+                  )}
+                  {c === 'Allograft dysfunction' && (
+                    <span style={{ display: 'flex', alignItems: 'flex-end', gap: 4, paddingLeft: 18 }}>
+                      (Due to <Line value={f.allograftDueTo} grow />)
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           ))}
-        </tbody>
-      </table>
-    </A4Page>
+        </div>
+        <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 13, margin: '-1px 0 -1px', tableLayout: 'fixed' }}>
+          <colgroup>
+            <col style={{ width: 211 }} />
+            <col style={{ width: 236 }} />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              {['Medical conditions', 'Details (if available)', 'Current medications'].map((h) => (
+                <th key={h} style={{ ...cellTd, background: headBg, fontWeight: 600, textAlign: 'center', borderLeft: h === 'Medical conditions' ? 'none' : B, borderRight: h === 'Current medications' ? 'none' : B }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {CONDITIONS.map((c, i) => (
+              <tr key={c}>
+                <td style={{ ...cellTd, borderLeft: 'none' }}>
+                  {c === 'Other' ? (
+                    <span style={{ display: 'flex', alignItems: 'flex-end', gap: 5 }}>
+                      Other <Line value={f.conditions[c]?.has ? f.conditions[c].detail : ''} grow />
+                    </span>
+                  ) : (
+                    c
+                  )}
+                </td>
+                <td style={{ ...cellTd, color: VALUE, fontWeight: 500 }}>{c !== 'Other' && f.conditions[c]?.has ? f.conditions[c].detail || 'มี' : ''}</td>
+                {i === 0 && (
+                  <td rowSpan={CONDITIONS.length} style={{ ...cellTd, borderRight: 'none', verticalAlign: 'top', padding: '7px 10px', color: VALUE, fontWeight: 500, lineHeight: 1.45 }}>
+                    {f.meds.map((m, j) => (
+                      <div key={j} style={{ paddingBottom: 6 }}>
+                        {j + 1}. {m.name} {m.dose} {m.how}
+                      </div>
+                    ))}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Page>
   );
 
   return (

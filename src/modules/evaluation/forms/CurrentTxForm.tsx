@@ -1,15 +1,16 @@
+import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Droplet, EyeOff, Info } from 'lucide-react';
 import { FormShell } from '@/components/forms/FormShell';
 import { FSection, FormLoading, Seg, useFormRecord } from '@/components/forms/FormBits';
 import { ChoiceChips, DataTag, Field, TextInput, Textarea } from '@/components/ui/Form';
-import { A4Page, Chk, Dotted, RegHeader, Row, tableStyle, td, Val } from '@/components/paper/Paper';
+import { Brand, Fld, Line, Opt, Page, PatientHead, R, RULE, Title, VALUE, bl, bt, cellPad, tbl } from '@/components/paper/Sheet';
 import { thaiDate } from '@/lib/format';
 import { FORM_META, SEROLOGY, type CurrentTxForm as F } from './data';
 import type { FormProps } from './types';
 
 const VESSELS_AV = ['Radiocephalic', 'Brachiocephalic', 'Lower extremity', 'Other'];
-const VEINS_CATH = ['Internal jugular vein', 'Subclavian vein', 'Femeral vein'];
+const VEINS_CATH = ['Internal jugular vein', 'Subclavian vein', 'Femoral vein'];
 
 export function CurrentTxForm({ rec, kind, done, onSaved, initialMode }: FormProps) {
   const { form: f, patch, save, info } = useFormRecord<F>(rec, kind, 'currentTx', done, onSaved);
@@ -23,112 +24,104 @@ export function CurrentTxForm({ rec, kind, done, onSaved, initialMode }: FormPro
   const female = rec.sex === 'female';
   const setSero = (k: string, p: Partial<F['serology'][string]>) => patch({ serology: { ...f.serology, [k]: { ...f.serology[k], ...p } } });
 
+  const B = `1px solid ${RULE}`;
+  const kv = (k: string, v: ReactNode, first?: boolean) => (
+    <div key={k} style={{ display: 'flex', ...(first ? {} : bt) }}>
+      <div style={{ ...cellPad, width: 236, flexShrink: 0 }}>{k}</div>
+      <div style={{ ...cellPad, ...bl, flex: 1, color: VALUE, fontWeight: 500 }}>{v || '\u00a0'}</div>
+    </div>
+  );
+  const col = (w: number | undefined, children: ReactNode, left?: boolean) => (
+    <div style={{ ...cellPad, display: 'flex', flexDirection: 'column', gap: 6, width: w, flex: w ? 'none' : 1, boxSizing: 'border-box', ...(left ? bl : {}) }}>{children}</div>
+  );
+  const C1 = 164, C2 = 72, C3 = 218, C4 = 82;
+  const d = (x?: string) => (x ? thaiDate(x) : '');
   const preview = (
-    <A4Page>
-      <RegHeader title="Naresuan University Hospital Kidney Transplantation Registration" date={thaiDate(f.date)} blood={rec.bloodGroup} name={`${rec.prefix}${rec.firstName}`} surname={rec.lastName} age={rec.age} hn={rec.hn} />
-      <div>Dialysis information</div>
-      <table style={tableStyle}>
-        <tbody>
-          <tr>
-            <td style={{ ...td, width: 230 }}>Mode</td>
-            <td style={td}>
-              {['Preemptive KT', 'Hemodialysis', 'Peritoneal dialysis'].map((m) => (
-                <Chk key={m} on={f.mode === m} label={m} />
-              ))}
-            </td>
-          </tr>
-          {[
-            ['HD frequency /PD regimen', f.frequency],
-            ['Date of dialysis initiation', thaiDate(f.initiation)],
-            ['Current dialysis unit', f.unit],
-            ['Residual renal function', f.residual],
-            ['Dry weight', f.dryWeight ? `${f.dryWeight} kg` : ''],
-          ].map(([k, v]) => (
-            <tr key={k}>
-              <td style={td}>{k}</td>
-              <td style={td}>
-                <Val>{v === '—' ? '' : v}</Val>
-              </td>
-            </tr>
-          ))}
-          <tr>
-            <td style={td} colSpan={2}>
-              <Dotted label="Dialysis access creation date" value={thaiDate(f.accessDate) === '—' ? '' : thaiDate(f.accessDate)} width={200} />
-            </td>
-          </tr>
-          <tr>
-            <td style={td} colSpan={2}>
-              <Row gap={28} style={{ alignItems: 'flex-start' }}>
-                <div>
-                  <Chk on={f.accessType === 'AVF'} label="AVF" />
-                  <Chk on={f.accessType === 'AVG'} label="AVG" />
-                  {VESSELS_AV.map((v) => (
-                    <div key={v}>
-                      <Chk on={isAV && f.vessel === v} label={v} />
-                    </div>
-                  ))}
-                  <Chk on={isAV && f.side === 'Left'} label="Left" />
-                  <Chk on={isAV && f.side === 'Right'} label="Right" />
-                </div>
-                <div>
-                  <Chk on={f.accessType === 'Permanent catheter'} label="Permanent catheter" />
-                  <Chk on={f.accessType === 'Temporary catheter'} label="Temporary catheter" />
-                  {VEINS_CATH.map((v) => (
-                    <div key={v}>
-                      <Chk on={isCath && f.vessel === v} label={v} />
-                    </div>
-                  ))}
-                  <Chk on={isCath && f.side === 'Left'} label="Left" />
-                  <Chk on={isCath && f.side === 'Right'} label="Right" />
-                </div>
-                <div>
-                  <Chk on={f.accessType === 'Tenckhoff catheter'} label="Tenckhoff catheter" />
-                </div>
-              </Row>
-            </td>
-          </tr>
-          <tr>
-            <td style={{ ...td, height: 60 }} colSpan={2}>
-              Dialysis-related Infections /complication
-              <div>
-                <Val>{f.infection}</Val>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 6 }}>
-        {SEROLOGY.map((s) => {
-          const r = f.serology[s];
+    <Page>
+      <Brand />
+      <Title>Naresuan University Hospital Kidney Transplantation Registration</Title>
+      <PatientHead date={thaiDate(f.date)} blood={rec.bloodGroup} first={`${rec.prefix}${rec.firstName}`} last={rec.lastName} age={rec.age} hn={rec.hn} />
+      <div style={{ fontWeight: 600, fontSize: 13.5, paddingTop: 6 }}>Dialysis information</div>
+      <div style={tbl}>
+        <div style={{ display: 'flex' }}>
+          <div style={{ ...cellPad, width: 236, flexShrink: 0 }}>Mode</div>
+          <div style={{ ...cellPad, ...bl, flex: 1, display: 'flex', flexWrap: 'wrap', rowGap: 7 }}>
+            {(['Preemptive KT', 'Hemodialysis', 'Peritoneal dialysis'] as const).map((m) => (
+              <Opt key={m} on={f.mode === m} label={m} w={186} />
+            ))}
+          </div>
+        </div>
+        {kv('HD frequency / PD regimen', f.frequency)}
+        {kv('Date of dialysis initiation', d(f.initiation))}
+        {kv('Current dialysis unit', f.unit)}
+        {kv('Residual renal function', f.residual)}
+        {kv('Dry weight', f.dryWeight ? `${f.dryWeight} kg` : '')}
+        <div style={{ ...cellPad, ...bt, display: 'flex' }}>
+          <Fld label="Dialysis access creation date" value={d(f.accessDate)} grow />
+        </div>
+        <div style={{ ...bt, display: 'flex' }}>
+          <div style={{ width: C1 + C2 + C3 + C4, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex' }}>
+              {col(C1 + C2, <><Opt on={f.accessType === 'AVF'} label="AVF" /><Opt on={f.accessType === 'AVG'} label="AVG" /></>)}
+              {col(C3 + C4, <><Opt on={f.accessType === 'Permanent catheter'} label="Permanent catheter" /><Opt on={f.accessType === 'Temporary catheter'} label="Temporary catheter" /></>, true)}
+            </div>
+            <div style={{ display: 'flex', ...bt }}>
+              {col(C1, VESSELS_AV.map((v) => <Opt key={v} on={isAV && f.vessel === v} label={v} />))}
+              {col(C2, <><Opt on={isAV && f.side === 'Left'} label="Left" /><Opt on={isAV && f.side === 'Right'} label="Right" /></>, true)}
+              {col(C3, VEINS_CATH.map((v) => <Opt key={v} on={isCath && f.vessel === v} label={v} />), true)}
+              {col(C4, <><Opt on={isCath && f.side === 'Left'} label="Left" /><Opt on={isCath && f.side === 'Right'} label="Right" /></>, true)}
+            </div>
+            <div style={{ ...cellPad, ...bt, minHeight: 96, boxSizing: 'border-box' }}>
+              Dialysis-related Infections / complication
+              <div style={{ color: VALUE, fontWeight: 500 }}>{f.infection}</div>
+            </div>
+          </div>
+          {col(undefined, <Opt on={f.accessType === 'Tenckhoff catheter'} label="Tenckhoff catheter" />, true)}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, paddingTop: 10 }}>
+        {SEROLOGY.map((sname) => {
+          const r = f.serology[sname];
           return (
-            <Row key={s} gap={10}>
-              <span style={{ width: 70 }}>{s}</span>
-              <span style={{ width: 170 }}>
-                <Chk on={r.result === 'Positive'} label={s === 'Anti-HBs' ? `Positive(titer ${r.titer || '……'})` : 'Positive'} />
+            <R key={sname} gap={0}>
+              <span style={{ width: 110, flexShrink: 0 }}>{sname}</span>
+              <span style={{ width: 220, flexShrink: 0, display: 'inline-flex', alignItems: 'flex-end', gap: 5 }}>
+                <Opt on={r.result === 'Positive'} label={sname === 'Anti-HBs' ? 'Positive (titer' : 'Positive'} />
+                {sname === 'Anti-HBs' && (
+                  <>
+                    <Line value={r.titer} w={90} />)
+                  </>
+                )}
               </span>
-              <span style={{ width: 100 }}>
-                <Chk on={r.result === 'Negative'} label="Negative" />
-              </span>
-              <Dotted label="Date" value={r.date ? thaiDate(r.date) : ''} width={110} />
-            </Row>
+              <Opt on={r.result === 'Negative'} label="Negative" w={136} />
+              <Fld label="Date" value={d(r.date)} grow />
+            </R>
           );
         })}
-        <Row>
-          <Dotted label="Previous blood transfusion last date" value={f.transfusionDate ? thaiDate(f.transfusionDate) : ''} width={150} />
-          <Dotted label="amount" value={f.transfusionAmount} width={60} after="unit" />
-        </Row>
-        <Dotted label="Previous pregnancy" value={female ? f.pregnancy : '—'} width={140} />
-        <Row gap={10}>
-          <span>Previous herpes infection</span>
-          {['Yes', 'No', 'Unknown'].map((o) => <Chk key={o} on={f.herpes === o} label={o} />)}
-        </Row>
-        <Dotted label="Drug allergy" value={f.allergy} width={220} />
-        <Row gap={10}>
-          <span>Previous chicken pox/shingles</span>
-          {['Yes', 'No', 'Unknown'].map((o) => <Chk key={o} on={f.chickenpox === o} label={o} />)}
-        </Row>
+        <R>
+          <Fld label="Previous blood transfusion last date" value={d(f.transfusionDate)} grow />
+          <Fld label="amount" value={f.transfusionAmount} w={86} after="unit" />
+        </R>
+        <R>
+          <Fld label="Previous pregnancy" value={female ? f.pregnancy : '—'} w={200} />
+        </R>
+        <R gap={0} style={{ alignItems: 'center' }}>
+          <span style={{ width: 248, flexShrink: 0 }}>Previous herpes infection</span>
+          {['Yes', 'No', 'Unknown'].map((o) => (
+            <Opt key={o} on={f.herpes === o} label={o} w={110} />
+          ))}
+        </R>
+        <R>
+          <Fld label="Drug allergy" value={f.allergy} grow />
+        </R>
+        <R gap={0} style={{ alignItems: 'center' }}>
+          <span style={{ width: 248, flexShrink: 0 }}>Previous chicken pox / shingles</span>
+          {['Yes', 'No', 'Unknown'].map((o) => (
+            <Opt key={o} on={f.chickenpox === o} label={o} w={110} />
+          ))}
+        </R>
       </div>
-    </A4Page>
+    </Page>
   );
 
   return (

@@ -3,7 +3,7 @@ import { FormShell } from '@/components/forms/FormShell';
 import { Box, FSection, FormLoading, useFormRecord } from '@/components/forms/FormBits';
 import { Field, Select, TextInput } from '@/components/ui/Form';
 import { Badge, TONES } from '@/components/ui/Badge';
-import { A4Page, Dotted, LogoBox, Row, tableStyle, td, th, Val } from '@/components/paper/Paper';
+import { CounselingSheet, InlineLine } from '@/components/paper/CounselingSheet';
 import { fullName, thaiDate } from '@/lib/format';
 import { COUNSELING_TOPICS, FORM_META, counselingKeys, type CounselingForm as F } from './data';
 import type { FormProps } from './types';
@@ -23,62 +23,22 @@ export function CounselingForm({ rec, kind, done, onSaved, initialMode }: FormPr
     patch({ understood: u });
   };
 
-  const preview = (
-    <A4Page>
-      <Row gap={14} style={{ alignItems: 'center' }}>
-        <LogoBox />
-        <div style={{ flex: 1, textAlign: 'center', fontWeight: 600, fontSize: 14 }}>
-          การให้คำปรึกษาผู้ป่วยปลูกถ่ายไต ศูนย์ไตเทียม
-          <br />
-          โรงพยาบาลมหาวิทยาลัยนเรศวร
-        </div>
-        <div style={{ width: 110 }} />
-      </Row>
-      <div style={{ fontWeight: 500 }}>การให้คำปรึกษาแนะนำที่เกี่ยวข้องกับการปลูกถ่ายไตจากผู้บริจาคมีชีวิต และผู้บริจาคสมองตาย</div>
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th style={th}>หัวข้อคำแนะนำ</th>
-            <th style={{ ...th, width: 110 }}>เข้าใจ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {COUNSELING_TOPICS.map((t, c) => (
-            <tr key={c}>
-              <td style={td}>
-                <div>
-                  {c + 1}. {t.title}
-                </div>
-                {t.items.map((it, s) => (
-                  <div key={s} style={{ paddingLeft: 36 }}>
-                    {c + 1}.{s + 1} {c === 6 && s === 1 ? `เจาะเลือดทุกเดือนภายในวันที่ ${f.bloodDrawDay || '……'}` : it}
-                  </div>
-                ))}
-              </td>
-              <td style={{ ...td, textAlign: 'center' }}>
-                <div>{!t.items.length && f.understood[key(c, 0)] ? <Val>✓</Val> : '\u00a0'}</div>
-                {t.items.map((_, s) => (
-                  <div key={s}>{f.understood[key(c, s)] ? <Val>✓</Val> : '\u00a0'}</div>
-                ))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div style={{ paddingLeft: 30, paddingTop: 10 }}>
-        <Dotted label="ข้าพเจ้า" value={fullName(rec)} width={260} /> รับทราบข้อมูลเกี่ยวกับการปลูกถ่ายไตแล้ว
-      </div>
-      <div>และขอดำเนินการรักษาต่อไป</div>
-      <div style={{ paddingLeft: 300, paddingTop: 6 }}>
-        <Dotted label="ลงชื่อ" width={170} after="ผู้รับฟังคำแนะนำ" />
-        <div style={{ paddingLeft: 30 }}>( {fullName(rec)} )</div>
-      </div>
-      <div style={{ paddingTop: 6 }}>
-        <Dotted label="ลงชื่อ" width={170} after="ผู้ให้คำปรึกษา" />
-        <div style={{ paddingLeft: 30 }}>( {f.counselor || '……………………………'} )</div>
-      </div>
-    </A4Page>
-  );
+  const groups = COUNSELING_TOPICS.map((t, c) => [
+    { text: `${c + 1}. ${t.title}`, head: true, on: t.items.length ? undefined : !!f.understood[key(c, 0)] },
+    ...t.items.map((it, s) => ({
+      text:
+        c === 6 && s === 1 ? (
+          <>
+            {c + 1}.{s + 1} เจาะเลือดทุกเดือนภายในวันที่
+            <InlineLine value={f.bloodDrawDay} />
+          </>
+        ) : (
+          `${c + 1}.${s + 1} ${it}`
+        ),
+      on: !!f.understood[key(c, s)],
+    })),
+  ]);
+  const preview = <CounselingSheet groups={groups} patientName={fullName(rec)} counselor={f.counselor} />;
 
   return (
     <FormShell

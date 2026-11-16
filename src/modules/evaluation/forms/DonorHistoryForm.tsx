@@ -3,7 +3,8 @@ import { Info, Stethoscope } from 'lucide-react';
 import { FormShell } from '@/components/forms/FormShell';
 import { FSection, FormLoading, Seg, useFormRecord } from '@/components/forms/FormBits';
 import { DataTag, Field, Textarea, TextInput } from '@/components/ui/Form';
-import { A4Page, Chk, Dotted, LogoBox, Row } from '@/components/paper/Paper';
+import { A4Page, Chk, Dotted, Row } from '@/components/paper/Paper';
+import { Brand, Fld, Line, Opt, Page, R, SectionHead, Title } from '@/components/paper/Sheet';
 import { cn, fullName, thaiDate } from '@/lib/format';
 import { DONOR_DISEASES, DONOR_FAMILY, DONOR_HABITS, FORM_META, type DonorHistoryForm as F, type YesNo } from './data';
 import type { FormProps } from './types';
@@ -53,36 +54,60 @@ export function DonorHistoryForm({ rec, kind, done, onSaved, initialMode }: Form
     </Row>
   );
 
+  const LBL = 236;
+  const yn = (name: string, v: YesNo | { has: string; detail?: string } | undefined, o: { indent?: boolean; spec?: boolean } = {}) => (
+    <R key={name} gap={0}>
+      <span style={{ width: LBL, flexShrink: 0, paddingLeft: o.indent ? 20 : 0, display: 'inline-flex', gap: 8 }}>
+        {o.indent && <span style={{ color: '#6b7280' }}>–</span>}
+        {name}
+      </span>
+      <Opt on={v?.has === 'มี'} label="มี" w={86} />
+      <Opt on={v?.has === 'ไม่มี'} label="ไม่มี" w={86} />
+      {o.spec && <Fld label="ระบุ" value={v?.detail} grow />}
+    </R>
+  );
+  const lines = (text: string, n: number) => {
+    const parts = (text || '').split(/\n/);
+    return Array.from({ length: Math.max(n, parts.length) }).map((_, i) => (
+      <R key={i}>
+        <Line value={parts[i]} grow />
+      </R>
+    ));
+  };
   const preview = (
-    <A4Page>
-      <Row style={{ alignItems: 'center' }}>
-        <LogoBox />
-        <span style={{ flex: 1 }} />
-        <Dotted label="วันที่" value={thaiDate(f.date)} width={140} />
-      </Row>
-      <Row>
-        <Dotted label="ชื่อ-สกุล" value={fullName(rec)} width={300} />
-        <Dotted label="อายุ" value={String(rec.age)} width={60} after="ปี" />
-      </Row>
-      <Dotted label="HN" value={rec.hn} width={140} />
-      <Row gap={14}>
-        <span style={{ width: 150 }}>เพศ</span>
-        <Chk on={rec.sex === 'male'} label="Male" />
-        <Chk on={rec.sex === 'female'} label="Female" />
-        <Dotted label="Blood group" value={rec.bloodGroup} width={40} />
-        <Dotted label="Rh" value={f.rhGroup} width={40} />
-      </Row>
-      <div style={{ fontWeight: 600, paddingTop: 4 }}>ซักประวัติ</div>
-      {pRow('โรคประจำตัว', { has: f.chronic })}
-      {DONOR_DISEASES.map((d) => pRow(d.name, f.diseases[d.name], { indent: true, spec: d.spec }))}
-      {DONOR_HABITS.map((h) => pRow(h, f.habits[h], { spec: h !== 'สารเสพติด' }))}
-      <div>ยาที่ใช้ประจำ</div>
-      <Dotted value={f.meds} width={600} />
-      <div style={{ fontWeight: 600, paddingTop: 6 }}>ประวัติครอบครัว</div>
-      {DONOR_FAMILY.map((h) => pRow(h, f.family[h], { spec: true }))}
-      <div>ประวัติอื่นๆ</div>
-      <Dotted value={f.otherHistory} width={600} />
-    </A4Page>
+    <Page gap={8}>
+      <Brand />
+      <Title size={16}>แบบฟอร์ม check list สำหรับ Living donor</Title>
+      <R style={{ justifyContent: 'flex-end' }}>
+        <Fld label="วันที่" value={thaiDate(f.date)} w={186} />
+      </R>
+      <R>
+        <Fld label="ชื่อ-สกุล" value={fullName(rec)} grow />
+        <Fld label="อายุ" value={String(rec.age)} w={62} after="ปี" />
+      </R>
+      <R>
+        <Fld label="HN" value={rec.hn} w={198} />
+      </R>
+      <R gap={0}>
+        <span style={{ width: LBL, flexShrink: 0 }}>เพศ</span>
+        <Opt on={rec.sex === 'male'} label="Male" w={86} />
+        <Opt on={rec.sex === 'female'} label="Female" w={98} />
+        <span style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 12 }}>
+          <Fld label="Blood group" value={rec.bloodGroup} w={62} />
+          <Fld label="Rh" value={f.rhGroup} w={50} />
+        </span>
+      </R>
+      <SectionHead>ซักประวัติ</SectionHead>
+      {yn('โรคประจำตัว', { has: f.chronic })}
+      {DONOR_DISEASES.map((d) => yn(d.name, f.diseases[d.name], { indent: true, spec: d.spec }))}
+      {DONOR_HABITS.map((h) => yn(h, f.habits[h], { spec: h !== 'สารเสพติด' }))}
+      <SectionHead>ยาที่ใช้ประจำ</SectionHead>
+      {lines(f.meds, 5)}
+      <SectionHead>ประวัติครอบครัว</SectionHead>
+      {DONOR_FAMILY.map((h) => yn(h, f.family[h], { spec: true }))}
+      <SectionHead>ประวัติอื่นๆ</SectionHead>
+      {lines(f.otherHistory, 4)}
+    </Page>
   );
 
   return (

@@ -26,6 +26,9 @@ import { Modal } from '@/components/ui/Modal';
 import { PrintArea } from '@/components/forms/PrintArea';
 import { exportWord, printForm } from '@/components/forms/exporters';
 import { A4Page, LogoBox, Row, tableStyle, td } from '@/components/paper/Paper';
+import { DonorRegisterPaper, RecipientRegisterPaper } from '@/components/paper/RecipientRegisterPaper';
+type RecipientPaperInput = Parameters<typeof RecipientRegisterPaper>[0]['rec'];
+type DonorPaperInput = Parameters<typeof DonorRegisterPaper>[0]['d'];
 import { FileText, Printer } from 'lucide-react';
 
 type FormComp = (p: FormProps) => ReactElement;
@@ -262,43 +265,12 @@ export function FormArea({ title, desc, icon: Icon }: { title: string; desc: str
 function RegisterPanel({ rows, date, kind, person, openPreview }: { rows: [string, string][][]; date: string; kind: PersonKind; person: PersonRef; openPreview?: boolean }) {
   const [preview, setPreview] = useState(!!openPreview);
   const [menu, setMenu] = useState(false);
-  const title = kind === 'donor' ? 'แบบฟอร์มลงทะเบียนผู้บริจาค' : 'แบบฟอร์มลงทะเบียน';
+  const title = kind === 'donor' ? 'แบบฟอร์มลงทะเบียนผู้บริจาค' : 'แบบฟอร์มข้อมูลผู้ป่วยก่อนเข้ารับการปลูกถ่ายไต';
   const fileName = `KT-${kind === 'donor' ? 'D' : 'R'}-registration-${person.hn}`;
   const GROUPS = ['ข้อมูลส่วนตัว', 'ข้อมูลการติดต่อ', kind === 'donor' ? 'ผู้รับไต' : 'ข้อมูลการรักษา / ผู้ประสงค์บริจาค'];
-  const paper = (
-    <A4Page>
-      <Row gap={14} style={{ alignItems: 'center' }}>
-        <LogoBox />
-        <div style={{ flex: 1, textAlign: 'center', fontWeight: 600, fontSize: 14 }}>
-          Naresuan University Hospital Kidney Transplantation {kind === 'donor' ? 'Donor ' : ''}Registration Form
-          <br />
-          {title}
-        </div>
-        <div style={{ width: 110, textAlign: 'right' }}>วันที่ {thaiDate(date)}</div>
-      </Row>
-      {rows.map((g, gi) => (
-        <div key={gi}>
-          <div style={{ fontWeight: 600, padding: '6px 0 4px' }}>
-            {gi + 1}. {GROUPS[gi] ?? ''}
-          </div>
-          <table style={tableStyle}>
-            <tbody>
-              {g.map(([k, v]) => (
-                <tr key={k}>
-                  <td style={{ ...td, width: 200, background: '#f8fafc' }}>{k}</td>
-                  <td style={td}>{v}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
-      <Row gap={20} style={{ paddingTop: 28, justifyContent: 'flex-end' }}>
-        <div style={{ width: 150, height: 70, border: '1px solid #64748b', display: 'grid', placeItems: 'center', fontSize: 11 }}>Sticker Recipient</div>
-        <div style={{ width: 150, height: 70, border: '1px solid #64748b', display: 'grid', placeItems: 'center', fontSize: 11 }}>Sticker Donor</div>
-      </Row>
-    </A4Page>
-  );
+  // ผู้รับ: แบบฟอร์มข้อมูลผู้ป่วยก่อนเข้ารับการปลูกถ่ายไต (หัวข้อ 1–6 ตามหน้าลงทะเบียน) · ผู้บริจาค: Donor Registration Form + Sticker
+  // ผู้รับ: แบบฟอร์มข้อมูลผู้ป่วยก่อนเข้ารับการปลูกถ่ายไต (2 หน้า) · ผู้บริจาค: Donor Registration Form + Sticker
+  const paper = kind === 'recipient' ? <RecipientRegisterPaper rec={person as RecipientPaperInput} date={date} /> : <DonorRegisterPaper d={person as DonorPaperInput} date={date} />;
   const busyRun = useBusyRun();
   const run = (fn: () => void) => {
     setMenu(false);

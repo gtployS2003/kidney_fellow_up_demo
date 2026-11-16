@@ -4,7 +4,7 @@ import { FormShell } from '@/components/forms/FormShell';
 import { FSection, FormLoading, Hint, Seg, useFormRecord } from '@/components/forms/FormBits';
 import { Field, TextInput, Textarea } from '@/components/ui/Form';
 import { Button } from '@/components/ui/Button';
-import { A4Page, Chk, Dotted, RegHeader, Row, tableStyle, td, Val } from '@/components/paper/Paper';
+import { Brand, Line, NoteLine, Opt, Page, PatientHead, R, TableHead, Title, bt, tbl } from '@/components/paper/Sheet';
 import { cn, thaiDate } from '@/lib/format';
 import { FORM_META, SYSTEMS, bmi, bsa, type PhysicalForm as F } from './data';
 import type { FormProps } from './types';
@@ -27,61 +27,54 @@ export function PhysicalForm({ rec, kind, done, onSaved, initialMode }: FormProp
     ['Respiratory rate', 'rr', '/min', 'his'],
   ];
 
+  const title = `Naresuan University Hospital Kidney Transplantation ${kind === 'donor' ? 'Donor ' : ''}Registration Form`;
+  const vitRow = (l: string, v: string, u: string) => (
+    <R key={l} gap={0}>
+      <span style={{ width: l.length > 14 ? 124 : 102, flexShrink: 0 }}>{l}</span>
+      <Line value={v} grow />
+      <span style={{ width: 48, paddingLeft: 6, flexShrink: 0 }}>{u}</span>
+    </R>
+  );
   const preview = (
-    <A4Page>
-      <RegHeader title={`Naresuan University Hospital Kidney Transplantation ${kind === 'donor' ? 'Donor ' : ''}Registration From`} date={thaiDate(f.date)} blood={rec.bloodGroup} name={`${rec.prefix}${rec.firstName}`} surname={rec.lastName} age={rec.age} hn={rec.hn} />
-      <table style={tableStyle}>
-        <tbody>
-          <tr>
-            <td style={td}>
-              <div>Physical Examination</div>
-              {[
-                [['Body weight', f.weight, 'kg'], ['Blood pressure', f.bp, 'mmHg']],
-                [['Hight', f.height, 'cm'], ['Pulse rate', f.pulse, 'bpm']],
-                [['BMI', B, 'kg/m²'], ['Body temperature', f.temp, '°C']],
-                [['BSA', S, 'm²'], ['Respiratory rate', f.rr, '/min']],
-              ].map((pair, i) => (
-                <Row key={i} gap={40}>
-                  {pair.map(([l, v, u]) => (
-                    <span key={l} style={{ width: 300 }}>
-                      <Dotted label={l} value={v} width={110} after={u} />
-                    </span>
-                  ))}
-                </Row>
-              ))}
-            </td>
-          </tr>
-          {SYSTEMS.map((s) => (
-            <tr key={s}>
-              <td style={{ ...td, height: 54 }}>
-                <Row gap={10}>
-                  <span style={{ flex: 1 }}>{s}</span>
-                  <span style={{ width: 140 }}>
-                    <Chk on={f.systems[s].result === 'normal'} label="normal" />
-                  </span>
-                  <span style={{ width: 100 }}>
-                    <Chk on={f.systems[s].result === 'abnormal'} label="abnormal" />
-                  </span>
-                </Row>
-                {f.systems[s].note && (
-                  <div>
-                    <Val>{f.systems[s].note}</Val>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-          <tr>
-            <td style={{ ...td, height: 54 }}>
-              Other
-              <div>
-                <Val>{f.other}</Val>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </A4Page>
+    <Page>
+      <Brand />
+      <Title>{title}</Title>
+      <PatientHead date={thaiDate(f.date)} blood={rec.bloodGroup} first={`${rec.prefix}${rec.firstName}`} last={rec.lastName} age={rec.age} hn={rec.hn} />
+      <div style={{ height: 4 }} />
+      <div style={tbl}>
+        <TableHead first>Physical Examination</TableHead>
+        <div style={{ ...bt, display: 'flex', gap: 30, padding: '10px 12px 12px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {vitRow('Body weight', f.weight, 'kg')}
+            {vitRow('Height', f.height, 'cm')}
+            {vitRow('BMI', B, 'kg/m²')}
+            {vitRow('BSA', S, 'm²')}
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {vitRow('Blood pressure', f.bp, 'mmHg')}
+            {vitRow('Pulse rate', f.pulse, 'bpm')}
+            {vitRow('Body temperature', f.temp, '°C')}
+            {vitRow('Respiratory rate', f.rr, '/min')}
+          </div>
+        </div>
+        {SYSTEMS.map((s) => (
+          <div key={s} style={{ ...bt, padding: '8px 12px 10px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ flex: 1, fontWeight: 500 }}>{s}</span>
+              <Opt on={f.systems[s].result === 'normal'} label="normal" w={112} />
+              <Opt on={f.systems[s].result === 'abnormal'} label="abnormal" w={100} />
+            </div>
+            <NoteLine value={f.systems[s].note} />
+            <NoteLine />
+          </div>
+        ))}
+        <div style={{ ...bt, padding: '8px 12px 12px', display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <span style={{ fontWeight: 500 }}>Other</span>
+          <NoteLine value={f.other} />
+          <NoteLine />
+        </div>
+      </div>
+    </Page>
   );
 
   return (

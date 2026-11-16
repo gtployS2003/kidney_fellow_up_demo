@@ -1,11 +1,11 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, Check, ClipboardCheck, CornerDownRight, Paperclip } from 'lucide-react';
 import { FormShell } from '@/components/forms/FormShell';
 import { Box, FSection, FormLoading, useFormRecord } from '@/components/forms/FormBits';
 import { DataTag, Field, Select, TextInput, Textarea } from '@/components/ui/Form';
 import { Badge, TONES } from '@/components/ui/Badge';
-import { A4Page, Chk, Dotted, RegHeader, Row, tableStyle, td, Val } from '@/components/paper/Paper';
+import { Brand, Fld, Line, Opt, Page, PatientHead, R, TableHead, Title, VALUE, bt, cellPad, tbl } from '@/components/paper/Sheet';
 import { cn, thaiDate } from '@/lib/format';
 import { CONSULTS, FORM_META, PLAN_ITEMS, VACCINES, planSummary, type PlanForm as F, type TrackItem, type TrackStatus } from './data';
 import type { FormProps } from './types';
@@ -101,79 +101,110 @@ export function PlanForm({ rec, kind, done, onSaved, initialMode }: FormProps) {
   );
 
   const female = rec.sex === 'female';
+  const title = `Naresuan University Hospital Kidney Transplantation ${kind === 'donor' ? 'Donor ' : ''}Registration Form`;
+  const label = (x: string) => (x === 'Anti-A / B tier' ? 'Anti-A / B titer' : x === 'CT angiography/ MRA of cerebral arteries' ? 'CT angiography / MRA of cerebral arteries' : x);
+  const vac = (k: string) => f.vaccines[k] ?? { selected: false, detail: '' };
+  const PV = 'PREVNAR13 → PNEUMOVAX 23';
+  const [pv1, pv2] = (vac(PV).detail || '').split('→').map((x) => x.trim());
+  const cell = (children: ReactNode, style?: CSSProperties, key?: string) => <div key={key} style={{ ...cellPad, ...bt, ...style }}>{children}</div>;
   const preview = (
-    <A4Page>
-      <RegHeader title={`Naresuan University Hospital Kidney Transplantation ${kind === 'donor' ? 'Donor ' : ''}Registration From`} date={thaiDate(f.date)} blood={rec.bloodGroup} name={`${rec.prefix}${rec.firstName}`} surname={rec.lastName} age={rec.age} hn={rec.hn} />
-      <table style={tableStyle}>
-        <tbody>
-          <tr>
-            <td style={td}>Summary: Potential kidney transplantation — {kind === 'donor' ? 'Donor' : 'Recipient'}</td>
-          </tr>
-          <tr>
-            <td style={{ ...td, height: 64 }}>
-              Medical Problems
-              <div>
-                <Val>{f.medicalProblems}</Val>
+    <Page gap={8}>
+      <Brand />
+      <Title>{title}</Title>
+      <PatientHead date={thaiDate(f.date)} blood={rec.bloodGroup} first={`${rec.prefix}${rec.firstName}`} last={rec.lastName} age={rec.age} hn={rec.hn} ageWithHn />
+      <div style={{ height: 2 }} />
+      <div style={tbl}>
+        <TableHead first>
+          Summary: Potential kidney transplantation
+          <Opt on={kind !== 'donor'} label="Recipient" />
+          <Opt on={kind === 'donor'} label="Donor" />
+        </TableHead>
+        {cell(
+          <>
+            <div style={{ fontWeight: 500 }}>Medical Problems</div>
+            <div style={{ color: VALUE, fontWeight: 500, minHeight: 50 }}>{f.medicalProblems}</div>
+          </>,
+          { paddingBottom: 8 },
+        )}
+        <TableHead>Plan for evaluation</TableHead>
+        {cell(
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {PLAN_ITEMS.map(([a, b]) => (
+              <div key={a} style={{ display: 'flex' }}>
+                <Opt on={f.plan[a]?.selected} label={label(a)} w={335} />
+                <Opt on={f.plan[b]?.selected} label={label(b)} />
               </div>
-            </td>
-          </tr>
-          <tr>
-            <td style={td}>Plan for evaluation</td>
-          </tr>
-          <tr>
-            <td style={td}>
-              {PLAN_ITEMS.map(([a, b]) => (
-                <Row key={a} gap={0}>
-                  <span style={{ width: 300 }}>
-                    <Chk on={f.plan[a].selected} label={a} />
-                  </span>
-                  <Chk on={f.plan[b].selected} label={b} />
-                </Row>
-              ))}
-            </td>
-          </tr>
-          <tr>
-            <td style={td}>Consultations</td>
-          </tr>
-          {CONSULTS.map((c) => (
-            <tr key={c.key}>
-              <td style={td}>
-                <Chk on={f.consults[c.key].selected} label={`${c.label}${c.forField ? ' for' : ''}`} /> {c.forField && f.consults[c.key].reason && <Val>{f.consults[c.key].reason}</Val>}
-              </td>
-            </tr>
-          ))}
-          <tr>
-            <td style={td}>
-              <Row gap={14}>
-                <span>Vaccinations</span>
-                {VACCINES.map((v) => (
-                  <Chk key={v} on={f.vaccines[v].selected} label={`${v}${f.vaccines[v].detail ? ` ${f.vaccines[v].detail}` : ''}`} />
-                ))}
-              </Row>
-            </td>
-          </tr>
-          <tr>
-            <td style={td}>
-              Request additional medical history
-              <div>
-                <Dotted label="of" value={f.requestOf} width={420} />
-              </div>
-              <div>
-                <Dotted label="From" value={f.requestFrom} width={220} after="hospital" />
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td style={{ ...td, height: 48 }}>
-              <Dotted label="Other" value={f.other} width={560} />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div style={{ textAlign: 'right', paddingTop: 10 }}>
-        <Dotted label="Physician" value={f.physician} width={190} />
+            ))}
+          </div>,
+          { padding: '7px 10px 8px' },
+        )}
+        <TableHead>Consultations</TableHead>
+        {CONSULTS.map((c) =>
+          cell(
+            <R gap={6}>
+              <Opt on={f.consults[c.key]?.selected} label={`${c.label}${c.forField ? ' for' : ''}`} />
+              {c.forField && <Line value={f.consults[c.key]?.reason} grow />}
+            </R>,
+            { paddingTop: 4, paddingBottom: 4 },
+            c.key,
+          ),
+        )}
+        {cell(
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <R gap={0}>
+              <span style={{ width: 124, flexShrink: 0, fontWeight: 500 }}>Vaccinations</span>
+              <Opt on={vac('Influenza vaccine').selected} label="Influenza vaccine" w={236} />
+              <span style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 5, flex: 1 }}>
+                <Opt on={vac('COVID vaccine').selected} label="COVID vaccine" />
+                <Line value={vac('COVID vaccine').detail} grow />
+              </span>
+            </R>
+            <R gap={0} style={{ paddingLeft: 124 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 5, width: 236, flexShrink: 0, paddingRight: 10, boxSizing: 'border-box' }}>
+                <Opt on={vac('HBV vaccines').selected} label="HBV vaccines" />
+                <Line value={vac('HBV vaccines').detail} grow />
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'flex-end', gap: 5, flex: 1, minWidth: 0 }}>
+                <Opt on={vac(PV).selected} label="PREVNAR13" />
+                <Line value={pv1} w={48} />
+                <span style={{ whiteSpace: 'nowrap' }}>then PNEUMOVAX 23</span>
+                <Line value={pv2} grow />
+              </span>
+            </R>
+            <R gap={0} style={{ paddingLeft: 124 }}>
+              <Opt on={vac('Zostavax').selected} label="Zostavax" />
+            </R>
+          </div>,
+          { padding: '7px 10px 8px' },
+        )}
+        {cell(
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontWeight: 500 }}>Request additional medical history</span>
+            <R gap={6}>
+              <Fld label="of" value={f.requestOf} grow />
+            </R>
+            <R gap={6}>
+              <Fld label="From" value={f.requestFrom} after="hospital" grow />
+            </R>
+          </div>,
+          { padding: '7px 10px 8px' },
+        )}
+        {cell(
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+            <R gap={6}>
+              <Fld label="Other" value={f.other} grow />
+            </R>
+            <R>
+              <Line grow />
+            </R>
+          </div>,
+          { padding: '7px 10px 10px' },
+        )}
       </div>
-    </A4Page>
+      <R style={{ justifyContent: 'flex-end', paddingTop: 8 }}>
+        <Fld label="Physician" value={f.physician} w={236} />
+      </R>
+    </Page>
   );
 
   return (

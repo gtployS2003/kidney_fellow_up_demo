@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import logoSrc from '@/assets/nuh-logo.png?inline';
 
 /**
  * ชิ้นส่วนหน้ากระดาษ A4 — ใช้ inline style ทั้งหมด
@@ -6,7 +7,7 @@ import type { CSSProperties, ReactNode } from 'react';
  */
 const INK = '#111827';
 const VALUE = '#1d4ed8';
-const FONT = "'IBM Plex Sans Thai','TH Sarabun New','Segoe UI',Tahoma,sans-serif";
+const FONT = "'Sarabun','TH Sarabun PSK','TH SarabunPSK','TH Sarabun New',Tahoma,sans-serif";
 
 export function A4Page({ children }: { children: ReactNode }) {
   return (
@@ -19,13 +20,9 @@ export function A4Page({ children }: { children: ReactNode }) {
   );
 }
 
+/** โลโก้โรงพยาบาล (ใช้ในเอกสารอื่น ๆ เช่น MRB ใบส่งรายชื่อ บันทึกผ่าตัด) */
 export function LogoBox() {
-  return (
-    <div style={{ width: 110, height: 58, border: '1px dashed #94a3b8', borderRadius: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 10, flexShrink: 0 }}>
-      <b>LOGO</b>
-      <span>รพ.ม.นเรศวร</span>
-    </div>
-  );
+  return <img src={logoSrc} alt="โลโก้โรงพยาบาลมหาวิทยาลัยนเรศวร" style={{ width: 118, height: 55, objectFit: 'contain', flexShrink: 0 }} />;
 }
 
 export function Row({ children, gap = 16, style }: { children: ReactNode; gap?: number; style?: CSSProperties }) {

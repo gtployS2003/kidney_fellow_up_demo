@@ -3,7 +3,7 @@ import { FormShell } from '@/components/forms/FormShell';
 import { Box, FSection, FormLoading, Hint, useFormRecord } from '@/components/forms/FormBits';
 import { Field, Select, TextInput } from '@/components/ui/Form';
 import { Badge, TONES } from '@/components/ui/Badge';
-import { A4Page, Dotted, LogoBox, Row, tableStyle, td, th, Val } from '@/components/paper/Paper';
+import { CounselingSheet } from '@/components/paper/CounselingSheet';
 import { fullName } from '@/lib/format';
 import { DONOR_COUNSELING_TOPICS, FORM_META, isFemaleOnly, type DonorCounselingForm as F } from './data';
 import type { FormProps } from './types';
@@ -25,62 +25,11 @@ export function DonorCounselingForm({ rec, kind, done, onSaved, initialMode }: F
     patch({ understood: u });
   };
 
-  const preview = (
-    <A4Page>
-      <Row gap={14} style={{ alignItems: 'center' }}>
-        <LogoBox />
-        <div style={{ flex: 1, textAlign: 'center', fontWeight: 600, fontSize: 14 }}>
-          การให้คำปรึกษาผู้ป่วยปลูกถ่ายไต ศูนย์ไตเทียม
-          <br />
-          โรงพยาบาลมหาวิทยาลัยนเรศวร
-        </div>
-        <div style={{ width: 110 }} />
-      </Row>
-      <div style={{ fontWeight: 500 }}>การให้คำปรึกษาแนะนำที่เกี่ยวข้องกับการปลูกถ่ายไตจากผู้บริจาคมีชีวิต และผู้บริจาคสมองตาย</div>
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th style={th}>หัวข้อคำแนะนำ</th>
-            <th style={{ ...th, width: 110 }}>เข้าใจ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {DONOR_COUNSELING_TOPICS.map((t, c) => (
-            <tr key={c}>
-              <td style={td}>
-                <div>
-                  {c + 1}. {t.title}
-                </div>
-                {t.items.map((it, s) => (
-                  <div key={s} style={{ paddingLeft: 36 }}>
-                    {c + 1}.{s + 1} {it}
-                  </div>
-                ))}
-              </td>
-              <td style={{ ...td, textAlign: 'center' }}>
-                <div>{'\u00a0'}</div>
-                {t.items.map((_, s) => (
-                  <div key={s}>{na(c, s) ? <span style={{ fontSize: 10, color: '#64748b' }}>N/A</span> : f.understood[k(c, s)] ? <Val>✓</Val> : '\u00a0'}</div>
-                ))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div style={{ paddingLeft: 30, paddingTop: 10 }}>
-        <Dotted label="ข้าพเจ้า" value={fullName(rec)} width={260} /> รับทราบข้อมูลเกี่ยวกับการปลูกถ่ายไตแล้ว
-      </div>
-      <div>และขอดำเนินการรักษาต่อไป</div>
-      <div style={{ paddingLeft: 300, paddingTop: 6 }}>
-        <Dotted label="ลงชื่อ" width={170} after="ผู้รับฟังคำแนะนำ" />
-        <div style={{ paddingLeft: 30 }}>( {fullName(rec)} )</div>
-      </div>
-      <div style={{ paddingTop: 6 }}>
-        <Dotted label="ลงชื่อ" width={170} after="ผู้ให้คำปรึกษา" />
-        <div style={{ paddingLeft: 30 }}>( {f.counselor || '……………………………'} )</div>
-      </div>
-    </A4Page>
-  );
+  const groups = DONOR_COUNSELING_TOPICS.map((t, c) => [
+    { text: `${c + 1}. ${t.title}`, head: true },
+    ...t.items.map((it, s) => ({ text: `${c + 1}.${s + 1} ${it}`, on: !!f.understood[k(c, s)], na: na(c, s) })),
+  ]);
+  const preview = <CounselingSheet groups={groups} patientName={fullName(rec)} counselor={f.counselor} />;
 
   return (
     <FormShell

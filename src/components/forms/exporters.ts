@@ -13,7 +13,7 @@ export function exportWord(fileName: string) {
   const el = document.getElementById(PRINT_ROOT_ID);
   if (!el) return;
   const html = `<!doctype html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>${fileName}</title>
-<style>@page{size:A4;margin:14mm} body{font-family:'TH Sarabun New','IBM Plex Sans Thai',Tahoma,sans-serif}</style></head><body>${el.innerHTML}</body></html>`;
+<style>@page{size:A4;margin:14mm} body{font-family:'TH Sarabun PSK','Sarabun','TH Sarabun New',Tahoma,sans-serif} .a4-page{break-after:page;page-break-after:always} .a4-page:last-child{break-after:auto;page-break-after:auto}</style></head><body>${el.innerHTML}</body></html>`;
   const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
