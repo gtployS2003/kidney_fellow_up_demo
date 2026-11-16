@@ -163,14 +163,17 @@ export function TrendChart({ series, secondary, xDomain, yDomain, height, bands 
           {(ticksY ?? [yd[0] + (yd[1] - yd[0]) * 0.1, yd[0] + (yd[1] - yd[0]) * 0.5, yd[0] + (yd[1] - yd[0]) * 0.9]).map((v, i) => (
             <line key={'g' + i} x1={pl} x2={W - pr} y1={Y(v)} y2={Y(v)} stroke="#eef2f7" />
           ))}
-          {shades.map((s, i) => (
-            <rect key={'s' + i} x={X(s.x0)} y={pt} width={Math.max(0, X(s.x1) - X(s.x0))} height={H - pt - pb} fill={s.color} />
-          ))}
+          {shades.map((s, i) => {
+            const a = X(Math.max(s.x0, xDomain[0]));
+            const b = X(Math.min(s.x1, xDomain[1]));
+            return <rect key={'s' + i} x={a} y={pt} width={Math.max(0, b - a)} height={H - pt - pb} fill={s.color} />;
+          })}
           {bands.map((b, i) => {
             const top = b.hi === null ? pt : clampY(Y(b.hi));
             const bot = clampY(Y(b.lo));
-            const x0 = X(b.x0 ?? xDomain[0]);
-            const x1 = X(b.x1 ?? xDomain[1]);
+            // ตัดแถบให้อยู่ในช่วงแกน x เสมอ (กันล้นออกนอกกราฟ)
+            const x0 = X(Math.max(b.x0 ?? xDomain[0], xDomain[0]));
+            const x1 = X(Math.min(b.x1 ?? xDomain[1], xDomain[1]));
             return <rect key={'b' + i} x={x0} y={top} width={Math.max(0, x1 - x0)} height={Math.max(0, bot - top)} fill={b.color} opacity={b.opacity ?? 1} />;
           })}
           {markers.map((m, i) => (
