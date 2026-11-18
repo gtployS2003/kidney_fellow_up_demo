@@ -18,6 +18,8 @@ type Tone = 'green' | 'orange' | 'teal' | 'slate';
 
 /** หลังบริจาคไต ค่าเหล่านี้เปลี่ยนเล็กน้อยเป็นเรื่องปกติ */
 const DONOR_EXPECTED = ['cr', 'bun', 'egfr'];
+/** LINE OA แสดง trend เฉพาะ Creatinine · eGFR · ระดับยากดภูมิ */
+const LINE_KEYS = ['cr', 'egfr', 'tac'];
 
 /** เมนู “ผลตรวจของฉัน” (เดิม “ค่าไต”) — ผลแล็บ · ระดับยา (ผู้รับหลังผ่าตัด, ไม่แสดงตัวเลข) · ที่ฉันบันทึก */
 export function MyResultsPage({ p, tab: initial }: { p: Persona; tab?: string }) {
@@ -25,7 +27,8 @@ export function MyResultsPage({ p, tab: initial }: { p: Persona; tab?: string })
   const hasDrug = p.kind === 'recipient' && p.postop;
   const [tab, setTab] = useState<Tab>(initial === 'drug' && hasDrug ? 'drug' : initial === 'mine' ? 'mine' : 'lab');
   const [detail, setDetail] = useState<string | null>(null);
-  const { data: h } = useAsync(() => labApi.history(p.kind, p.id), [p.id]);
+  const { data: raw } = useAsync(() => labApi.history(p.kind, p.id), [p.id]);
+  const h = raw && lineOnly(raw, hasDrug);
   const lastDate = h?.dates[h.dates.length - 1];
 
   const sel = detail && h ? h.series.find((s) => s.key === detail) : undefined;
@@ -47,6 +50,12 @@ export function MyResultsPage({ p, tab: initial }: { p: Persona; tab?: string })
 }
 
 // ================= ผลแล็บ =================
+/** เหลือเฉพาะ Creatinine · eGFR · ระดับยากดภูมิ (เฉพาะผู้รับหลังผ่าตัด) และรายการรอผลของค่าเหล่านี้ */
+function lineOnly(h: LabHistoryDto, drug: boolean): LabHistoryDto {
+  const series = LINE_KEYS.map((k) => h.series.find((s) => s.key === k)).filter((s): s is LabSeriesDto => !!s && (s.key !== 'tac' || drug));
+  const names = series.map((s) => s.name.split(' ')[0].toLowerCase());
+  return { ...h, series, pending: h.pending.filter((x) => names.some((n) => x.name.toLowerCase().startsWith(n))) };
+}
 function statusOf(s: LabSeriesDto, v: number | null, donor: boolean): { tone: Tone; label: string } {
   const f = flagOf(s, v);
   if (v === null) return { tone: 'slate', label: 'ไม่มีผล' };
@@ -83,7 +92,7 @@ function LabTab({ h, donor, postop, onOpen }: { h: LabHistoryDto; donor: boolean
       : 'แตะแต่ละค่าเพื่อดูกราฟย้อนหลังและคำแนะนำ';
   const groups = [...new Set(h.series.map((s) => s.group))];
   // ระดับยาไว้ต่อจากกลุ่มไต
-  const order = ['Renal function', 'Drug level', 'Electrolytes', 'CBC', 'Urine'].filter((g) => groups.includes(g));
+  const order = ['Renal function', 'Drug level'].filter((g) => groups.includes(g));
 
   return (
     <>
@@ -132,6 +141,11 @@ function LabTab({ h, donor, postop, onOpen }: { h: LabHistoryDto; donor: boolean
       {h.pending.length > 0 && (
         <p className="rounded-2xl bg-yellow-50 px-4 py-2.5 text-[12px] font-medium text-yellow-800">
           ⏳ รอผล: {h.pending.map((x) => x.name).join(' · ')} (ส่งตรวจ {shortDate(h.pending[0].sentAt)}) — แจ้งเตือนทาง LINE เมื่อผลออก
+        </p>
+      )}
+      {!donor && (
+        <p className="rounded-2xl bg-yellow-50 px-4 py-2.5 text-[12px] font-medium text-yellow-800">
+          ℹ️ แสดงเฉพาะค่าการทำงานของไต (Creatinine, eGFR) และระดับยากดภูมิ · ผลตรวจอื่นสอบถามแพทย์ที่ OPD
         </p>
       )}
     </>

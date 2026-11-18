@@ -17,21 +17,25 @@ interface Props {
   patient: Pick<PersonRef, 'prefix' | 'firstName' | 'lastName' | 'hn' | 'age' | 'bloodGroup'>;
   dateLabel?: string;
   date: string;
-  onDate: (v: string) => void;
+  onDate?: (v: string) => void;
   /** หน้าตาเหมือนกระดาษ (A4) */
   preview: ReactNode;
   /** ฟอร์มกรอกข้อมูล */
   children: ReactNode;
-  onSave: (draft: boolean) => Promise<void> | void;
+  onSave?: (draft: boolean) => Promise<void> | void;
   savedInfo?: string;
   fileName: string;
   /** แสดงหมายเหตุใต้ Preview */
   previewNote?: string;
   initialMode?: 'edit' | 'preview';
+  /** ดูอย่างเดียว (ข้อมูลดึงจาก iMed) — ไม่มีปุ่มบันทึก · สลับ “ดูข้อมูล / Preview” */
+  readOnly?: boolean;
+  /** แถบแจ้งใต้หัวฟอร์ม (เช่น ที่มาของข้อมูล) */
+  notice?: ReactNode;
 }
 
 /** โครงฟอร์มทุกขั้นตอนย่อย: หัวฟอร์ม + สลับ กรอกข้อมูล/Preview + Export + แถบผู้ป่วย + ปุ่มบันทึก */
-export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f46e5'], patient, dateLabel = 'วันที่กรอกข้อมูล', date, onDate, preview, children, onSave, savedInfo, fileName, previewNote, initialMode = 'edit' }: Props) {
+export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f46e5'], patient, dateLabel = 'วันที่กรอกข้อมูล', date, onDate, preview, children, onSave, savedInfo, fileName, previewNote, initialMode = 'edit', readOnly, notice }: Props) {
   const [mode, setMode] = useState<'edit' | 'preview'>(initialMode);
   const [menu, setMenu] = useState(false);
   const [saving, setSaving] = useState<null | 'draft' | 'final'>(null);
@@ -48,6 +52,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
   }, []);
 
   async function save(draft: boolean) {
+    if (!onSave) return;
     setSaving(draft ? 'draft' : 'final');
     try {
       await onSave(draft);
@@ -74,7 +79,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
         <div className="flex gap-0.5 rounded-[10px] border border-indigo-100 bg-white p-[3px]">
           {(
             [
-              ['edit', 'กรอกข้อมูล', Pencil],
+              ['edit', readOnly ? 'ดูข้อมูล' : 'กรอกข้อมูล', readOnly ? FileText : Pencil],
               ['preview', 'Preview', Eye],
             ] as const
           ).map(([k, l, I]) => (
@@ -124,6 +129,8 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
         </div>
       </div>
 
+      {notice}
+
       {/* แถบผู้ป่วย (ดึงจากการลงทะเบียน) */}
       <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-blue-200 bg-white px-4 py-3">
         {[
@@ -143,7 +150,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
           <span className="flex items-center gap-1 text-[11px] text-slate-400">
             <Calendar className="h-3 w-3" /> {dateLabel}
           </span>
-          <TextInput type="date" className="!h-9 w-[170px]" value={date} onChange={(e) => onDate(e.target.value)} />
+          {readOnly || !onDate ? <span className="text-sm font-semibold">{thaiDate(date)}</span> : <TextInput type="date" className="!h-9 w-[170px]" value={date} onChange={(e) => onDate(e.target.value)} />}
         </label>
       </div>
 
@@ -151,6 +158,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
         {mode === 'edit' ? (
           <motion.div key="edit" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="flex flex-col gap-4">
             {children}
+            {!readOnly && (
             <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-slate-200 bg-white p-4">
               <span className="text-xs text-slate-400">{savedInfo ?? 'ยังไม่ได้บันทึก'}</span>
               <span className="flex-1" />
@@ -161,6 +169,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
                 {saving === 'final' ? 'กำลังบันทึก…' : 'บันทึก'}
               </Button>
             </div>
+            )}
           </motion.div>
         ) : (
           <motion.div key="preview" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex flex-col items-center gap-3 overflow-x-auto rounded-2xl bg-slate-200 p-6">

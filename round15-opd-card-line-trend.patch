@@ -1,0 +1,1236 @@
+From 4d60acd9094e6e98b21602bf2835eae4a4fe0191 Mon Sep 17 00:00:00 2001
+From: Sirichat <sirichat@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 13:53:35 +0700
+Subject: [PATCH] =?UTF-8?q?round15:=20OPD=20view-only=20from=20iMed=20(OPD?=
+ =?UTF-8?q?=20card=20KT=20+=20sub-steps=202=E2=80=933)=20=C2=B7=20LINE=20O?=
+ =?UTF-8?q?A=20results=20show=20only=20Creatinine,=20eGFR,=20immunosuppres?=
+ =?UTF-8?q?sant=20level?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01GxFnjJe91Y234oYT9sL9ao
+---
+ src/components/forms/FormShell.tsx       |  19 +-
+ src/components/paper/OpdCardPaper.tsx    | 244 ++++++++++
+ src/components/stage/postop/OpdPanel.tsx | 547 ++++++++++++++---------
+ src/modules/line/liff/ResultsPage.tsx    |  18 +-
+ src/modules/usecase/data.ts              |   2 +-
+ src/services/api/imedApi.ts              | 153 +++++++
+ 6 files changed, 769 insertions(+), 214 deletions(-)
+ create mode 100644 src/components/paper/OpdCardPaper.tsx
+ create mode 100644 src/services/api/imedApi.ts
+
+diff --git a/src/components/forms/FormShell.tsx b/src/components/forms/FormShell.tsx
+index 7ad0244..e9fc28d 100644
+--- a/src/components/forms/FormShell.tsx
++++ b/src/components/forms/FormShell.tsx
+@@ -17,21 +17,25 @@ interface Props {
+   patient: Pick<PersonRef, 'prefix' | 'firstName' | 'lastName' | 'hn' | 'age' | 'bloodGroup'>;
+   dateLabel?: string;
+   date: string;
+-  onDate: (v: string) => void;
++  onDate?: (v: string) => void;
+   /** หน้าตาเหมือนกระดาษ (A4) */
+   preview: ReactNode;
+   /** ฟอร์มกรอกข้อมูล */
+   children: ReactNode;
+-  onSave: (draft: boolean) => Promise<void> | void;
++  onSave?: (draft: boolean) => Promise<void> | void;
+   savedInfo?: string;
+   fileName: string;
+   /** แสดงหมายเหตุใต้ Preview */
+   previewNote?: string;
+   initialMode?: 'edit' | 'preview';
++  /** ดูอย่างเดียว (ข้อมูลดึงจาก iMed) — ไม่มีปุ่มบันทึก · สลับ “ดูข้อมูล / Preview” */
++  readOnly?: boolean;
++  /** แถบแจ้งใต้หัวฟอร์ม (เช่น ที่มาของข้อมูล) */
++  notice?: ReactNode;
+ }
+ 
+ /** โครงฟอร์มทุกขั้นตอนย่อย: หัวฟอร์ม + สลับ กรอกข้อมูล/Preview + Export + แถบผู้ป่วย + ปุ่มบันทึก */
+-export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f46e5'], patient, dateLabel = 'วันที่กรอกข้อมูล', date, onDate, preview, children, onSave, savedInfo, fileName, previewNote, initialMode = 'edit' }: Props) {
++export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f46e5'], patient, dateLabel = 'วันที่กรอกข้อมูล', date, onDate, preview, children, onSave, savedInfo, fileName, previewNote, initialMode = 'edit', readOnly, notice }: Props) {
+   const [mode, setMode] = useState<'edit' | 'preview'>(initialMode);
+   const [menu, setMenu] = useState(false);
+   const [saving, setSaving] = useState<null | 'draft' | 'final'>(null);
+@@ -48,6 +52,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
+   }, []);
+ 
+   async function save(draft: boolean) {
++    if (!onSave) return;
+     setSaving(draft ? 'draft' : 'final');
+     try {
+       await onSave(draft);
+@@ -74,7 +79,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
+         <div className="flex gap-0.5 rounded-[10px] border border-indigo-100 bg-white p-[3px]">
+           {(
+             [
+-              ['edit', 'กรอกข้อมูล', Pencil],
++              ['edit', readOnly ? 'ดูข้อมูล' : 'กรอกข้อมูล', readOnly ? FileText : Pencil],
+               ['preview', 'Preview', Eye],
+             ] as const
+           ).map(([k, l, I]) => (
+@@ -124,6 +129,8 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
+         </div>
+       </div>
+ 
++      {notice}
++
+       {/* แถบผู้ป่วย (ดึงจากการลงทะเบียน) */}
+       <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-blue-200 bg-white px-4 py-3">
+         {[
+@@ -143,7 +150,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
+           <span className="flex items-center gap-1 text-[11px] text-slate-400">
+             <Calendar className="h-3 w-3" /> {dateLabel}
+           </span>
+-          <TextInput type="date" className="!h-9 w-[170px]" value={date} onChange={(e) => onDate(e.target.value)} />
++          {readOnly || !onDate ? <span className="text-sm font-semibold">{thaiDate(date)}</span> : <TextInput type="date" className="!h-9 w-[170px]" value={date} onChange={(e) => onDate(e.target.value)} />}
+         </label>
+       </div>
+ 
+@@ -151,6 +158,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
+         {mode === 'edit' ? (
+           <motion.div key="edit" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="flex flex-col gap-4">
+             {children}
++            {!readOnly && (
+             <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-slate-200 bg-white p-4">
+               <span className="text-xs text-slate-400">{savedInfo ?? 'ยังไม่ได้บันทึก'}</span>
+               <span className="flex-1" />
+@@ -161,6 +169,7 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
+                 {saving === 'final' ? 'กำลังบันทึก…' : 'บันทึก'}
+               </Button>
+             </div>
++            )}
+           </motion.div>
+         ) : (
+           <motion.div key="preview" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex flex-col items-center gap-3 overflow-x-auto rounded-2xl bg-slate-200 p-6">
+diff --git a/src/components/paper/OpdCardPaper.tsx b/src/components/paper/OpdCardPaper.tsx
+new file mode 100644
+index 0000000..68b81d5
+--- /dev/null
++++ b/src/components/paper/OpdCardPaper.tsx
+@@ -0,0 +1,244 @@
++import type { CSSProperties, ReactNode } from 'react';
++import type { PersonRef } from '@/types';
++import type { OpdCardVisit, OpdLabGroup } from '@/services/api/imedApi';
++import { fullName, thaiDate } from '@/lib/format';
++import { Brand, Fld, Line, MUTE, Opt, Page, R, RULE, SectionHead, VALUE } from './Sheet';
++
++/**
++ * OPD card · Kidney transplantation (Nephro) — 2 หน้า A4 (ตรงกับ Figma · เนื้อหาครบตามต้นฉบับ)
++ * ข้อมูลทั้งหมดมาจาก iMed — ใช้สำหรับ Preview / พิมพ์ / Export
++ */
++const B = `1px solid ${RULE}`;
++const LIGHT = '1px solid #cbd5e1';
++const SM: CSSProperties = { fontSize: 11.8, lineHeight: 1.35 };
++
++const Box = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => <div style={{ border: B, padding: '7px 10px', display: 'flex', flexDirection: 'column', gap: 6, ...style }}>{children}</div>;
++/** แถวคอลัมน์ในกรอบ (เส้นแบ่งแนวตั้งระหว่างคอลัมน์) */
++function Grid({ children, top }: { children: ReactNode[]; top?: boolean }) {
++  return (
++    <div style={{ display: 'flex', border: B, borderTop: top ? 'none' : B, padding: '7px 10px' }}>
++      {children.map((c, i) => (
++        <div key={i} style={{ flex: 1, minWidth: 0, padding: i ? '0 0 0 8px' : '0 8px 0 0', borderLeft: i ? LIGHT : undefined, display: 'flex', flexDirection: 'column' }}>
++          {c}
++        </div>
++      ))}
++    </div>
++  );
++}
++const ColTitle = ({ children }: { children: ReactNode }) => <div style={{ fontSize: 12.4, fontWeight: 600, color: '#374151', borderBottom: LIGHT, paddingBottom: 2, marginBottom: 3 }}>{children}</div>;
++/** ป้าย | ค่า (เส้นประ) | หน่วย */
++function M({ label, value, unit, lw, chk }: { label: string; value?: string; unit?: string; lw: number; chk?: boolean }) {
++  return (
++    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, minHeight: 16, ...SM }}>
++      {chk !== undefined && <Opt on={chk} label="" style={{ gap: 0 }} />}
++      <span style={{ width: lw, flexShrink: 0 }}>{label}</span>
++      <span style={{ flex: 1, minWidth: 0, borderBottom: '1px dotted #9ca3af', padding: '0 2px', color: VALUE, fontWeight: 500, minHeight: 15 }}>{value || ' '}</span>
++      {unit !== undefined && <span style={{ fontSize: 10.5, color: '#6b7280', minWidth: 26 }}>{unit}</span>}
++    </div>
++  );
++}
++const NoteLine = ({ children }: { children?: ReactNode }) => <div style={{ borderBottom: '1px solid #cbd5e1', minHeight: 18, color: VALUE, fontWeight: 500, ...SM }}>{children ?? ' '}</div>;
++const labCol = (g: OpdLabGroup, lw: number, chk: string[] = []) => (
++  <>
++    <ColTitle>{g.title}</ColTitle>
++    {g.rows.map(([l, v, u]) => (
++      <M key={l} label={l} value={v} unit={u} lw={lw} chk={chk.includes(l) ? !!v : undefined} />
++    ))}
++  </>
++);
++
++function Head({ p, v }: { p: PersonRef; v: OpdCardVisit }) {
++  return (
++    <>
++      <Brand />
++      <R style={{ justifyContent: 'space-between' }}>
++        <span>
++          <span style={{ fontSize: 17, fontWeight: 600 }}>OPD card </span>
++          <span style={{ color: MUTE }}>Kidney transplantation (Nephro)</span>
++        </span>
++        <Fld label="Date" value={`${thaiDate(v.date)} , ${v.time} น.`} w={175} />
++      </R>
++      <R gap={12}>
++        <Fld label="HN" value={p.hn} w={88} />
++        <Fld label="VN" value={v.vn} w={100} />
++        <Fld label="ชื่อ" value={fullName(p)} grow />
++        <Fld label="เพศ" value={p.sex === 'male' ? 'ชาย' : 'หญิง'} w={50} />
++        <Fld label="อายุ" value={String(p.age)} w={38} after="ปี" />
++      </R>
++      <R gap={12}>
++        <Opt on={!!v.allergy} label="แพ้ยา" />
++        <Line value={v.allergy} w={150} />
++        <Opt on={!!v.coverage} label="สิทธิการรักษา" />
++        <Line value={v.coverage} w={150} />
++        <Fld label="OPD" value={v.opd} w={50} />
++      </R>
++    </>
++  );
++}
++
++export function OpdCardPaper({ p, v }: { p: PersonRef; v: OpdCardVisit }) {
++  const { kt, vitals: vs, note, labs, meds, summary } = v;
++  return (
++    <div className="paper-stack">
++      {/* ---------- หน้า 1 ---------- */}
++      <Page gap={7}>
++        <Head p={p} v={v} />
++        <SectionHead>ข้อมูลการปลูกถ่ายไต</SectionHead>
++        <Box>
++          <R gap={14}>
++            <span style={{ fontWeight: 600 }}>Status</span>
++            <Opt on={kt.deceased} label="Deceased donor KT" />
++            <Opt on={!kt.deceased} label="Living donor KT from" />
++            <Line value={kt.donorFrom} w={110} />
++            <Fld label="KT date" value={thaiDate(kt.ktDate)} w={120} />
++          </R>
++          <R gap={10}>
++            <Fld label="HLA MM A-B-DR-DQ" value={kt.hlaMm} w={86} />
++            <Opt on={!!kt.pra} label="PRA" />
++            <Line value={kt.pra} w={100} />
++            <Opt on={!!kt.preDsa} label="pre KT DSA" />
++            <Line value={kt.preDsa} grow />
++          </R>
++          <R gap={10}>
++            <Fld label="CDC crossmatch" value={kt.xm} w={86} />
++            <Opt on={kt.abo} label="ABOi" />
++            <Line w={74} />
++            <Opt on={kt.prevKt} label="Previous KT" />
++            <Opt on={!!kt.cmv} label="CMV IgG D/R" />
++            <Line value={kt.cmv} w={62} />
++          </R>
++        </Box>
++        <Grid>
++          {[
++            <>
++              <ColTitle>Vital sign</ColTitle>
++              {(
++                [
++                  ['BT', vs.bt, '°C'],
++                  ['PR', vs.pr, 'bpm'],
++                  ['BP', vs.bp, 'mmHg'],
++                  ['RR', vs.rr, '/min'],
++                  ['BW', vs.bw, 'kg'],
++                  ['BMI', vs.bmi, 'kg/m²'],
++                ] as const
++              ).map(([l, val, u]) => (
++                <M key={l} label={l} value={val} unit={u} lw={30} />
++              ))}
++            </>,
++            <>
++              <ColTitle>Clinical note</ColTitle>
++              <div style={SM}>
++                <Opt on={note.homeBp} label="Home BP" />
++              </div>
++              <NoteLine>{note.clinical}</NoteLine>
++              <NoteLine />
++              <NoteLine />
++              <NoteLine />
++            </>,
++            <>
++              <ColTitle>Physical examination</ColTitle>
++              <M label="Edema" value={note.edema} lw={42} />
++              <div style={{ display: 'flex', gap: 10, ...SM, marginTop: 3 }}>
++                <Opt on={note.tremor} label="Tremor" />
++                <Opt on={note.oralUlcer} label="Oral ulcer" />
++              </div>
++              <NoteLine />
++              <NoteLine />
++              <NoteLine />
++            </>,
++            <>
++              <ColTitle>Pharmacist/Dietician note</ColTitle>
++              <NoteLine>{note.pharm}</NoteLine>
++              <NoteLine />
++              <NoteLine />
++              <NoteLine />
++              <NoteLine />
++            </>,
++          ]}
++        </Grid>
++        <SectionHead>ผลตรวจทางห้องปฏิบัติการ</SectionHead>
++        <Grid>{[labCol(labs.drug, 66, ['TAC C0', 'CSA C0/C2', 'SRL C0', 'EVL C0']), labCol(labs.heme, 72), labCol(labs.chem, 80)]}</Grid>
++        <Grid top>{[labCol(labs.lipid, 72), labCol(labs.urine24, 92), labCol(labs.urine, 72, ['UA sp.gr', 'UPCI'])]}</Grid>
++      </Page>
++
++      {/* ---------- หน้า 2 ---------- */}
++      <Page gap={7}>
++        <R style={{ justifyContent: 'space-between' }}>
++          <span style={{ fontWeight: 600 }}>OPD card (ต่อ)</span>
++          <span style={{ color: MUTE }}>
++            HN {p.hn} · {fullName(p)} · {thaiDate(v.date)}
++          </span>
++        </R>
++        <SectionHead>ยาที่ใช้ปัจจุบัน</SectionHead>
++        <Grid>
++          {[
++            <>
++              <ColTitle>ยากดภูมิคุ้มกัน</ColTitle>
++              {meds.immuno.map(([l, val]) => (
++                <M key={l} label={l} value={val} lw={88} />
++              ))}
++            </>,
++            <>
++              <ColTitle>ยาป้องกัน / ยาอื่น</ColTitle>
++              {meds.prophylaxis.map(([l, val]) => (
++                <M key={l} label={l} value={val} lw={118} />
++              ))}
++            </>,
++          ]}
++        </Grid>
++        <Grid top>
++          {[
++            <>
++              <ColTitle>ยาอื่น ๆ</ColTitle>
++              {meds.misc.map(([l, val]) => (
++                <M key={l} label={l} value={val} lw={50} />
++              ))}
++            </>,
++            <>
++              <ColTitle>Review medications</ColTitle>
++              {[...meds.review, '', ''].slice(0, Math.max(7, meds.review.length)).map((r, i) => (
++                <NoteLine key={i}>{r || undefined}</NoteLine>
++              ))}
++            </>,
++          ]}
++        </Grid>
++        <SectionHead>Summary</SectionHead>
++        <Box>
++          <R gap={20} style={{ alignItems: 'center' }}>
++            <span style={{ fontWeight: 600 }}>Summary</span>
++            {(['Stable', 'Deteriorated', 'Improved graft function'] as const).map((g) => (
++              <Opt key={g} on={summary.graft === g} label={g} />
++            ))}
++          </R>
++          <div style={{ display: 'flex', gap: 18 }}>
++            {[summary.left, summary.right].map((col, ci) => (
++              <div key={ci} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
++                {col.map(([l, val]) => (
++                  <R key={l} gap={0}>
++                    <Fld label={l} labelW={ci ? 100 : 140} value={val === 'ไม่มี' ? '' : val} grow />
++                  </R>
++                ))}
++              </div>
++            ))}
++          </div>
++        </Box>
++        <SectionHead>Last investigations</SectionHead>
++        <Box>
++          {v.last.map(([l, val]) => (
++            <R key={l} gap={0}>
++              <Fld label={l} labelW={150} value={val} grow />
++            </R>
++          ))}
++        </Box>
++        <NoteLine />
++        <NoteLine />
++        <div style={{ height: 12 }} />
++        <R gap={14}>
++          <Fld label="Follow up" value={v.followUp} w={200} />
++          <span style={{ flex: 1 }} />
++          <Fld label="Physician" value={v.physician} w={220} after="M.D." />
++        </R>
++      </Page>
++    </div>
++  );
++}
+diff --git a/src/components/stage/postop/OpdPanel.tsx b/src/components/stage/postop/OpdPanel.tsx
+index 644c8d8..179ef13 100644
+--- a/src/components/stage/postop/OpdPanel.tsx
++++ b/src/components/stage/postop/OpdPanel.tsx
+@@ -1,23 +1,27 @@
+-import { useEffect, useState } from 'react';
++import { useState, type ReactNode } from 'react';
+ import { motion } from 'framer-motion';
+-import { AlertTriangle, Pill, Plus, Stethoscope, X } from 'lucide-react';
++import { Activity, AlertTriangle, Clock, FlaskConical, HeartPulse, Pill, Stethoscope, type LucideIcon } from 'lucide-react';
+ import type { PersonKind, PersonRef } from '@/types';
+-import type { Complication, MedAdjust, OpdComplications, OpdMeds, OpdVisit, OpdVisits } from '@/services/api/postopApi';
++import type { OpdVisits } from '@/services/api/postopApi';
++import { imedApi, type ImedComplication, type ImedMedAdjust, type OpdCardDto, type OpdLabGroup } from '@/services/api/imedApi';
+ import { FormShell } from '@/components/forms/FormShell';
+-import { FSection, FormLoading } from '@/components/forms/FormBits';
+-import { Field, Select, TextInput, Textarea } from '@/components/ui/Form';
+-import { Button } from '@/components/ui/Button';
++import { FormLoading } from '@/components/forms/FormBits';
+ import { A4Page, LogoBox, Row, tableStyle, td, th } from '@/components/paper/Paper';
++import { OpdCardPaper } from '@/components/paper/OpdCardPaper';
++import { useAsync } from '@/hooks/useAsync';
+ import { cn, fullName, thaiDate } from '@/lib/format';
+ import { SubNav, usePostop } from './common';
+ import { FollowupRounds } from './FollowupRounds';
+ 
++/**
++ * ติดตาม OPD — ทุกขั้นตอนย่อย “ดูอย่างเดียว” (ข้อมูลดึงจาก iMed · แพทย์/พยาบาลบันทึกใน iMed ตามปกติ)
++ * 1 OPD card KT (ผู้รับ) / บันทึกการตรวจ OPD (ผู้บริจาค) · 2 ยากดภูมิ / การปรับยา · 3 ภาวะแทรกซ้อน / Admit ซ้ำ
++ */
+ interface P {
+   person: PersonRef;
+   kind: PersonKind;
+   filled: boolean;
+ }
+-const TAC_TARGET: [number, number] = [8, 10];
+ 
+ function Head({ person, title }: { person: PersonRef; title: string }) {
+   return (
+@@ -33,18 +37,86 @@ function Head({ person, title }: { person: PersonRef; title: string }) {
+   );
+ }
+ 
++/** แถบแจ้ง “ดึงจาก iMed · ดูอย่างเดียว” */
++function ImedNotice({ updatedAt, text }: { updatedAt?: string; text?: string }) {
++  return (
++    <div className="flex items-center gap-2.5 rounded-2xl border border-cyan-200 bg-cyan-50 px-3.5 py-2.5 text-[12.5px] text-cyan-800">
++      <Clock className="h-4 w-4 shrink-0 text-cyan-700" />
++      <span>
++        {text ?? 'ข้อมูลทั้งหมดดึงจาก iMed อัตโนมัติ (แพทย์/พยาบาลบันทึกใน iMed ตามปกติ) · หน้านี้ดูและพิมพ์ได้อย่างเดียว'}
++        {updatedAt && ` · อัปเดตล่าสุด ${thaiDate(updatedAt)} ${updatedAt.slice(11, 16)} น.`}
++      </span>
++    </div>
++  );
++}
++
++/** การ์ด + หัวข้อ (ไอคอน · ชื่อ · ป้ายที่มาจาก iMed) */
++function VCard({ icon: Icon, tint, fg, title, src, badge, children }: { icon?: LucideIcon; tint?: string; fg?: string; title?: string; src?: string; badge?: ReactNode; children: ReactNode }) {
++  return (
++    <section className="flex flex-col gap-2.5 rounded-[14px] border border-slate-200 bg-white px-4 py-3.5">
++      {title && (
++        <div className="flex items-center gap-2.5">
++          {Icon && (
++            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px]" style={{ background: tint, color: fg }}>
++              <Icon className="h-[18px] w-[18px]" />
++            </span>
++          )}
++          <span className="text-[15px] font-bold text-slate-900">{title}</span>
++          {badge}
++          <span className="flex-1" />
++          {src && <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10.5px] font-semibold text-blue-700">{src}</span>}
++        </div>
++      )}
++      {children}
++    </section>
++  );
++}
++const Chip = ({ children, tone = 'slate' }: { children: ReactNode; tone?: 'slate' | 'green' | 'violet' | 'orange' }) => (
++  <span className={cn('inline-flex rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold', { slate: 'bg-slate-100 text-slate-600', green: 'bg-green-100 text-green-700', violet: 'bg-violet-100 text-violet-700', orange: 'bg-orange-100 text-orange-700' }[tone])}>{children}</span>
++);
++/** แถว ป้าย | ค่า (ค่าว่าง = “—”) */
++function KV({ k, v, chipEmpty }: { k: string; v: string; chipEmpty?: string }) {
++  return (
++    <div className="flex min-h-[34px] items-center gap-2.5 border-b border-slate-100 py-1.5 last:border-b-0">
++      <span className="w-[160px] shrink-0 text-[12.5px] text-slate-700">{k}</span>
++      <span className="flex flex-1 flex-wrap items-center gap-1.5 text-[13.5px] font-semibold text-slate-900">
++        {v === 'ไม่มี' || (!v && chipEmpty) ? <Chip>{v || chipEmpty}</Chip> : v || '—'}
++      </span>
++    </div>
++  );
++}
++function LabTable({ g }: { g: OpdLabGroup }) {
++  return (
++    <div className="overflow-hidden rounded-[10px] border border-slate-200">
++      <div className="flex items-center gap-1.5 border-b border-slate-200 bg-slate-50 px-2.5 py-[7px]">
++        <span className="text-[12.5px] font-bold text-slate-900">{g.title}</span>
++        <span className="flex-1" />
++        {g.date && <span className="text-[11px] font-medium text-slate-500">{thaiDate(g.date)}</span>}
++      </div>
++      {g.rows.map(([l, v, u], i) => (
++        <div key={l} className={cn('flex items-center px-2.5 py-[5px]', i > 0 && 'border-t border-slate-100')}>
++          <span className="flex-1 text-[12.5px] text-slate-600">{l}</span>
++          <span className={cn('text-[12.5px] font-semibold', v ? 'text-slate-900' : 'text-slate-300')}>{v ? `${v}${u ? ` ${u}` : ''}` : '—'}</span>
++        </div>
++      ))}
++    </div>
++  );
++}
++
+ export function OpdPanel({ person, kind, filled }: P) {
+   const [sel, setSel] = useState('visits');
+   const items = [
+-    { key: 'visits', num: '1', title: 'บันทึกการตรวจ OPD', sub: 'บันทึกผลการตรวจแต่ละครั้ง', icon: Stethoscope, tint: '#dbeafe', fg: '#2563eb', done: filled },
+-    { key: 'meds', num: '2', title: kind === 'donor' ? 'ยา / การปรับยา' : 'ยากดภูมิ / การปรับยา', sub: 'ประวัติการปรับขนาดยา', icon: Pill, tint: '#fce7f3', fg: '#be185d' },
+-    { key: 'comp', num: '3', title: 'ภาวะแทรกซ้อน / Admit ซ้ำ', sub: 'Rejection, ติดเชื้อ, อื่นๆ', icon: AlertTriangle, tint: '#ffedd5', fg: '#c2410c' },
++    kind === 'recipient'
++      ? { key: 'visits', num: '1', title: 'OPD card KT', sub: 'ดูอย่างเดียว · ข้อมูลจาก iMed', icon: Activity, tint: '#dbeafe', fg: '#2563eb', done: filled }
++      : { key: 'visits', num: '1', title: 'บันทึกการตรวจ OPD', sub: 'ดูอย่างเดียว · ข้อมูลจาก iMed', icon: Stethoscope, tint: '#dbeafe', fg: '#2563eb', done: filled },
++    { key: 'meds', num: '2', title: kind === 'donor' ? 'ยา / การปรับยา' : 'ยากดภูมิ / การปรับยา', sub: 'ประวัติการปรับยา · จาก iMed', icon: Pill, tint: '#fce7f3', fg: '#be185d', done: filled },
++    { key: 'comp', num: '3', title: 'ภาวะแทรกซ้อน / Admit ซ้ำ', sub: 'Rejection, ติดเชื้อ · จาก iMed', icon: AlertTriangle, tint: '#ffedd5', fg: '#c2410c', done: filled },
+   ];
+   return (
+     <>
+       <FollowupRounds person={person} kind={kind} />
+       <SubNav items={items} sel={sel} onSel={setSel}>
+-        {sel === 'visits' && <Visits person={person} kind={kind} filled={filled} />}
++        {sel === 'visits' && (kind === 'recipient' ? <OpdCard person={person} /> : <DonorVisits person={person} kind={kind} filled={filled} />)}
+         {sel === 'meds' && <MedsAdj person={person} kind={kind} filled={filled} />}
+         {sel === 'comp' && <Comps person={person} kind={kind} filled={filled} />}
+       </SubNav>
+@@ -52,161 +124,204 @@ export function OpdPanel({ person, kind, filled }: P) {
+   );
+ }
+ 
+-const emptyVisit = (): OpdVisit => ({ date: new Date().toISOString().slice(0, 10), pod: '', doctor: 'นพ.สมเกียรติ วงศ์ไทย', weight: '', bp: '', pulse: '', urine: '', cr: '', bun: '', k: '', tac: '', assessment: '', plan: '', nextDate: '', nextLab: '' });
+-
+-function Visits({ person, kind, filled }: P) {
+-  const { data: f, patch, save, info } = usePostop<OpdVisits>(kind, person, 'opdVisits', filled);
++// ================= 1 OPD card KT (ผู้รับ) =================
++function OpdCard({ person }: { person: PersonRef }) {
++  const { data } = useAsync<OpdCardDto>(() => imedApi.opdCard(person), [person.id]);
+   const [idx, setIdx] = useState(0);
+-  useEffect(() => {
+-    if (f) setIdx(Math.max(0, f.visits.length - 1));
+-    // eslint-disable-next-line react-hooks/exhaustive-deps
+-  }, [f === null]);
+-  if (!f) return <FormLoading />;
+-  const v = f.visits[idx];
+-  const setV = (p: Partial<OpdVisit>) => patch({ visits: f.visits.map((x, j) => (j === idx ? { ...x, ...p } : x)) });
+-  const tacN = parseFloat(v?.tac ?? '');
+-  const tacOff = kind === 'recipient' && !Number.isNaN(tacN) && (tacN < TAC_TARGET[0] || tacN > TAC_TARGET[1]);
+-  const addVisit = () => {
+-    patch({ visits: [...f.visits, emptyVisit()] });
+-    setIdx(f.visits.length);
+-  };
+-
+-  const unitField = (label: string, k: keyof OpdVisit, unit: string, warn = false) => (
+-    <Field label={label}>
+-      <TextInput suffix={unit} className={cn(warn && '!border-orange-300 !bg-orange-50')} value={v[k]} onChange={(e) => setV({ [k]: e.target.value } as Partial<OpdVisit>)} />
+-    </Field>
++  const [all, setAll] = useState(false);
++  if (!data) return <FormLoading />;
++  const v = data.visits[idx];
++  if (!v) return <ImedNotice text="ยังไม่มีข้อมูลการตรวจ OPD ใน iMed" />;
++  const { kt, vitals: vs, note, labs, meds, summary } = v;
++  const missing = Object.values(labs).reduce((n, g) => n + g.rows.filter((r) => !r[1]).length, 0);
++  const shown = all ? data.visits : data.visits.slice(0, 4);
++  const tiles: [string, string, string, string][] = [
++    ['Status', kt.deceased ? 'Deceased donor KT' : 'Living donor KT', `${kt.donorFrom ? `จาก${kt.donorFrom} · ` : ''}KT date ${thaiDate(kt.ktDate)}`, 'bg-cyan-100 text-cyan-700'],
++    ['HLA MM A-B-DR-DQ', kt.hlaMm, `CDC crossmatch · ${kt.xm}`, 'bg-violet-100 text-violet-700'],
++    ['PRA / pre KT DSA', kt.pra || '—', kt.preDsa || '—', 'bg-rose-100 text-rose-700'],
++    ['CMV IgG D/R', kt.cmv || '—', `ABOi · ${kt.abo ? 'ใช่' : 'ไม่ใช่'} · Previous KT · ${kt.prevKt ? 'มี' : 'ไม่มี'}`, 'bg-amber-100 text-amber-700'],
++  ];
++  const medRow = ([n, d]: [string, string]) => (
++    <div key={n} className="flex items-center gap-2.5 rounded-[10px] bg-violet-50/60 px-2.5 py-2">
++      <span className="text-[13.5px] font-bold text-violet-900">{n}</span>
++      <span className="text-[12.5px] text-slate-500">{d}</span>
++    </div>
+   );
+-
++  const sub = (t: string) => <p className="pt-1 text-center text-[11px] font-medium text-slate-500">{t}</p>;
+   return (
+     <FormShell
+-      title="บันทึกการตรวจ OPD"
+-      desc={`1 ติดตาม OPD · บันทึกผลการตรวจแต่ละครั้งหลัง${kind === 'donor' ? 'บริจาคไต' : 'ปลูกถ่ายไต'}`}
+-      icon={Stethoscope}
++      readOnly
++      title="OPD card KT"
++      desc="1 ติดตาม OPD · ดูอย่างเดียว · ข้อมูลจาก iMed"
++      icon={Activity}
+       gradient={['#3b82f6', '#2563eb']}
+       patient={person}
+-      dateLabel="วันที่ตรวจ"
+-      date={v?.date ?? f.date}
+-      onDate={(date) => (v ? setV({ date }) : patch({ date }))}
+-      onSave={() => save()}
+-      savedInfo={info}
+-      fileName={`KT-opd-visits-${person.hn}`}
+-      preview={
+-        <A4Page>
+-          <Head person={person} title="บันทึกการตรวจติดตาม OPD" />
+-          <table style={{ ...tableStyle, fontSize: 11.5 }}>
+-            <thead>
+-              <tr>
+-                {['ครั้งที่', 'วันที่', 'POD', 'BW', 'BP', 'Urine', 'Cr', 'K', 'Tac', 'การประเมิน / แผน'].map((h) => (
+-                  <th key={h} style={th}>
+-                    {h}
+-                  </th>
+-                ))}
+-              </tr>
+-            </thead>
+-            <tbody>
+-              {f.visits.map((x, i) => (
+-                <tr key={i}>
+-                  <td style={{ ...td, textAlign: 'center' }}>{i + 1}</td>
+-                  <td style={td}>{thaiDate(x.date)}</td>
+-                  <td style={td}>{x.pod}</td>
+-                  <td style={td}>{x.weight}</td>
+-                  <td style={td}>{x.bp}</td>
+-                  <td style={td}>{x.urine}</td>
+-                  <td style={td}>{x.cr}</td>
+-                  <td style={td}>{x.k}</td>
+-                  <td style={td}>{x.tac}</td>
+-                  <td style={td}>
+-                    {x.assessment}
+-                    {x.plan ? ` · ${x.plan}` : ''}
+-                  </td>
+-                </tr>
+-              ))}
+-            </tbody>
+-          </table>
+-        </A4Page>
+-      }
++      dateLabel={`วันที่ตรวจ · VN ${v.vn}`}
++      date={v.date}
++      fileName={`KT-opd-card-${person.hn}-${v.date}`}
++      notice={<ImedNotice updatedAt={data.updatedAt} />}
++      preview={<OpdCardPaper p={person} v={v} />}
+     >
+-      <section className="flex flex-col gap-4 rounded-[14px] border border-slate-200 bg-white p-[18px]">
+-        <div className="flex flex-wrap items-center gap-2">
+-          <span className="text-[13px] font-semibold text-slate-600">ครั้งที่</span>
+-          {f.visits.map((x, i) => (
+-            <button key={i} type="button" onClick={() => setIdx(i)} className={cn('relative rounded-[10px] border px-3 py-2 text-[13px]', i === idx ? 'border-indigo-300 font-bold text-indigo-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50')}>
+-              {i === idx && <motion.span layoutId="opd-visit" className="absolute inset-0 rounded-[10px] bg-indigo-50" />}
+-              <span className="relative">
+-                {i + 1} <span className="ml-1 text-xs font-normal text-slate-400">{thaiDate(x.date).slice(0, 6)}</span>
++      <VCard>
++        <div className="flex items-center gap-2">
++          <span className="text-sm font-bold text-slate-900">ครั้งที่มาตรวจ</span>
++          <Chip>{data.visits.length} ครั้ง</Chip>
++          <span className="flex-1" />
++          {data.visits.length > 4 && (
++            <button type="button" onClick={() => setAll(!all)} className="text-xs font-semibold text-brand-indigo">
++              {all ? 'ย่อ ▴' : 'ดูทั้งหมด ▾'}
++            </button>
++          )}
++        </div>
++        <div className="flex flex-wrap gap-2">
++          {shown.map((x, i) => (
++            <button key={x.vn} type="button" onClick={() => setIdx(i)} className={cn('relative flex flex-col items-start rounded-[10px] border px-3 py-1.5 text-left', i === idx ? 'border-2 border-brand-indigo' : 'border-slate-200 hover:bg-slate-50')}>
++              {i === idx && <motion.span layoutId="opd-card-visit" className="absolute inset-0 rounded-[8px] bg-indigo-50" />}
++              <span className="relative text-[13px] font-bold text-slate-900">{thaiDate(x.date)}</span>
++              <span className="relative text-[11px] text-slate-500">
++                VN {x.vn}
++                {i === 0 && ' · ล่าสุด'}
+               </span>
+             </button>
+           ))}
+-          <span className="flex-1" />
+-          <Button variant="secondary" size="sm" icon={Plus} onClick={addVisit}>
+-            เพิ่มครั้งใหม่
+-          </Button>
+         </div>
+-        {!v ? (
+-          <p className="py-8 text-center text-sm text-slate-400">ยังไม่มีบันทึกการตรวจ — กด “เพิ่มครั้งใหม่”</p>
+-        ) : (
+-          <motion.div key={idx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
+-            <div className="grid gap-3 md:grid-cols-[1fr_1fr_1.2fr]">
+-              <Field label="วันที่ตรวจ">
+-                <TextInput type="date" value={v.date} onChange={(e) => setV({ date: e.target.value })} />
+-              </Field>
+-              {unitField('POD', 'pod', 'วัน')}
+-              <Field label="แพทย์ผู้ตรวจ">
+-                <Select value={v.doctor} onChange={(e) => setV({ doctor: e.target.value })}>
+-                  <option>นพ.สมเกียรติ วงศ์ไทย</option>
+-                  <option>พญ.อรุณี ใจดี</option>
+-                </Select>
+-              </Field>
++      </VCard>
++
++      <motion.div key={v.vn} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
++        <VCard title="ข้อมูลการปลูกถ่ายไต">
++          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
++            {tiles.map(([k, val, s, cls]) => (
++              <div key={k} className={cn('flex flex-col gap-0.5 rounded-xl px-3 py-2.5', cls.split(' ')[0])}>
++                <span className={cn('text-[11px] font-semibold', cls.split(' ')[1])}>{k}</span>
++                <span className="text-sm font-bold text-slate-900">{val}</span>
++                <span className="text-[11px] text-slate-500">{s}</span>
++              </div>
++            ))}
++          </div>
++        </VCard>
++
++        <VCard icon={HeartPulse} tint="#dcfce7" fg="#15803d" title="Vital sign · Clinical note · Physical examination" src={`iMed · OPD ${v.opd}`}>
++          <div className="grid grid-cols-3 gap-2 lg:grid-cols-6">
++            {(
++              [
++                ['BT', vs.bt, '°C'],
++                ['PR', vs.pr, 'bpm'],
++                ['BP', vs.bp, 'mmHg'],
++                ['RR', vs.rr, '/min'],
++                ['BW', vs.bw, 'kg'],
++                ['BMI', vs.bmi, 'kg/m²'],
++              ] as const
++            ).map(([k, val, u]) => (
++              <div key={k} className="rounded-[10px] border border-slate-200 px-2.5 py-2">
++                <p className="text-[11px] text-slate-500">{k}</p>
++                <p className="text-base font-bold text-slate-900">
++                  {val || '—'} <span className="text-[11px] font-medium text-slate-400">{u}</span>
++                </p>
++              </div>
++            ))}
++          </div>
++          <div className="grid gap-x-6 md:grid-cols-2">
++            <div>
++              <KV k="Clinical note" v={note.clinical} />
++              <KV k="Home BP" v={note.homeBp ? 'วัด' : ''} chipEmpty="ไม่ได้วัด" />
+             </div>
+-            <p className="text-[13px] font-bold text-slate-600">สัญญาณชีพ</p>
+-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+-              {unitField('น้ำหนัก', 'weight', 'kg')}
+-              {unitField('ความดัน', 'bp', 'mmHg')}
+-              {unitField('ชีพจร', 'pulse', '/min')}
+-              {unitField('ปัสสาวะ / วัน', 'urine', 'ml')}
++            <div>
++              <KV k="Edema" v={note.edema} />
++              <KV k="Tremor / Oral ulcer" v={[note.tremor && 'Tremor', note.oralUlcer && 'Oral ulcer'].filter(Boolean).join(', ')} chipEmpty="ไม่มี" />
+             </div>
+-            <p className="text-[13px] font-bold text-slate-600">ผลตรวจทางห้องปฏิบัติการ</p>
+-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+-              {unitField('Creatinine', 'cr', 'mg/dL')}
+-              {unitField('BUN', 'bun', 'mg/dL')}
+-              {unitField('Potassium', 'k', 'mmol/L')}
+-              {kind === 'recipient' && unitField('Tacrolimus level', 'tac', 'ng/mL', tacOff)}
++          </div>
++          <KV k="Pharmacist/Dietician" v={note.pharm} />
++        </VCard>
++
++        <VCard icon={FlaskConical} tint="#e0e7ff" fg="#4338ca" title="ผลตรวจทางห้องปฏิบัติการ" src="iMed · LIS" badge={missing > 0 ? <Chip>ไม่มีผลใน VN นี้ {missing}</Chip> : undefined}>
++          <div className="grid gap-2.5 md:grid-cols-2">
++            <div className="flex flex-col gap-2.5">
++              <LabTable g={labs.drug} />
++              <LabTable g={labs.heme} />
++              <LabTable g={labs.lipid} />
+             </div>
+-            {tacOff && <p className="-mt-2 text-xs font-medium text-orange-700">Tacrolimus อยู่นอกเป้า {TAC_TARGET[0]}–{TAC_TARGET[1]} ng/mL</p>}
+-            <div className="grid gap-3 md:grid-cols-2">
+-              <Field label="อาการ / การประเมิน">
+-                <Textarea className="!min-h-[72px]" value={v.assessment} onChange={(e) => setV({ assessment: e.target.value })} />
+-              </Field>
+-              <Field label="แผนการรักษา">
+-                <Textarea className="!min-h-[72px]" value={v.plan} onChange={(e) => setV({ plan: e.target.value })} />
+-              </Field>
+-              <Field label="นัดครั้งถัดไป">
+-                <TextInput type="date" value={v.nextDate} onChange={(e) => setV({ nextDate: e.target.value })} />
+-              </Field>
+-              <Field label="ส่งตรวจครั้งถัดไป">
+-                <TextInput value={v.nextLab} onChange={(e) => setV({ nextLab: e.target.value })} />
+-              </Field>
++            <div className="flex flex-col gap-2.5">
++              <LabTable g={labs.chem} />
++              <LabTable g={{ ...labs.urine, title: 'Urine', rows: [...labs.urine24.rows, ...labs.urine.rows] }} />
+             </div>
+-          </motion.div>
+-        )}
+-      </section>
++          </div>
++        </VCard>
++
++        <VCard icon={Pill} tint="#ede9fe" fg="#6d28d9" title="ยาที่ใช้ปัจจุบัน" src="iMed · ใบสั่งยา" badge={<Chip tone="violet">{[...meds.immuno, ...meds.prophylaxis, ...meds.misc].filter((m) => m[1]).length + meds.review.length} รายการ</Chip>}>
++          <div className="grid gap-4 md:grid-cols-2">
++            <div className="flex flex-col gap-1.5">
++              {sub('ยากดภูมิคุ้มกัน')}
++              {meds.immuno.filter((m) => m[1]).map(medRow)}
++              {sub('Review medications')}
++              {meds.review.map((r) => {
++                const m = r.match(/^(\S+)\s+(.*)$/);
++                return medRow(m ? [m[1], m[2]] : [r, '']);
++              })}
++            </div>
++            <div className="flex flex-col gap-1.5">
++              {sub('ยาป้องกัน / ยาอื่น')}
++              {[...meds.prophylaxis, ...meds.misc].filter((m) => m[1]).map(medRow)}
++            </div>
++          </div>
++        </VCard>
++
++        <VCard icon={Activity} tint="#ffe4e6" fg="#be123c" title="Summary · Last investigations" src="iMed · บันทึกแพทย์">
++          <div className="flex min-h-[34px] items-center gap-2.5 border-b border-slate-100 py-1.5">
++            <span className="w-[160px] shrink-0 text-[12.5px] text-slate-700">Graft function</span>
++            <Chip tone={summary.graft === 'Deteriorated' ? 'orange' : 'green'}>{summary.graft}</Chip>
++          </div>
++          <div className="grid gap-x-6 md:grid-cols-2">
++            <div>{summary.left.map(([k, val]) => <KV key={k} k={k} v={val} />)}</div>
++            <div>{summary.right.map(([k, val]) => <KV key={k} k={k} v={val} />)}</div>
++          </div>
++          {sub('Last investigations')}
++          {v.last.map(([k, val]) => (
++            <KV key={k} k={k} v={val} />
++          ))}
++        </VCard>
++
++        <VCard>
++          <div className="flex flex-wrap gap-6">
++            <div>
++              <p className="text-[13px] text-slate-500">Follow up</p>
++              <p className="text-[13px] font-bold text-slate-900">{v.followUp || '—'}</p>
++            </div>
++            <div>
++              <p className="text-[13px] text-slate-500">Physician</p>
++              <p className="text-[13px] font-bold text-slate-900">{v.physician || '—'}</p>
++            </div>
++          </div>
++        </VCard>
++      </motion.div>
+     </FormShell>
+   );
+ }
+ 
+-function MedsAdj({ person, kind, filled }: P) {
+-  const { data: f, patch, save, info } = usePostop<OpdMeds>(kind, person, 'opdMeds', filled);
++// ================= 1 บันทึกการตรวจ OPD (ผู้บริจาค · ดูอย่างเดียว) =================
++function DonorVisits({ person, kind, filled }: P) {
++  const { data: f } = usePostop<OpdVisits>(kind, person, 'opdVisits', filled);
+   if (!f) return <FormLoading />;
+-  const set = (i: number, p: Partial<MedAdjust>) => patch({ rows: f.rows.map((r, j) => (j === i ? { ...r, ...p } : r)) });
++  const cols = ['ครั้งที่', 'วันที่', 'POD', 'BW', 'BP', 'Urine', 'Cr', 'K', 'การประเมิน / แผน'];
++  const row = (x: OpdVisits['visits'][number], i: number) => [String(i + 1), thaiDate(x.date), x.pod, x.weight, x.bp, x.urine, x.cr, x.k, [x.assessment, x.plan].filter(Boolean).join(' · ')];
+   return (
+-    <FormShell title={kind === 'donor' ? 'ยา / การปรับยา' : 'ยากดภูมิ / การปรับยา'} desc="2 ติดตาม OPD · ประวัติการปรับขนาดยา" icon={Pill} gradient={['#ec4899', '#be185d']} patient={person} date={f.date} onDate={(date) => patch({ date })} onSave={() => save()} savedInfo={info} fileName={`KT-med-adjust-${person.hn}`}
++    <FormShell
++      readOnly
++      title="บันทึกการตรวจ OPD"
++      desc="1 ติดตาม OPD · ดูอย่างเดียว · ข้อมูลจาก iMed"
++      icon={Stethoscope}
++      gradient={['#3b82f6', '#2563eb']}
++      patient={person}
++      dateLabel="ข้อมูล ณ วันที่"
++      date={f.date}
++      fileName={`KT-opd-visits-${person.hn}`}
++      notice={<ImedNotice />}
+       preview={
+         <A4Page>
+-          <Head person={person} title="ประวัติการปรับยา" />
+-          <table style={tableStyle}>
++          <Head person={person} title="บันทึกการตรวจติดตาม OPD" />
++          <table style={{ ...tableStyle, fontSize: 11.5 }}>
+             <thead>
+               <tr>
+-                {['วันที่', 'ยา', 'เดิม', 'ใหม่', 'เหตุผล'].map((h) => (
++                {cols.map((h) => (
+                   <th key={h} style={th}>
+                     {h}
+                   </th>
+@@ -214,13 +329,13 @@ function MedsAdj({ person, kind, filled }: P) {
+               </tr>
+             </thead>
+             <tbody>
+-              {f.rows.map((r, i) => (
++              {f.visits.map((x, i) => (
+                 <tr key={i}>
+-                  <td style={td}>{thaiDate(r.date)}</td>
+-                  <td style={td}>{r.drug}</td>
+-                  <td style={td}>{r.from}</td>
+-                  <td style={td}>{r.to}</td>
+-                  <td style={td}>{r.reason}</td>
++                  {row(x, i).map((c, j) => (
++                    <td key={j} style={{ ...td, textAlign: j === 0 ? 'center' : undefined }}>
++                      {c}
++                    </td>
++                  ))}
+                 </tr>
+               ))}
+             </tbody>
+@@ -228,81 +343,101 @@ function MedsAdj({ person, kind, filled }: P) {
+         </A4Page>
+       }
+     >
+-      <FSection title="ประวัติการปรับยา" right={<Button variant="secondary" size="sm" icon={Plus} onClick={() => patch({ rows: [{ date: new Date().toISOString().slice(0, 10), drug: '', from: '', to: '', reason: '' }, ...f.rows] })}>เพิ่มการปรับยา</Button>}>
+-        {f.rows.length === 0 && <p className="text-[13px] text-slate-400">ยังไม่มีการปรับยา</p>}
+-        {f.rows.map((r, i) => (
+-          <div key={i} className="grid grid-cols-[150px_1fr_110px_110px_1.4fr_28px] items-center gap-2 rounded-[10px] bg-slate-50 px-3 py-2">
+-            <TextInput type="date" className="!h-8" value={r.date} onChange={(e) => set(i, { date: e.target.value })} />
+-            <TextInput className="!h-8" placeholder="ยา" value={r.drug} onChange={(e) => set(i, { drug: e.target.value })} />
+-            <TextInput className="!h-8" placeholder="เดิม" value={r.from} onChange={(e) => set(i, { from: e.target.value })} />
+-            <TextInput className="!h-8" placeholder="ใหม่" value={r.to} onChange={(e) => set(i, { to: e.target.value })} />
+-            <TextInput className="!h-8" placeholder="เหตุผล" value={r.reason} onChange={(e) => set(i, { reason: e.target.value })} />
+-            <button type="button" onClick={() => patch({ rows: f.rows.filter((_, j) => j !== i) })} className="rounded p-1 text-slate-400 hover:bg-slate-200" aria-label="ลบ">
+-              <X className="h-4 w-4" />
+-            </button>
+-          </div>
+-        ))}
+-      </FSection>
++      <ViewTable title="การตรวจ OPD (จาก iMed)" cols={cols} rows={f.visits.map(row)} empty="ยังไม่มีข้อมูลการตรวจ OPD ใน iMed" />
+     </FormShell>
+   );
+ }
+ 
+-const COMP_TYPES = ['Acute rejection', 'ติดเชื้อ', 'CMV / BK virus', 'Delayed graft function', 'ภาวะแทรกซ้อนทางศัลยกรรม', 'อื่นๆ'];
+-
+-function Comps({ person, kind, filled }: P) {
+-  const { data: f, patch, save, info } = usePostop<OpdComplications>(kind, person, 'opdComplications', filled);
+-  if (!f) return <FormLoading />;
+-  const set = (i: number, p: Partial<Complication>) => patch({ rows: f.rows.map((r, j) => (j === i ? { ...r, ...p } : r)) });
++/** ตารางดูอย่างเดียว */
++function ViewTable({ title, cols, rows, empty }: { title: string; cols: string[]; rows: string[][]; empty: string }) {
+   return (
+-    <FormShell title="ภาวะแทรกซ้อน / Admit ซ้ำ" desc="3 ติดตาม OPD · Rejection, ติดเชื้อ, อื่นๆ" icon={AlertTriangle} gradient={['#f97316', '#c2410c']} patient={person} date={f.date} onDate={(date) => patch({ date })} onSave={() => save()} savedInfo={info} fileName={`KT-complications-${person.hn}`}
+-      preview={
+-        <A4Page>
+-          <Head person={person} title="ภาวะแทรกซ้อน / Admit ซ้ำ" />
+-          <table style={tableStyle}>
++    <VCard>
++      <div className="overflow-x-auto rounded-[10px] border border-slate-200">
++        <div className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-[12.5px] font-bold text-slate-900">{title}</div>
++        {rows.length === 0 ? (
++          <p className="py-6 text-center text-[13px] text-slate-400">{empty}</p>
++        ) : (
++          <table className="w-full text-[12.5px]">
+             <thead>
+-              <tr>
+-                {['วันที่', 'ประเภท', 'รายละเอียด', 'Admit'].map((h) => (
+-                  <th key={h} style={th}>
+-                    {h}
++              <tr className="text-left text-[11.5px] text-slate-500">
++                {cols.map((c) => (
++                  <th key={c} className="px-3 py-1.5 font-medium">
++                    {c}
+                   </th>
+                 ))}
+               </tr>
+             </thead>
+             <tbody>
+-              {f.rows.map((r, i) => (
+-                <tr key={i}>
+-                  <td style={td}>{thaiDate(r.date)}</td>
+-                  <td style={td}>{r.type}</td>
+-                  <td style={td}>{r.detail}</td>
+-                  <td style={td}>{r.admit}</td>
++              {rows.map((r, i) => (
++                <tr key={i} className="border-t border-slate-100">
++                  {r.map((c, j) => (
++                    <td key={j} className={cn('px-3 py-1.5', j === 0 ? 'text-slate-600' : 'font-semibold text-slate-900')}>
++                      {c || '—'}
++                    </td>
++                  ))}
+                 </tr>
+               ))}
+             </tbody>
+           </table>
+-        </A4Page>
+-      }
+-    >
+-      <FSection title="รายการภาวะแทรกซ้อน" right={<Button variant="secondary" size="sm" icon={Plus} onClick={() => patch({ rows: [{ date: new Date().toISOString().slice(0, 10), type: COMP_TYPES[0], detail: '', admit: 'ไม่ admit' }, ...f.rows] })}>เพิ่มรายการ</Button>}>
+-        {f.rows.length === 0 && <p className="py-4 text-center text-[13px] text-slate-400">ไม่มีภาวะแทรกซ้อน</p>}
+-        {f.rows.map((r, i) => (
+-          <div key={i} className="grid grid-cols-[150px_200px_1fr_130px_28px] items-center gap-2 rounded-[10px] bg-orange-50 px-3 py-2">
+-            <TextInput type="date" className="!h-8" value={r.date} onChange={(e) => set(i, { date: e.target.value })} />
+-            <Select className="!h-8 !text-[13px]" value={r.type} onChange={(e) => set(i, { type: e.target.value })}>
+-              {COMP_TYPES.map((t) => (
+-                <option key={t}>{t}</option>
++        )}
++      </div>
++    </VCard>
++  );
++}
++
++function paperTable(person: PersonRef, title: string, cols: string[], rows: string[][]) {
++  return (
++    <A4Page>
++      <Head person={person} title={title} />
++      <table style={tableStyle}>
++        <thead>
++          <tr>
++            {cols.map((h) => (
++              <th key={h} style={th}>
++                {h}
++              </th>
++            ))}
++          </tr>
++        </thead>
++        <tbody>
++          {rows.map((r, i) => (
++            <tr key={i}>
++              {r.map((c, j) => (
++                <td key={j} style={td}>
++                  {c}
++                </td>
+               ))}
+-            </Select>
+-            <TextInput className="!h-8" placeholder="รายละเอียด" value={r.detail} onChange={(e) => set(i, { detail: e.target.value })} />
+-            <Select className="!h-8 !text-[13px]" value={r.admit} onChange={(e) => set(i, { admit: e.target.value })}>
+-              <option>ไม่ admit</option>
+-              <option>Admit</option>
+-            </Select>
+-            <button type="button" onClick={() => patch({ rows: f.rows.filter((_, j) => j !== i) })} className="rounded p-1 text-slate-400 hover:bg-orange-100" aria-label="ลบ">
+-              <X className="h-4 w-4" />
+-            </button>
+-          </div>
+-        ))}
+-      </FSection>
++            </tr>
++          ))}
++        </tbody>
++      </table>
++    </A4Page>
++  );
++}
++
++// ================= 2 ยากดภูมิ / การปรับยา (ดูอย่างเดียว) =================
++function MedsAdj({ person, kind, filled }: P) {
++  const { data } = useAsync<ImedMedAdjust[]>(() => imedApi.medAdjust(kind, person, filled), [person.id, kind]);
++  if (!data) return <FormLoading />;
++  const title = kind === 'donor' ? 'ยา / การปรับยา' : 'ยากดภูมิ / การปรับยา';
++  const cols = ['วันที่', 'ยา', 'เดิม', 'ใหม่', 'เหตุผล'];
++  const rows = data.map((r) => [thaiDate(r.date), r.drug, r.from, r.to, r.reason]);
++  return (
++    <FormShell readOnly title={title} desc="2 ติดตาม OPD · ดูอย่างเดียว · ประวัติการปรับยาจากใบสั่งยา iMed" icon={Pill} gradient={['#ec4899', '#be185d']} patient={person} dateLabel="ข้อมูล ณ วันที่" date={new Date().toISOString().slice(0, 10)} fileName={`KT-med-adjust-${person.hn}`} notice={<ImedNotice />} preview={paperTable(person, 'ประวัติการปรับยา', cols, rows)}>
++      <ViewTable title="ประวัติการปรับยา (จากใบสั่งยา iMed)" cols={cols} rows={rows} empty="ยังไม่มีการปรับยา" />
++    </FormShell>
++  );
++}
++
++// ================= 3 ภาวะแทรกซ้อน / Admit ซ้ำ (ดูอย่างเดียว) =================
++function Comps({ person, kind, filled }: P) {
++  const { data } = useAsync<ImedComplication[]>(() => imedApi.complications(kind, person, filled), [person.id, kind]);
++  if (!data) return <FormLoading />;
++  const cols = ['วันที่', 'ประเภท', 'รายละเอียด', 'Admit'];
++  const rows = data.map((r) => [thaiDate(r.date), r.type, r.detail, r.admit]);
++  return (
++    <FormShell readOnly title="ภาวะแทรกซ้อน / Admit ซ้ำ" desc="3 ติดตาม OPD · ดูอย่างเดียว · ข้อมูลจาก iMed" icon={AlertTriangle} gradient={['#f97316', '#c2410c']} patient={person} dateLabel="ข้อมูล ณ วันที่" date={new Date().toISOString().slice(0, 10)} fileName={`KT-complications-${person.hn}`} notice={<ImedNotice />} preview={paperTable(person, 'ภาวะแทรกซ้อน / Admit ซ้ำ', cols, rows)}>
++      <ViewTable title="ภาวะแทรกซ้อน / Admit ซ้ำ (จาก iMed)" cols={cols} rows={rows} empty="ไม่มีภาวะแทรกซ้อน" />
+     </FormShell>
+   );
+ }
+diff --git a/src/modules/line/liff/ResultsPage.tsx b/src/modules/line/liff/ResultsPage.tsx
+index ebdb8c8..fef5af3 100644
+--- a/src/modules/line/liff/ResultsPage.tsx
++++ b/src/modules/line/liff/ResultsPage.tsx
+@@ -18,6 +18,8 @@ type Tone = 'green' | 'orange' | 'teal' | 'slate';
+ 
+ /** หลังบริจาคไต ค่าเหล่านี้เปลี่ยนเล็กน้อยเป็นเรื่องปกติ */
+ const DONOR_EXPECTED = ['cr', 'bun', 'egfr'];
++/** LINE OA แสดง trend เฉพาะ Creatinine · eGFR · ระดับยากดภูมิ */
++const LINE_KEYS = ['cr', 'egfr', 'tac'];
+ 
+ /** เมนู “ผลตรวจของฉัน” (เดิม “ค่าไต”) — ผลแล็บ · ระดับยา (ผู้รับหลังผ่าตัด, ไม่แสดงตัวเลข) · ที่ฉันบันทึก */
+ export function MyResultsPage({ p, tab: initial }: { p: Persona; tab?: string }) {
+@@ -25,7 +27,8 @@ export function MyResultsPage({ p, tab: initial }: { p: Persona; tab?: string })
+   const hasDrug = p.kind === 'recipient' && p.postop;
+   const [tab, setTab] = useState<Tab>(initial === 'drug' && hasDrug ? 'drug' : initial === 'mine' ? 'mine' : 'lab');
+   const [detail, setDetail] = useState<string | null>(null);
+-  const { data: h } = useAsync(() => labApi.history(p.kind, p.id), [p.id]);
++  const { data: raw } = useAsync(() => labApi.history(p.kind, p.id), [p.id]);
++  const h = raw && lineOnly(raw, hasDrug);
+   const lastDate = h?.dates[h.dates.length - 1];
+ 
+   const sel = detail && h ? h.series.find((s) => s.key === detail) : undefined;
+@@ -47,6 +50,12 @@ export function MyResultsPage({ p, tab: initial }: { p: Persona; tab?: string })
+ }
+ 
+ // ================= ผลแล็บ =================
++/** เหลือเฉพาะ Creatinine · eGFR · ระดับยากดภูมิ (เฉพาะผู้รับหลังผ่าตัด) และรายการรอผลของค่าเหล่านี้ */
++function lineOnly(h: LabHistoryDto, drug: boolean): LabHistoryDto {
++  const series = LINE_KEYS.map((k) => h.series.find((s) => s.key === k)).filter((s): s is LabSeriesDto => !!s && (s.key !== 'tac' || drug));
++  const names = series.map((s) => s.name.split(' ')[0].toLowerCase());
++  return { ...h, series, pending: h.pending.filter((x) => names.some((n) => x.name.toLowerCase().startsWith(n))) };
++}
+ function statusOf(s: LabSeriesDto, v: number | null, donor: boolean): { tone: Tone; label: string } {
+   const f = flagOf(s, v);
+   if (v === null) return { tone: 'slate', label: 'ไม่มีผล' };
+@@ -83,7 +92,7 @@ function LabTab({ h, donor, postop, onOpen }: { h: LabHistoryDto; donor: boolean
+       : 'แตะแต่ละค่าเพื่อดูกราฟย้อนหลังและคำแนะนำ';
+   const groups = [...new Set(h.series.map((s) => s.group))];
+   // ระดับยาไว้ต่อจากกลุ่มไต
+-  const order = ['Renal function', 'Drug level', 'Electrolytes', 'CBC', 'Urine'].filter((g) => groups.includes(g));
++  const order = ['Renal function', 'Drug level'].filter((g) => groups.includes(g));
+ 
+   return (
+     <>
+@@ -134,6 +143,11 @@ function LabTab({ h, donor, postop, onOpen }: { h: LabHistoryDto; donor: boolean
+           ⏳ รอผล: {h.pending.map((x) => x.name).join(' · ')} (ส่งตรวจ {shortDate(h.pending[0].sentAt)}) — แจ้งเตือนทาง LINE เมื่อผลออก
+         </p>
+       )}
++      {!donor && (
++        <p className="rounded-2xl bg-yellow-50 px-4 py-2.5 text-[12px] font-medium text-yellow-800">
++          ℹ️ แสดงเฉพาะค่าการทำงานของไต (Creatinine, eGFR) และระดับยากดภูมิ · ผลตรวจอื่นสอบถามแพทย์ที่ OPD
++        </p>
++      )}
+     </>
+   );
+ }
+diff --git a/src/modules/usecase/data.ts b/src/modules/usecase/data.ts
+index 0f31a38..a2ef31c 100644
+--- a/src/modules/usecase/data.ts
++++ b/src/modules/usecase/data.ts
+@@ -57,7 +57,7 @@ export const PACKAGES: Pkg[] = [
+     id: 'post', name: 'ผ่าตัด → ติดตาม OPD', col: 0, ucs: [
+       { id: 'O1', name: 'บันทึกการผ่าตัด', desc: 'บันทึกการผ่าตัดและการทำงานของไตหลังผ่าตัด (ฟอร์มรอแบบจริงจากหน้างาน)', actors: S },
+       { id: 'O2', name: 'ก่อนกลับบ้าน (Discharge)', desc: 'Checklist · สรุปการจำหน่าย · ยากลับบ้าน · นัดติดตาม', actors: S },
+-      { id: 'O3', name: 'บันทึกการตรวจ OPD / ปรับยา', desc: 'บันทึกแต่ละครั้ง · ประวัติปรับยา · ภาวะแทรกซ้อน', actors: S },
++      { id: 'O3', name: 'ดู OPD card KT / ปรับยา (จาก iMed)', desc: 'ดูและพิมพ์ OPD card แต่ละครั้ง · ประวัติปรับยา · ภาวะแทรกซ้อน — ดูอย่างเดียว ดึงจาก iMed', actors: S },
+       { id: 'O4', name: 'ดูรอบติดตาม OPD', desc: 'ตารางรอบมาตรฐาน · มาแล้ว / ขาดนัด / รอบถัดไป (ผู้รับและผู้บริจาค)', actors: S, ext: ['imed'] },
+     ],
+   },
+diff --git a/src/services/api/imedApi.ts b/src/services/api/imedApi.ts
+new file mode 100644
+index 0000000..74a202a
+--- /dev/null
++++ b/src/services/api/imedApi.ts
+@@ -0,0 +1,153 @@
++import type { PersonRef } from '@/types';
++import { USE_MOCK, http, mockDelay } from './client';
++
++// ===== OPD card KT — ดึงจาก iMed (แพทย์/พยาบาลบันทึกใน iMed ตามปกติ · ระบบนี้ดูและพิมพ์ได้อย่างเดียว) =====
++
++/** [ชื่อ, ค่า, หน่วย] — ค่าว่าง = ไม่มีผลใน VN นี้ */
++export type OpdLabRow = [string, string, string];
++export interface OpdLabGroup {
++  title: string;
++  date?: string;
++  rows: OpdLabRow[];
++}
++export interface OpdCardVisit {
++  vn: string;
++  date: string;
++  time: string;
++  opd: string;
++  allergy: string;
++  coverage: string;
++  kt: {
++    deceased: boolean;
++    donorFrom: string;
++    ktDate: string;
++    hlaMm: string;
++    pra: string;
++    preDsa: string;
++    xm: string;
++    abo: boolean;
++    prevKt: boolean;
++    cmv: string;
++  };
++  vitals: { bt: string; pr: string; bp: string; rr: string; bw: string; bmi: string };
++  note: { clinical: string; homeBp: boolean; edema: string; tremor: boolean; oralUlcer: boolean; pharm: string };
++  labs: { drug: OpdLabGroup; heme: OpdLabGroup; chem: OpdLabGroup; lipid: OpdLabGroup; urine24: OpdLabGroup; urine: OpdLabGroup };
++  meds: { immuno: [string, string][]; prophylaxis: [string, string][]; misc: [string, string][]; review: string[] };
++  summary: { graft: 'Stable' | 'Deteriorated' | 'Improved graft function'; left: [string, string][]; right: [string, string][] };
++  last: [string, string][];
++  followUp: string;
++  physician: string;
++}
++export interface OpdCardDto {
++  updatedAt: string;
++  visits: OpdCardVisit[];
++}
++
++/** ประวัติการปรับยา / ภาวะแทรกซ้อน (ดึงจาก iMed) */
++export interface ImedMedAdjust {
++  date: string;
++  drug: string;
++  from: string;
++  to: string;
++  reason: string;
++}
++export interface ImedComplication {
++  date: string;
++  type: string;
++  detail: string;
++  admit: string;
++}
++
++/** 2026-08-23 → 23 Aug 2026 (รูปแบบที่แพทย์เขียนในฟอร์มเดิม) */
++const enDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
++const addDays = (iso: string, n: number) => {
++  const d = new Date(iso);
++  d.setDate(d.getDate() + n);
++  return d.toISOString().slice(0, 10);
++};
++
++function sampleCard(p: PersonRef): OpdCardDto {
++  const kt = p.stageDates.surgery ?? addDays(p.statusSince, -11);
++  const deceased = p.caseType === 'redcross';
++  const offsets = [15, 22, 36, 50];
++  const cr = ['1.3', '1.1', '1.0', '1.0'];
++  const tac = ['9.2', '8.9', '8.9', '7.6'];
++  const visits = offsets.map((o, i): OpdCardVisit => {
++    const date = addDays(kt, o);
++    const last = i === offsets.length - 1;
++    return {
++      vn: `${1000 + i}/${String(64 + i * 17).padStart(6, '0')}`,
++      date,
++      time: '09:30',
++      opd: '99',
++      allergy: 'ไม่มี',
++      coverage: 'ข้าราชการ',
++      kt: { deceased, donorFrom: deceased ? '' : 'ญาติ', ktDate: kt, hlaMm: '2-0-2-2', pra: '70% T cell', preDsa: 'positive DR5 (5,000 MFI)', xm: 'Negative', abo: false, prevKt: false, cmv: '+/-' },
++      vitals: { bt: '37', pr: ['88', '84', '80', '101'][i], bp: ['132/84', '130/82', '128/80', '130/80'][i], rr: '18', bw: ['66', '65.5', '65', '65'][i], bmi: '23' },
++      note: { clinical: last ? 'สบายดี ไม่มีไข้ · Tac level ต่ำกว่าเป้า' : 'สบายดี ไม่มีไข้ แผลแห้งดี', homeBp: false, edema: '', tremor: false, oralUlcer: false, pharm: '' },
++      labs: {
++        drug: { title: 'ระดับยากดภูมิ', date, rows: [['TAC C0', tac[i], 'ng/mL'], ['CSA C0/C2', '', 'ng/mL'], ['SRL C0', '', 'ng/mL'], ['EVL C0', '', 'ng/mL'], ['Time', '8.00, 20.00', ''], ['AUC', '', ''], ['%CV', '', '']] },
++        heme: {
++          title: 'Hematology',
++          date,
++          rows: [['Hb', '10', 'g/dL'], ['Hct', '30', '%'], ['MCV', '80', 'fl'], ['RDW', '14', '%'], ['WBC', '5,000', '/uL'], ['PMNs', '76', '%'], ['Lymph', '20', '%'], ['Plt', '130,000', '/uL'], ['Ferritin', '', 'ng/ml'], ['TSAT', '', '%'], ['PT/INR', '13/1.1', 'sec'], ['PTT', '', 'sec'], ['Reticulocyte', '', ''], ['CMV VL', last ? '2,000 · log 5.6' : '', '']],
++        },
++        chem: {
++          title: 'Chemistry',
++          date,
++          rows: [['FBS', '99', 'mg/dL'], ['HbA1C', '6.5', '%'], ['BUN', ['22', '20', '19', '20'][i], 'mg/dL'], ['Cr', cr[i], 'mg/dL'], ['Na', '137', 'mmol/L'], ['K', '4.4', 'mmol/L'], ['Cl', '107', 'mmol/L'], ['HCO3-', '24', 'mmol/L'], ['Ca', '8.2', 'mg/dL'], ['PO4-', '3.5', 'mg/dL'], ['Mg', '2.1', 'mg/dL'], ['Uric', '4.0', 'mg/dL'], ['BK VL (Blood/Urine)', '', 'log']],
++        },
++        lipid: { title: 'Lipid / LFT', rows: [['Chol', '', 'mg/dL'], ['TG', '', 'mg/dL'], ['HDL', '', 'mg/dL'], ['LDL', '', 'mg/dL'], ['Alb', '', 'g/dL'], ['Glob', '', 'g/dL'], ['TB/DB', '', 'mg/dL'], ['AST/ALT', '', 'u/L'], ['ALP', '', 'u/L'], ['iPTH', '', 'pg/mL'], ['25-OH vitD', '', 'ng/mL'], ['Others', '', '']] },
++        urine24: { title: '24 hr urine', date, rows: [['Volume', '3,000', 'mL'], ['Total Cr', '4', 'g'], ['Total urea', '13', 'g'], ['Total protein', '250', 'mg'], ['DPI', '1.4', ''], ['CrCl', '', 'ml/min'], ['Urine Na', '', 'mmol']] },
++        urine: { title: 'Urine', date, rows: [['UA sp.gr', '1.030', ''], ['protein', '2+', ''], ['sugar', 'neg', ''], ['WBC/Leu', '3-5/2+', ''], ['RBC/Blood', '1-2/neg', ''], ['UPCI', '0.3', '']] },
++      },
++      meds: {
++        immuno: [['Tacrolimus', last ? '3.5-0-3.5 mg' : '3-0-3 mg'], ['Ciclosporin', ''], ['Sirolimus', ''], ['Everolimus', ''], ['MMF/MPF', 'MMF (250) 3-0-3'], ['Azathioprine', ''], ['Prednisolone', i < 2 ? '4 tab OD' : '2 tab OD']],
++        prophylaxis: [['Bactrim (400/80)', '2 tab BID'], ['Acyclovir (200)', '1 tab BID'], ['Lasix', '(40) 1 tab OD'], ['Sodamint', '(650) 1 tab BID'], ['CaCO3', '(835) 1 tab OD'], ['Vit D2 (20,000 iu)', '1/wk'], ['Statin', 'Atorvastatin (40) ½ tab hs']],
++        misc: [['PPI', 'Omeprazole (20) 1 tab OD'], ['ESA', 'Espogen 4,000 u 1/wk'], ['อื่น ๆ', 'Chelated Mg 1 tab BID']],
++        review: ['Madiplot (20) 1 tab BID', 'Doxazocin (2) 2 tab hs', 'Metoprolol (100) ¼ tab BID', 'Aldactone (25) 1 tab OD', 'Azilsartan (40) 1 tab BID'],
++      },
++      summary: {
++        graft: i === 0 ? 'Improved graft function' : 'Stable',
++        left: [['History TCMR', 'ไม่มี'], ['History ABMR', 'ไม่มี'], ['CNI toxicity', 'ไม่มี'], ['CMV DNAemia', last ? 'มี · CMV VL 2,000' : 'ไม่มี'], ['PyV BK viremia/BKVAN', 'ไม่มี'], ['Surgical complication', 'ไม่มี']],
++        right: [['PTDM', 'ไม่มี'], ['Malignancy', 'ไม่มี'], ['DM/HT/DLP', 'HT']],
++      },
++      last: [
++        ['USG Doppler allograft', `${enDate(addDays(kt, 3))} · No transplant renal artery stenosis, renal parenchymal disease`],
++        ['Allograft biopsy', ''],
++        ['DSA/PRA', `${enDate(addDays(kt, 14))} · DR5 (2,000 MFI)`],
++      ],
++      followUp: last ? '2 week' : '1 week',
++      physician: 'นพ.สมเกียรติ วงศ์ไทย',
++    };
++  });
++  return { updatedAt: `${visits[visits.length - 1].date}T10:42:00`, visits: visits.reverse() };
++}
++
++function sampleMeds(p: PersonRef): ImedMedAdjust[] {
++  const kt = p.stageDates.surgery ?? addDays(p.statusSince, -11);
++  return [
++    { date: addDays(kt, 50), drug: 'Tacrolimus', from: '3-0-3 mg', to: '3.5-0-3.5 mg', reason: 'TAC C0 7.6 (ต่ำกว่าเป้า 8–10)' },
++    { date: addDays(kt, 36), drug: 'Prednisolone', from: '4 tab OD', to: '2 tab OD', reason: 'ลดขนาดตามแผน' },
++  ];
++}
++function sampleComps(p: PersonRef): ImedComplication[] {
++  const kt = p.stageDates.surgery ?? addDays(p.statusSince, -11);
++  return [{ date: addDays(kt, 50), type: 'CMV / BK virus', detail: 'CMV DNAemia · CMV VL 2,000 · ติดตาม OPD', admit: 'ไม่ admit' }];
++}
++
++/** module “iMed” ฝั่ง backend: /api/imed/{recipients|donors}/{id}/... (อ่านอย่างเดียว) */
++export const imedApi = {
++  async opdCard(p: PersonRef): Promise<OpdCardDto> {
++    if (!USE_MOCK) return http(`/imed/recipients/${p.id}/opd-card`);
++    return mockDelay(sampleCard(p), 250);
++  },
++  async medAdjust(kind: 'recipient' | 'donor', p: PersonRef, filled: boolean): Promise<ImedMedAdjust[]> {
++    if (!USE_MOCK) return http(`/imed/${kind === 'recipient' ? 'recipients' : 'donors'}/${p.id}/med-adjust`);
++    return mockDelay(filled && kind === 'recipient' ? sampleMeds(p) : [], 200);
++  },
++  async complications(kind: 'recipient' | 'donor', p: PersonRef, filled: boolean): Promise<ImedComplication[]> {
++    if (!USE_MOCK) return http(`/imed/${kind === 'recipient' ? 'recipients' : 'donors'}/${p.id}/complications`);
++    return mockDelay(filled && kind === 'recipient' ? sampleComps(p) : [], 200);
++  },
++};
+-- 
+2.43.0
+
