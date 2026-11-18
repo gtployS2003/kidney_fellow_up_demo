@@ -28,3 +28,7 @@
   .print-only .a4-page { width: auto !important; min-height: 0 !important; padding: 0 !important; }
   .print-only .a4-page + .a4-page { break-before: page; page-break-before: always; }
 }
+
+/* ฟอร์มหลายหน้าใน Preview (เว้นระยะระหว่างหน้า — ตอนพิมพ์ไม่เว้น) */
+.paper-stack { display: flex; flex-direction: column; gap: 16px; }
+.print-only .paper-stack { display: block; }

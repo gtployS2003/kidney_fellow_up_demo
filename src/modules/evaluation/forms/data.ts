@@ -1,6 +1,8 @@
 /** โครงข้อมูลฟอร์ม Evaluation (ผู้รับ) 1.1–1.5 และ MRB — ตรงกับ DTO ฝั่ง .NET ในอนาคต */
 
-export type FormKey = 'counseling' | 'currentTx' | 'history' | 'physical' | 'plan' | 'mrb' | 'donorCounseling' | 'donorHistory';
+export type FormKey = 'counseling' | 'currentTx' | 'history' | 'physical' | 'plan' | 'preMrb' | 'mrb' | 'donorCounseling' | 'donorHistory';
+/** ฟอร์มของ “เคส MRB ร่วม” (1 เคสต่อคู่ผู้รับ–ผู้บริจาค) */
+export const MRB_KEYS: FormKey[] = ['preMrb', 'mrb'];
 
 export interface FormMeta {
   key: FormKey;
@@ -15,7 +17,8 @@ export const FORM_META: Record<FormKey, FormMeta> = {
   history: { key: 'history', num: '1.3', title: 'ซักประวัติโดยแพทย์', fileName: 'KT-1.3-history' },
   physical: { key: 'physical', num: '1.4', title: 'ตรวจร่างกายโดยแพทย์', fileName: 'KT-1.4-physical-exam' },
   plan: { key: 'plan', num: '1.5', title: 'รายการรอส่งตรวจเพิ่มเติม', fileName: 'KT-1.5-summary-plan' },
-  mrb: { key: 'mrb', num: '2', title: 'รอ MRB', fileName: 'KT-2-MRB' },
+  preMrb: { key: 'preMrb', num: '2.1', title: 'สรุป case ก่อนเข้า MRB', fileName: 'KT-2.1-pre-MRB-summary' },
+  mrb: { key: 'mrb', num: '2.2', title: 'สรุป MRB', fileName: 'KT-2.2-post-MRB-conclusion' },
   donorCounseling: { key: 'donorCounseling', num: '1.1', title: 'รายการให้คำปรึกษาผู้บริจาค', fileName: 'KT-D1.1-donor-counseling' },
   donorHistory: { key: 'donorHistory', num: '1.2', title: 'ซักประวัติโดยแพทย์', fileName: 'KT-D1.2-donor-history' },
 };
@@ -201,14 +204,98 @@ export interface PlanForm {
   physician: string;
 }
 
-// ---------- MRB ----------
-export interface MrbForm {
+// ---------- 2.1 สรุป case ก่อนเข้า MRB (ข้อมูลส่วนใหญ่ดึงอัตโนมัติ — กรอกเฉพาะช่องด้านล่าง) ----------
+export type GoHla = '' | 'yes' | 'no' | 'consult';
+export interface PreMrbForm {
+  /** วันที่เข้า MRB */
   date: string;
-  result: '' | 'pass' | 'fail';
-  note: string;
+  epts: string;
+  commentRecipient: string;
+  commentDonor: string;
+  goHla: GoHla;
 }
 
-export type AnyForm = CounselingForm | CurrentTxForm | HistoryForm | PhysicalForm | PlanForm | MrbForm | DonorCounselingForm | DonorHistoryForm;
+// ---------- 2.2 สรุป MRB: Post MRB conclusion + Pre-living KT evaluation form ----------
+export type PassFail = '' | 'pass' | 'fail';
+export const COVERAGES = ['ข้าราชการ', 'ประกันสังคม', 'ประกันสุขภาพถ้วนหน้า', 'ชำระเงินเอง'] as const;
+export interface DsaRow {
+  cls: string;
+  ag: string;
+  mfi: string;
+}
+export interface PreLivingForm {
+  evalDate: string;
+  admitDate: string;
+  opDate: string;
+  meds: string;
+  antiPlatelet: { on: boolean; name: string };
+  antiCoagulant: { on: boolean; name: string };
+  stop: { on: boolean; date: string };
+  donorCr: string;
+  donorEgfr: string;
+  prevKt: boolean;
+  pregnancy: boolean;
+  transfusion: boolean;
+  abo: '' | 'compatible' | 'incompatible';
+  aboD: string;
+  aboR: string;
+  hla: { A: string; B: string; DR: string; DQ: string };
+  pra: { screening: string; peak: string; current: string };
+  dsa: '' | 'negative' | 'positive';
+  dsaRows: [DsaRow, DsaRow];
+  xm: '' | 'negative' | 'positive';
+  xmClass: string;
+  xmIgG: boolean;
+  xmIgM: boolean;
+  xmNote: string;
+  problems: '' | 'none' | 'resolved';
+  plasmapheresis: { on: boolean; sessions: string; date: string };
+  ivig: { on: boolean; dose: string; date: string };
+  rituximab: { on: boolean; date: string };
+  basiliximab: boolean;
+  atg: boolean;
+  ivmp: boolean;
+  maintenanceStd: boolean;
+  maintenanceOther: { on: boolean; text: string };
+  cotrimoxazole: boolean;
+  acyclovir: boolean;
+  cmv: '' | 'prophylaxis' | 'preemptive';
+}
+export interface MrbForm {
+  /** วันที่พิจารณา */
+  date: string;
+  /** ผลผู้รับ */
+  result: PassFail;
+  /** ผลผู้บริจาค (ไม่มีผู้บริจาค = ไม่ใช้) */
+  donorResult: PassFail;
+  note: string;
+  coverage: '' | (typeof COVERAGES)[number];
+  planRecipient: string[];
+  planDonor: string[];
+  typing: '' | 'yes' | 'consult' | 'no';
+  typingConsult: string;
+  remark: string;
+  physician: string;
+  signDate: string;
+  pre: PreLivingForm;
+}
+
+export type AnyForm = CounselingForm | CurrentTxForm | HistoryForm | PhysicalForm | PlanForm | PreMrbForm | MrbForm | DonorCounselingForm | DonorHistoryForm;
+
+export function emptyPreLiving(): PreLivingForm {
+  return {
+    evalDate: '', admitDate: '', opDate: '', meds: '',
+    antiPlatelet: { on: false, name: '' }, antiCoagulant: { on: false, name: '' }, stop: { on: false, date: '' },
+    donorCr: '', donorEgfr: '', prevKt: false, pregnancy: false, transfusion: false,
+    abo: '', aboD: '', aboR: '', hla: { A: '', B: '', DR: '', DQ: '' }, pra: { screening: '', peak: '', current: '' },
+    dsa: '', dsaRows: [{ cls: '', ag: '', mfi: '' }, { cls: '', ag: '', mfi: '' }],
+    xm: '', xmClass: '', xmIgG: false, xmIgM: false, xmNote: '', problems: '',
+    plasmapheresis: { on: false, sessions: '', date: '' }, ivig: { on: false, dose: '', date: '' }, rituximab: { on: false, date: '' },
+    // ฟอร์มกระดาษพิมพ์ ☑ IVMP ไว้แล้ว
+    basiliximab: false, atg: false, ivmp: true,
+    maintenanceStd: false, maintenanceOther: { on: false, text: '' }, cotrimoxazole: false, acyclovir: false, cmv: '',
+  };
+}
 
 const today = () => new Date().toISOString().slice(0, 10);
 const allPlan = () => Object.fromEntries(PLAN_ITEMS.flat().map((k) => [k, { selected: false, status: 'sent' as TrackStatus, date: '' }]));
@@ -231,8 +318,13 @@ export function emptyForm(key: FormKey): AnyForm {
       return { date: today(), weight: '', height: '', bp: '', pulse: '', temp: '', rr: '', systems: Object.fromEntries(SYSTEMS.map((s) => [s, { result: '', note: '' }])) as PhysicalForm['systems'], other: '' } satisfies PhysicalForm;
     case 'plan':
       return { date: today(), medicalProblems: '', plan: allPlan(), consults: allConsults(), vaccines: Object.fromEntries(VACCINES.map((v) => [v, { selected: false, detail: '' }])), requestOf: '', requestFrom: '', other: '', physician: 'นพ.สมเกียรติ วงศ์ไทย' } satisfies PlanForm;
+    case 'preMrb':
+      return { date: today(), epts: '', commentRecipient: '', commentDonor: '', goHla: '' } satisfies PreMrbForm;
     case 'mrb':
-      return { date: today(), result: '', note: '' } satisfies MrbForm;
+      return {
+        date: today(), result: '', donorResult: '', note: '', coverage: '', planRecipient: ['', '', '', '', ''], planDonor: ['', '', '', '', ''],
+        typing: '', typingConsult: '', remark: '', physician: 'นพ.สมเกียรติ วงศ์ไทย', signDate: today(), pre: emptyPreLiving(),
+      } satisfies MrbForm;
     case 'donorCounseling':
       return { date: today(), counselor: '', understood: {} } satisfies DonorCounselingForm;
     case 'donorHistory': {
@@ -274,6 +366,7 @@ export function sampleForm(key: FormKey, sex: 'male' | 'female', kind: 'recipien
     case 'physical': {
       const f = base as PhysicalForm;
       SYSTEMS.forEach((s) => (f.systems[s] = { result: 'normal', note: '' }));
+      if (kind === 'donor') return { ...f, date: '2026-09-16', weight: '58', height: '156', bp: '124/78', pulse: '72', temp: '36.6', rr: '16' };
       f.systems['Extremities'] = { result: 'abnormal', note: 'AVF แขนซ้าย คลำ thrill ได้ ฟัง bruit ชัด · ไม่บวม' };
       return { ...f, date: '2025-06-24', weight: '64', height: '170', bp: '138/84', pulse: '78', temp: '36.8', rr: '18' };
     }
@@ -297,8 +390,22 @@ export function sampleForm(key: FormKey, sex: 'male' | 'female', kind: 'recipien
       if (kind === 'donor') return { ...f, date: '2026-09-18', medicalProblems: 'ผู้บริจาคมีชีวิต · ไม่มีโรคประจำตัว · เคยสูบบุหรี่ เลิกแล้ว 5 ปี', requestOf: 'ผลตรวจสุขภาพประจำปีล่าสุด', requestFrom: 'รพ.พุทธชินราช' };
       return { ...f, date: '2025-06-26', medicalProblems: 'ESRD จาก hypertensive nephropathy · HD 3 ครั้ง/สัปดาห์ ตั้งแต่ มี.ค. 2567 · HT, Dyslipidemia', requestOf: 'ประวัติการผ่าตัดสร้าง AVF', requestFrom: 'รพ.พุทธชินราช' };
     }
-    case 'mrb':
-      return { date: '2025-12-20', result: 'pass', note: kind === 'donor' ? 'สุขภาพร่างกายและจิตใจแข็งแรง ผ่านเกณฑ์ทุกด้าน เหมาะสมเป็นผู้บริจาค' : 'ผลประเมินครบถ้วน เหมาะสมสำหรับการปลูกถ่ายไต' } satisfies MrbForm;
+    case 'preMrb':
+      return { date: '2025-12-20', epts: '12', commentRecipient: 'ผลประเมินครบ · เตรียมนำเสนอ MRB', commentDonor: 'เหมาะสมเป็นผู้บริจาค · แนะนำผ่าตัดไตซ้าย', goHla: 'yes' } satisfies PreMrbForm;
+    case 'mrb': {
+      const pre = emptyPreLiving();
+      Object.assign(pre, {
+        evalDate: '2025-12-20', admitDate: '2026-01-06', opDate: '2026-01-08', meds: 'Amlodipine 10 mg, Atorvastatin 20 mg, Calcium carbonate 1,500 mg, Erythropoietin 4,000 U SC 2/wk',
+        donorCr: '0.7', donorEgfr: '106', transfusion: true, abo: 'compatible', hla: { A: '1', B: '1', DR: '0', DQ: '1' }, pra: { screening: '0%', peak: '0%', current: '0%' },
+        dsa: 'negative', xm: 'negative', problems: 'resolved', basiliximab: true, maintenanceStd: true, cotrimoxazole: true, acyclovir: true, cmv: 'prophylaxis',
+      });
+      return {
+        date: '2025-12-20', result: 'pass', donorResult: 'pass', note: 'ผลประเมินครบถ้วน เหมาะสมสำหรับการปลูกถ่ายไต', coverage: 'ประกันสังคม',
+        planRecipient: ['Typing HLA ผู้รับและผู้บริจาค', 'ติดตามผล CTWA กับศัลยแพทย์', 'ปรับ HD ให้ได้ dry weight', '', ''],
+        planDonor: ['นัด admit พร้อมผู้รับ', 'ตรวจ 24 hr urine ซ้ำก่อนผ่าตัด', '', '', ''],
+        typing: 'yes', typingConsult: '', remark: 'ผ่านการพิจารณา MRB · นัดทบทวนผล HLA', physician: 'นพ.สมเกียรติ วงศ์ไทย', signDate: '2025-12-20', pre,
+      } satisfies MrbForm;
+    }
     case 'donorCounseling': {
       const f = base as DonorCounselingForm;
       DONOR_COUNSELING_TOPICS.forEach((t, c) => t.items.forEach((_, i) => (f.understood[`${c}-${i}`] = !isFemaleOnly(c, i) || sex === 'female')));

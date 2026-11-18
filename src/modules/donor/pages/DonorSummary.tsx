@@ -34,7 +34,8 @@ export default function DonorSummary() {
   const [params] = useSearchParams();
   const fromAppt = params.get('from') === 'appt' ? params.get('date') : null;
   const [stage, setStage] = useState<StageKey | null>(params.get('tab') ? null : 'preop');
-  const [openSub, setOpenSub] = useState<{ key: string; mode: 'edit' | 'preview'; n: number } | null>(null);
+  const subParam = params.get('sub');
+  const [openSub, setOpenSub] = useState<{ key: string; mode: 'edit' | 'preview'; n: number } | null>(subParam ? { key: subParam, mode: 'edit', n: 0 } : null);
   const [tab, setTab] = useState<'ภาพรวม' | 'ผลตรวจ Lab' | 'ระดับยากดภูมิ' | 'นัดหมาย' | 'Timeline' | 'รายงานฟอร์ม' | 'ข้อมูลจาก LINE'>(params.get('tab') === 'lab' ? 'ผลตรวจ Lab' : params.get('tab') === 'drug' ? 'ระดับยากดภูมิ' : 'ภาพรวม');
 
   const openForm: OpenFormFn = (key, mode) => {

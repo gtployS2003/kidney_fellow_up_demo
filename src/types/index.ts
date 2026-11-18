@@ -547,3 +547,74 @@ export interface NotifySettingsDto {
   fluidIsDefault: boolean;
   medTimesIsDefault: boolean;
 }
+
+// ===== Module: MRB (เคส MRB ร่วม — 1 เคสต่อคู่ผู้รับ–ผู้บริจาค) =====
+export interface MrbParty {
+  id: string;
+  kind: PersonKind;
+  prefix: string;
+  firstName: string;
+  lastName: string;
+  hn: string;
+  age: number;
+  sex: Sex;
+  bloodGroup: BloodGroup;
+  rh: '+' | '-';
+  /** ความสัมพันธ์กับผู้รับ (เฉพาะผู้บริจาค) */
+  relation?: string;
+}
+
+export interface MrbCaseDto {
+  id: string;
+  /** ลำดับเคสของผู้รับ (เปิดเคสใหม่เมื่อเปลี่ยนผู้บริจาค) */
+  no: number;
+  recipient: MrbParty;
+  /** ไม่มี = รอไตจากสภากาชาด */
+  donor?: MrbParty;
+  /** จำนวนเคส MRB ทั้งหมดของผู้รับรายนี้ (ประวัติ) */
+  historyCount: number;
+}
+
+/** แถวข้อมูล [ป้าย, ค่า, หน่วย?] — ค่าว่าง = รอผลตรวจ */
+export type MrbRow = [string, string, string?];
+export interface MrbLabGroup {
+  title: string;
+  date?: string;
+  rows: MrbRow[];
+}
+
+/** ข้อมูลสรุปก่อนเข้า MRB ของบุคคลหนึ่ง (ดึงจากลงทะเบียน · 1.1–1.5 · ผล Lab) */
+export interface MrbPartySummary {
+  party: MrbParty;
+  regDate: string;
+  general: {
+    nationalId: string;
+    birthDate: string;
+    education: string;
+    occupation: string;
+    coverage: string;
+    address: string;
+    phone: string;
+    income: string;
+    expense: string;
+    marital: string;
+    children: string;
+    siblings: string;
+  };
+  /** ผู้รับ: Cause of ESKD / Kidney biopsy / Comorbidity · ผู้บริจาค: Underlying disease / Comorbidity */
+  history: MrbRow[];
+  sensitization?: MrbRow[];
+  meds: string[];
+  rrt?: { prior: string; hd: string; since: string; access: string; rrf: string };
+  pe: { bw: string; ht: string; bmi: string; bsa: string; bp: string; pr: string; heent: string; chest: string; heart: string; abdomen: string; extremities: string };
+  labs: MrbLabGroup[];
+  imaging: MrbRow[];
+  consults: MrbRow[];
+  vaccines: MrbRow[];
+  scoring?: MrbRow[];
+}
+
+export interface MrbSummaryDto {
+  recipient: MrbPartySummary;
+  donor?: MrbPartySummary;
+}

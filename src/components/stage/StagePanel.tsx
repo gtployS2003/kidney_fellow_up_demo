@@ -16,6 +16,8 @@ import { HistoryForm } from '@/modules/evaluation/forms/HistoryForm';
 import { PhysicalForm } from '@/modules/evaluation/forms/PhysicalForm';
 import { PlanForm } from '@/modules/evaluation/forms/PlanForm';
 import { MrbForm } from '@/modules/evaluation/forms/MrbForm';
+import { PreMrbForm } from '@/modules/evaluation/forms/PreMrbForm';
+import { mrbApi } from '@/services/api/mrbApi';
 import { DonorCounselingForm } from '@/modules/evaluation/forms/DonorCounselingForm';
 import { DonorHistoryForm } from '@/modules/evaluation/forms/DonorHistoryForm';
 import type { FormProps } from '@/modules/evaluation/forms/types';
@@ -75,9 +77,21 @@ function preopSteps(r: PersonRef, kind: PersonKind, saved: FormKey[]) {
     title: ef.title,
     state: i < doneCount || saved.includes(ef.key) ? 'done' : 'todo',
   }));
+  // 2 MRB (เคสร่วมผู้รับ–ผู้บริจาค): 2.1 สรุป case ก่อนเข้า MRB · 2.2 สรุป MRB
+  const preBase: SubState = ['evaluation', 'passed'].includes(r.status) ? 'todo' : 'done';
   const mrbBase: SubState = r.status === 'mrb' ? 'pending' : ['passed', 'evaluation'].includes(r.status) ? 'todo' : 'done';
-  const mrbState: SubState = saved.includes('mrb') ? 'done' : mrbBase;
-  return { evalChildren, mrbState, evalDone: evalChildren.every((c) => c.state === 'done'), baseDone: (k: FormKey) => (k === 'mrb' ? mrbBase === 'done' : forms.findIndex((e) => e.key === k) < doneCount) };
+  const mrbChildren: SubStep[] = [
+    { key: 'preMrb', num: '2.1', title: 'สรุป case ก่อนเข้า MRB', state: saved.includes('preMrb') ? 'done' : preBase },
+    { key: 'mrb', num: '2.2', title: 'สรุป MRB', state: saved.includes('mrb') ? 'done' : mrbBase },
+  ];
+  const mrbState: SubState = mrbChildren.every((c) => c.state === 'done') ? 'done' : mrbChildren.some((c) => c.state !== 'todo') || r.status === 'mrb' ? 'pending' : 'todo';
+  return {
+    evalChildren,
+    mrbChildren,
+    mrbState,
+    evalDone: evalChildren.every((c) => c.state === 'done'),
+    baseDone: (k: FormKey) => (k === 'mrb' ? mrbBase === 'done' : k === 'preMrb' ? preBase === 'done' : forms.findIndex((e) => e.key === k) < doneCount),
+  };
 }
 
 function Mark({ state, count }: { state: SubState; count?: number }) {
@@ -134,10 +148,10 @@ export function StagePanel({
 }
 
 function PreopPanel({ rec, kind, initialSub, initialMode }: { rec: PersonRef; kind: PersonKind; initialSub?: string; initialMode?: 'edit' | 'preview' }) {
-  const [saved, setSaved] = useState<FormKey[]>(() => formsApi.completedKeys(rec.id));
-  const { evalChildren, mrbState, evalDone, baseDone } = preopSteps(rec, kind, saved);
+  const [saved, setSaved] = useState<FormKey[]>(() => [...formsApi.completedKeys(rec.id), ...mrbApi.completedKeys(rec.id)]);
+  const { evalChildren, mrbChildren, mrbState, evalDone, baseDone } = preopSteps(rec, kind, saved);
   const forms = EVAL_FORMS[kind];
-  const firstTodo = evalChildren.find((c) => c.state !== 'done')?.key ?? 'mrb';
+  const firstTodo = evalChildren.find((c) => c.state !== 'done')?.key ?? mrbChildren.find((c) => c.state !== 'done')?.key ?? 'mrb';
   const [sel, setSel] = useState<string>(initialSub ?? firstTodo);
   const [collapsed, setCollapsed] = useState(false);
   const pendingCount = evalChildren.filter((c) => c.state !== 'done').length;
@@ -154,7 +168,7 @@ function PreopPanel({ rec, kind, initialSub, initialMode }: { rec: PersonRef; ki
           {!collapsed && (
             <>
               <span className="text-xs font-semibold text-slate-600">ขั้นตอนย่อย</span>
-              <Badge label={`${evalChildren.filter((c) => c.state === 'done').length + (mrbState === 'done' ? 1 : 0)}/${forms.length + 1}`} tone={TONES.slate} />
+              <Badge label={`${[...evalChildren, ...mrbChildren].filter((c) => c.state === 'done').length}/${forms.length + mrbChildren.length}`} tone={TONES.slate} />
               <span className="flex-1" />
             </>
           )}
@@ -166,41 +180,50 @@ function PreopPanel({ rec, kind, initialSub, initialMode }: { rec: PersonRef; ki
         </div>
 
         <NavItem icon={ClipboardCheck} tint="#fee2e2" fg="#dc2626" num="1" title="Evaluation" sub={`${forms.length} ขั้นตอน · ตรวจประเมิน${kind === 'donor' ? 'ผู้บริจาค' : 'ก่อนปลูกถ่าย'}`} collapsed={collapsed} mark={<Mark state={evalDone ? 'done' : 'pending'} count={pendingCount} />} />
-        {!collapsed && (
-          <div className="ml-7 border-l-2 border-indigo-100 pl-2.5">
-            {evalChildren.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                onClick={() => setSel(c.key)}
-                className={cn('relative flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2 text-left', sel === c.key ? 'font-bold text-indigo-800' : 'text-slate-700 hover:bg-slate-50')}
-              >
-                {sel === c.key && <motion.span layoutId="sub-sel" className="absolute inset-0 rounded-[10px] bg-indigo-50" />}
-                <span className="relative text-[11px] font-semibold text-slate-400">{c.num}</span>
-                <span className="relative flex-1 truncate text-[13px]">{c.title}</span>
-                <span className="relative">
-                  <Mark state={c.state} />
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+        {!collapsed && <SubList items={evalChildren} sel={sel} onSel={setSel} />}
         <div className="my-1 border-t border-dashed border-slate-200" />
-        <button type="button" onClick={() => setSel('mrb')} className="relative block w-full text-left">
-          {sel === 'mrb' && <motion.span layoutId="sub-sel" className="absolute inset-0 rounded-xl bg-indigo-50" />}
-          <NavItem icon={Building2} tint="#fef9c3" fg="#a16207" num="2" title="รอ MRB" sub="Medical Review Board" collapsed={collapsed} mark={<Mark state={mrbState} />} />
-        </button>
+        <NavItem icon={Building2} tint="#fef9c3" fg="#a16207" num="2" title="MRB" sub={`${mrbChildren.length} ขั้นตอน · Medical Review Board`} collapsed={collapsed} mark={<Mark state={mrbState} />} />
+        {!collapsed && <SubList items={mrbChildren} sel={sel} onSel={setSel} locked={!evalDone} />}
       </motion.nav>
 
       <div className="min-w-0 flex-1">
         <>
           <motion.div key={sel} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.2 }}>
-            {sel === 'mrb' ? <MrbForm {...formProps} /> : Current ? <Current {...formProps} /> : null}
+            {sel === 'mrb' ? <MrbForm {...formProps} /> : sel === 'preMrb' ? <PreMrbForm {...formProps} /> : Current ? <Current {...formProps} /> : null}
           </motion.div>
         </>
       </div>
     </div>
   );
+}
+
+/** รายการขั้นตอนย่อย (1.1–1.x / 2.1–2.2) */
+function SubList({ items, sel, onSel, locked }: { items: SubStep[]; sel: string; onSel: (k: string) => void; locked?: boolean }) {
+  return (
+    <div className="ml-7 border-l-2 border-indigo-100 pl-2.5">
+      {items.map((c) => (
+        <button
+          key={c.key}
+          type="button"
+          disabled={locked}
+          title={locked ? 'เปิดได้เมื่อผ่าน Evaluation ครบแล้ว' : undefined}
+          onClick={() => onSel(c.key)}
+          className={cn('relative flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2 text-left disabled:cursor-not-allowed disabled:opacity-50', sel === c.key ? 'font-bold text-indigo-800' : 'text-slate-700 hover:bg-slate-50')}
+        >
+          {sel === c.key && <motion.span layoutId="sub-sel" className="absolute inset-0 rounded-[10px] bg-indigo-50" />}
+          <span className="relative text-[11px] font-semibold text-slate-400">{c.num}</span>
+          <span className="relative flex-1 truncate text-[13px]">{c.title}</span>
+          <span className="relative">{locked ? <Lock className="h-3.5 w-3.5 text-slate-400" /> : <SubMark state={c.state} />}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** เครื่องหมายของขั้นตอนย่อย: ✓ เสร็จ · จุดส้ม รอผล · วงว่าง ยังไม่ทำ */
+function SubMark({ state }: { state: SubState }) {
+  if (state === 'pending') return <span className="mx-[7px] block h-2 w-2 rounded-full bg-amber-500" />;
+  return <Mark state={state} />;
 }
 
 function NavItem({ icon: Icon, tint, fg, num, title, sub, mark, collapsed }: { icon: LucideIcon; tint: string; fg: string; num: string; title: string; sub: string; mark: ReactNode; collapsed: boolean }) {

@@ -51,8 +51,9 @@ export default function PatientSummary() {
   useCrumbs(['ผู้รับบริจาคไต (Recipient)', 'รายชื่อผู้รับบริจาคไต', rec ? fullName(rec) : '…']);
   const [params] = useSearchParams();
   const fromAppt = params.get('from') === 'appt' ? params.get('date') : null;
-  const [stage, setStage] = useState<StageKey | null>(null);
-  const [openSub, setOpenSub] = useState<{ key: string; mode: 'edit' | 'preview'; n: number } | null>(null);
+  const subParam = params.get('sub');
+  const [stage, setStage] = useState<StageKey | null>(subParam ? 'preop' : null);
+  const [openSub, setOpenSub] = useState<{ key: string; mode: 'edit' | 'preview'; n: number } | null>(subParam ? { key: subParam, mode: 'edit', n: 0 } : null);
   const [tab, setTab] = useState<(typeof TABS)[number]>(params.get('tab') === 'lab' ? 'ผลตรวจ Lab' : params.get('tab') === 'drug' ? 'ระดับยากดภูมิ' : 'ภาพรวม');
 
   const openForm: OpenFormFn = (key, mode) => {

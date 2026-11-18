@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 import { CalendarCheck, FileCheck2, Flag, Link2, Sparkles, UserPlus, type LucideIcon } from 'lucide-react';
 import type { PersonKind, PersonRef } from '@/types';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { formsApi } from '@/services/api/formsApi';
 import { matchingApi } from '@/services/api/matchingApi';
 import { appointmentApi } from '@/services/api/appointmentApi';
 import { FORM_LIST, baseDone } from '@/modules/evaluation/progress';
+import { personFormRecord } from '@/services/api/mrbApi';
 import type { AnyForm, MrbForm } from '@/modules/evaluation/forms/data';
 import { STATUS_META } from '@/lib/status';
 import { cn, isoDate, thaiDate } from '@/lib/format';
@@ -40,14 +40,15 @@ export function PersonTimeline({ person, kind }: { person: PersonRef; kind: Pers
     (async () => {
       const ev: Ev[] = [{ date: person.registeredAt, title: kind === 'donor' ? 'ลงทะเบียนผู้บริจาค' : 'ลงทะเบียนผู้รับบริจาคไต', cat: 'status', icon: UserPlus, color: '#64748b' }];
       const list = FORM_LIST[kind];
-      const recs = await Promise.all(list.map((f) => formsApi.get<AnyForm>(kind, person.id, f.key, { sex: person.sex, done: baseDone(person, kind, f.key) })));
+      const recs = await Promise.all(list.map((f) => personFormRecord<AnyForm>(kind, person, f.key, baseDone(person, kind, f.key))));
       recs.forEach((r, i) => {
         if (!r.completed) return;
         const f = list[i];
         const date = (r.data as { date?: string }).date ?? r.savedAt ?? person.registeredAt;
         if (f.key === 'mrb') {
-          const res = (r.data as MrbForm).result;
-          ev.push({ date, title: `ผล MRB: ${res === 'pass' ? 'ผ่าน' : res === 'fail' ? 'ไม่ผ่าน' : '—'}`, sub: (r.data as MrbForm).note, cat: 'form', icon: Flag, color: res === 'fail' ? '#dc2626' : '#ca8a04' });
+          const m = r.data as MrbForm;
+          const res = kind === 'donor' ? m.donorResult || m.result : m.result;
+          ev.push({ date, title: `ผล MRB${kind === 'donor' ? ' (ผู้บริจาค)' : ''}: ${res === 'pass' ? 'ผ่าน' : res === 'fail' ? 'ไม่ผ่าน' : '—'}`, sub: (r.data as MrbForm).note, cat: 'form', icon: Flag, color: res === 'fail' ? '#dc2626' : '#ca8a04' });
         } else {
           ev.push({ date, title: `บันทึกฟอร์ม ${f.num} ${f.title}`, sub: r.savedBy, cat: 'form', icon: FileCheck2, color: '#4f46e5' });
         }

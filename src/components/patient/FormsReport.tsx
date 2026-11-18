@@ -5,8 +5,9 @@ import type { PersonKind, PersonRef } from '@/types';
 import { Badge, TONES } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { formsApi, type FormRecord } from '@/services/api/formsApi';
+import type { FormRecord } from '@/services/api/formsApi';
 import { FORM_LIST, baseDone } from '@/modules/evaluation/progress';
+import { personFormRecord } from '@/services/api/mrbApi';
 import type { AnyForm, FormKey } from '@/modules/evaluation/forms/data';
 import { thaiDate } from '@/lib/format';
 
@@ -19,7 +20,7 @@ export function FormsReport({ person, kind, onOpen }: { person: PersonRef; kind:
 
   useEffect(() => {
     let alive = true;
-    Promise.all(list.map((f) => formsApi.get<AnyForm>(kind, person.id, f.key, { sex: person.sex, done: baseDone(person, kind, f.key) }))).then((rs) => {
+    Promise.all(list.map((f) => personFormRecord<AnyForm>(kind, person, f.key, baseDone(person, kind, f.key)))).then((rs) => {
       if (alive) setRecords(Object.fromEntries(rs.map((r, i) => [list[i].key, r])));
     });
     return () => {
@@ -42,7 +43,7 @@ export function FormsReport({ person, kind, onOpen }: { person: PersonRef; kind:
         state: r?.completed ? ('done' as const) : r?.savedAt ? ('draft' as const) : ('empty' as const),
         date: (r?.data as { date?: string } | undefined)?.date,
         by: r?.savedBy ?? '—',
-        group: f.key === 'mrb' ? 'ก่อนผ่าตัด · MRB' : 'ก่อนผ่าตัด · Evaluation',
+        group: f.key === 'mrb' || f.key === 'preMrb' ? 'ก่อนผ่าตัด · MRB (เคสร่วม)' : 'ก่อนผ่าตัด · Evaluation',
       };
     }),
   ];
