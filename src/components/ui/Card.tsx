@@ -6,7 +6,8 @@ import { fadeUp } from './motion';
 
 export function Card({ className, children, animate = true }: { className?: string; children: ReactNode; animate?: boolean }) {
   return (
-    <motion.section variants={animate ? fadeUp : undefined} className={cn('rounded-2xl border border-slate-200 bg-white shadow-card', className)}>
+    // ใส่ initial/animate เองทุกครั้ง — การ์ดที่ mount ทีหลัง (เช่น สลับแท็บกลับมา “ภาพรวม”) จะไม่ค้างที่ opacity 0
+    <motion.section variants={animate ? fadeUp : undefined} initial={animate ? 'hidden' : undefined} animate={animate ? 'show' : undefined} className={cn('rounded-2xl border border-slate-200 bg-white shadow-card', className)}>
       {children}
     </motion.section>
   );
