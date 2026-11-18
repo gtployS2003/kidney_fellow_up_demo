@@ -151,9 +151,9 @@ function PartyView({ s, recipient }: { s: MrbPartySummary; recipient: boolean })
   const waiting = allRows.filter((r) => !r[1]);
   const labWait = pendingOf(s.labs.flatMap((x) => x.rows));
   const otherWait = pendingOf([...s.imaging, ...s.consults, ...s.vaccines]);
-  const h = Object.fromEntries(s.history);
-  const sens = Object.fromEntries(s.sensitization ?? []);
-  const comorb = (h['Comorbidity'] ?? '').split(/,\s*(?![^()]*\))/).filter(Boolean);
+  const h: Record<string, string> = Object.fromEntries(s.history.map((r) => [r[0], r[1]]));
+  const sens: Record<string, string> = Object.fromEntries((s.sensitization ?? []).map((r) => [r[0], r[1]]));
+  const comorb: string[] = (h['Comorbidity'] ?? '').split(/,\s*(?![^()]*\))/).filter(Boolean);
   const pe = s.pe;
   const tiles: [Tone, string, string, string][] = recipient
     ? [
@@ -213,7 +213,7 @@ function PartyView({ s, recipient }: { s: MrbPartySummary; recipient: boolean })
             ))}
         </Cols>
         <Row k="Comorbidity">
-          {comorb.length && h['Comorbidity'] !== 'ไม่มี' ? comorb.map((c) => <Chip key={c} tone={/surgery/i.test(c) ? 'slate' : 'rose'}>{c}</Chip>) : <Val v="ไม่มี" />}
+          {comorb.length > 0 && h['Comorbidity'] !== 'ไม่มี' ? comorb.map((c: string) => <Chip key={c} tone={/surgery/i.test(c) ? 'slate' : 'rose'}>{c}</Chip>) : <Val v="ไม่มี" />}
         </Row>
         {s.sensitization && (
           <>
