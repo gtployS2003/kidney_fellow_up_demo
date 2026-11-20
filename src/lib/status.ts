@@ -56,6 +56,14 @@ export function stageIndex(key: StageKey): number {
   return STAGES.findIndex((s) => s.key === key);
 }
 
+/** HLA mismatch ต่อ locus = antigen ของผู้บริจาค (ไม่นับซ้ำ) ที่ผู้รับไม่มี · ค่าว่างไม่นับ */
+export function hlaLocusMismatch(donor: readonly string[] | undefined, recipient: readonly string[] | undefined): number | null {
+  const d = [...new Set((donor ?? []).map((x) => x.trim()).filter(Boolean))];
+  const r = (recipient ?? []).map((x) => x.trim()).filter(Boolean);
+  if (!d.length || !r.length) return null;
+  return d.filter((a) => !r.includes(a)).length;
+}
+
 /** ABO: ผู้บริจาค → ผู้รับ เข้ากันได้หรือไม่ */
 export function aboCompatible(donor: string, recipient: string): boolean {
   if (donor === 'O') return true;

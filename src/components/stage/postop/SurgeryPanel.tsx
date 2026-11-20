@@ -1,19 +1,91 @@
-import { Activity, Building2, FileText, Link2, Scissors } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Activity, Building2, FileText, Scissors } from 'lucide-react';
 import type { PersonKind, PersonRef } from '@/types';
-import type { SurgeryRecord } from '@/services/api/postopApi';
+import { postopApi, type SurgeryRecord } from '@/services/api/postopApi';
 import { FormShell } from '@/components/forms/FormShell';
 import { FormLoading } from '@/components/forms/FormBits';
 import { Field, TextInput, Textarea } from '@/components/ui/Form';
 import { Badge, TONES } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { Bars } from '@/components/charts/Bars';
 import { A4Page, LogoBox, Row, tableStyle, td } from '@/components/paper/Paper';
 import { fullName, thaiDate } from '@/lib/format';
-import { usePostop } from './common';
+import { SubNav, usePostop } from './common';
+import { RcDonorForm } from './RcDonorForm';
 
 type K = keyof SurgeryRecord;
 
-export function SurgeryPanel({ person, kind, filled }: { person: PersonRef; kind: PersonKind; filled: boolean }) {
+interface P {
+  person: PersonRef;
+  kind: PersonKind;
+  filled: boolean;
+}
+
+/**
+ * ขั้นตอน “ผ่าตัด”
+ * - ผู้รับที่ได้ไตจากสภากาชาด: มีขั้นตอนย่อย 3.1 บันทึกการผ่าตัด → 3.2 ข้อมูลผู้บริจาค (สภากาชาด) · 3.2 เปิดเมื่อบันทึก 3.1 แล้ว
+ * - ผู้รับที่มีผู้บริจาคมีชีวิต / ผู้บริจาค: ฟอร์มเดียว (ไม่มีขั้นตอนย่อย)
+ */
+export function SurgeryPanel({ person, kind, filled }: P) {
+  const rc = kind === 'recipient' && person.caseType === 'redcross';
+  if (!rc) return <SurgeryForm person={person} kind={kind} filled={filled} />;
+  return <RedCrossSurgery person={person} kind={kind} filled={filled} />;
+}
+
+function RedCrossSurgery({ person, kind, filled }: P) {
+  const [state, setState] = useState<{
+    surgery: boolean;
+    donor: boolean;
+  } | null>(null);
+  const [sel, setSel] = useState<'surgery' | 'rcDonor'>('surgery');
+  useEffect(() => {
+    let alive = true;
+    Promise.all([postopApi.get(kind, person, 'surgery', filled), postopApi.get(kind, person, 'rcDonor', filled)]).then(([s, d]) => {
+      if (!alive) return;
+      const st = {
+        surgery: !!s.savedAt,
+        donor: !!d.savedAt && !!(d.data as { redCrossCode?: string }).redCrossCode,
+      };
+      setState(st);
+      setSel(st.surgery && !st.donor ? 'rcDonor' : 'surgery');
+    });
+    return () => {
+      alive = false;
+    };
+  }, [kind, person, filled]);
+  if (!state) return <FormLoading />;
+  const items = [
+    {
+      key: 'surgery',
+      num: '3.1',
+      title: 'บันทึกการผ่าตัด',
+      sub: 'ศัลยแพทย์และทีมผ่าตัด',
+      icon: Scissors,
+      tint: '#dbeafe',
+      fg: '#2563eb',
+      done: state.surgery,
+    },
+    {
+      key: 'rcDonor',
+      num: '3.2',
+      title: 'ข้อมูลผู้บริจาค (สภากาชาด)',
+      sub: 'กรอกหลังผ่าตัด',
+      icon: Building2,
+      tint: '#ede9fe',
+      fg: '#6d28d9',
+      done: state.donor,
+      pending: state.surgery && !state.donor,
+      locked: !state.surgery,
+      lockedHint: 'เปิดให้กรอกหลังบันทึก 3.1 บันทึกการผ่าตัด',
+    },
+  ];
+  return (
+    <SubNav items={items} sel={sel} onSel={(k) => setSel(k as typeof sel)} footer="3.2 เปิดให้กรอกหลังบันทึก 3.1 · ผู้รับที่มีผู้บริจาคมีชีวิตไม่มีขั้นตอนย่อยนี้">
+      {sel === 'surgery' ? <SurgeryForm person={person} kind={kind} filled={filled} onSaved={() => setState((s) => (s ? { ...s, surgery: true } : s))} /> : <RcDonorForm person={person} filled={filled} onSaved={() => setState((s) => (s ? { ...s, donor: true } : s))} />}
+    </SubNav>
+  );
+}
+
+function SurgeryForm({ person, kind, filled, onSaved }: P & { onSaved?: () => void }) {
   const { data: f, patch, save, info } = usePostop<SurgeryRecord>(kind, person, 'surgery', filled);
   if (!f) return <FormLoading />;
   const donor = kind === 'donor';
@@ -91,7 +163,7 @@ export function SurgeryPanel({ person, kind, filled }: { person: PersonRef; kind
   return (
     <FormShell
       title="บันทึกการผ่าตัด"
-      desc={`ขั้นตอนนี้ยังไม่มีขั้นตอนย่อย · บันทึกโดยศัลยแพทย์และทีมผ่าตัด${donor ? ' · ผู้บริจาค' : ''}`}
+      desc={rc ? '3.1 ผ่าตัด · บันทึกโดยศัลยแพทย์และทีมผ่าตัด · บันทึกแล้วจึงกรอก 3.2 ข้อมูลผู้บริจาคได้' : `ขั้นตอนนี้ไม่มีขั้นตอนย่อย · บันทึกโดยศัลยแพทย์และทีมผ่าตัด${donor ? ' · ผู้บริจาค' : ''}`}
       icon={Scissors}
       gradient={['#0ea5e9', '#2563eb']}
       patient={person}
@@ -99,7 +171,10 @@ export function SurgeryPanel({ person, kind, filled }: { person: PersonRef; kind
       date={f.date}
       onDate={(date) => patch({ date })}
       preview={preview}
-      onSave={() => save()}
+      onSave={async (draft) => {
+        await save();
+        if (!draft) onSaved?.();
+      }}
       savedInfo={info}
       fileName={`KT-surgery-${person.hn}`}
     >
@@ -140,7 +215,14 @@ export function SurgeryPanel({ person, kind, filled }: { person: PersonRef; kind
           </h3>
           {!donor && f.graft && <Badge label={f.graft} tone={TONES.green} className="w-fit" />}
           <p className="text-xs font-semibold text-slate-500">Creatinine (mg/dL) · POD 0–7</p>
-          <Bars height={110} data={creat.map((v, i) => ({ label: `D${i}`, value: v, color: i >= 4 ? '#2563eb' : '#93c5fd' }))} />
+          <Bars
+            height={110}
+            data={creat.map((v, i) => ({
+              label: `D${i}`,
+              value: v,
+              color: i >= 4 ? '#2563eb' : '#93c5fd',
+            }))}
+          />
           <div className="grid grid-cols-8 gap-1">
             {f.creat.map((c, i) => (
               <input key={i} value={c} onChange={(e) => setCreat(i, e.target.value)} className="h-8 w-full rounded-md border border-slate-300 px-1 text-center text-xs outline-none focus:border-primary" aria-label={`Creatinine D${i}`} />
@@ -161,36 +243,6 @@ export function SurgeryPanel({ person, kind, filled }: { person: PersonRef; kind
             ))}
         </section>
       </div>
-
-      {rc && (
-        <section className="flex flex-col gap-4 rounded-2xl border-[1.5px] border-violet-300 bg-white p-5">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-[10px] bg-violet-100 text-violet-700">
-              <Building2 className="h-5 w-5" />
-            </span>
-            <div className="flex-1">
-              <p className="text-base font-bold">ข้อมูลผู้บริจาค (สภากาชาด)</p>
-              <p className="text-[12.5px] text-slate-500">เปิดให้กรอกหลังบันทึกการผ่าตัด · เฉพาะผู้รับที่ไม่มีผู้บริจาคมีชีวิต</p>
-            </div>
-            <Badge label="field รอกำหนด" tone={TONES.violet} />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {['รหัสผู้บริจาค (สภากาชาด)', 'โรงพยาบาลต้นทาง', 'อายุ / เพศ', 'กรุ๊ปเลือด', 'HLA', 'สาเหตุการเสียชีวิต'].map((l) => (
-              <Field key={l} label={l}>
-                <TextInput placeholder="field รอกำหนด" className="!border-dashed" />
-              </Field>
-            ))}
-          </div>
-          <p className="flex items-center gap-2 rounded-[10px] border border-violet-200 bg-violet-50 px-3 py-2.5 text-[12.5px] text-violet-800">
-            <Link2 className="h-4 w-4" /> เมื่อบันทึก → สร้างรายการในเมนูผู้บริจาค › “ไตจากสภากาชาด” อัตโนมัติ และผูกกับผู้รับรายนี้
-          </p>
-          <div className="flex justify-end">
-            <Button variant="indigo" size="sm">
-              บันทึกข้อมูลผู้บริจาค
-            </Button>
-          </div>
-        </section>
-      )}
     </FormShell>
   );
 }

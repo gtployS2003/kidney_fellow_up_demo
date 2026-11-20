@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { Check, ChevronsLeft, type LucideIcon } from 'lucide-react';
+import { Check, ChevronsLeft, Lock, type LucideIcon } from 'lucide-react';
 import type { PersonKind, PersonRef } from '@/types';
 import { postopApi, type PostopSection } from '@/services/api/postopApi';
 import { Badge, TONES } from '@/components/ui/Badge';
@@ -41,10 +41,15 @@ export interface SubItem {
   fg: string;
   badge?: number;
   done?: boolean;
+  /** ยังเปิดไม่ได้ (เช่น ต้องบันทึกขั้นตอนก่อนหน้าก่อน) */
+  locked?: boolean;
+  lockedHint?: string;
+  /** รอกรอก (จุดส้ม) */
+  pending?: boolean;
 }
 
-/** เมนูขั้นตอนย่อยด้านซ้าย (พับได้) — ใช้กับ ก่อนกลับบ้าน / ติดตาม OPD */
-export function SubNav({ items, sel, onSel, children }: { items: SubItem[]; sel: string; onSel: (k: string) => void; children: ReactNode }) {
+/** เมนูขั้นตอนย่อยด้านซ้าย (พับได้) — ใช้กับ ผ่าตัด (สภากาชาด) / ก่อนกลับบ้าน / ติดตาม OPD */
+export function SubNav({ items, sel, onSel, children, footer }: { items: SubItem[]; sel: string; onSel: (k: string) => void; children: ReactNode; footer?: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const done = items.filter((i) => i.done).length;
   return (
@@ -65,7 +70,7 @@ export function SubNav({ items, sel, onSel, children }: { items: SubItem[]; sel:
           </button>
         </div>
         {items.map((it, i) => (
-          <button key={it.key} type="button" title={it.title} onClick={() => onSel(it.key)} className={cn('relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left', i > 0 && 'mt-0.5')}>
+          <button key={it.key} type="button" title={it.locked ? it.lockedHint : it.title} disabled={it.locked} onClick={() => onSel(it.key)} className={cn('relative flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left disabled:cursor-not-allowed disabled:opacity-50', i > 0 && 'mt-0.5')}>
             {sel === it.key && <motion.span layoutId="postop-sub" className="absolute inset-0 rounded-xl bg-indigo-50" />}
             <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-[10px]" style={{ background: it.tint, color: it.fg }}>
               <it.icon className="h-[18px] w-[18px]" />
@@ -79,17 +84,22 @@ export function SubNav({ items, sel, onSel, children }: { items: SubItem[]; sel:
                   </span>
                   <span className="block truncate text-xs text-slate-400">{it.sub}</span>
                 </span>
-                {it.badge ? (
+                {it.locked ? (
+                  <Lock className="relative h-4 w-4 text-slate-400" />
+                ) : it.badge ? (
                   <span className="relative grid h-[22px] w-[22px] place-items-center rounded-full bg-red-500 text-[11px] font-bold text-white">{it.badge}</span>
                 ) : it.done ? (
                   <span className="relative grid h-[22px] w-[22px] place-items-center rounded-full bg-green-600">
                     <Check className="h-3 w-3 text-white" strokeWidth={3} />
                   </span>
+                ) : it.pending ? (
+                  <span className="relative mx-[7px] block h-2 w-2 rounded-full bg-amber-500" />
                 ) : null}
               </>
             )}
           </button>
         ))}
+        {footer && !collapsed && <p className="px-2.5 pb-1 pt-2 text-[11.5px] leading-snug text-slate-500">{footer}</p>}
       </motion.nav>
       <div className="min-w-0 flex-1">
         <motion.div key={sel} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }}>

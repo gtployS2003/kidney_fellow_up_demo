@@ -1,13 +1,11 @@
-import { BusyDialog, useBusyRun } from '@/components/brand/BuddyStates';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Check, ChevronDown, Download, Eye, FileText, Pencil, Printer, Save, type LucideIcon } from 'lucide-react';
+import { Calendar, Check, FileText, Pencil, Save, type LucideIcon } from 'lucide-react';
 import type { PersonRef } from '@/types';
 import { DataTag, TextInput } from '@/components/ui/Form';
 import { Button } from '@/components/ui/Button';
 import { cn, fullName, thaiDate } from '@/lib/format';
-import { exportWord, printForm, PRINT_ROOT_ID } from './exporters';
+import { ExportMenu, ModeToggle, PreviewCanvas, PrintArea } from './PreviewExport';
 
 interface Props {
   title: string;
@@ -37,19 +35,8 @@ interface Props {
 /** โครงฟอร์มทุกขั้นตอนย่อย: หัวฟอร์ม + สลับ กรอกข้อมูล/Preview + Export + แถบผู้ป่วย + ปุ่มบันทึก */
 export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f46e5'], patient, dateLabel = 'วันที่กรอกข้อมูล', date, onDate, preview, children, onSave, savedInfo, fileName, previewNote, initialMode = 'edit', readOnly, notice }: Props) {
   const [mode, setMode] = useState<'edit' | 'preview'>(initialMode);
-  const [menu, setMenu] = useState(false);
   const [saving, setSaving] = useState<null | 'draft' | 'final'>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const { busy, run } = useBusyRun();
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const close = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenu(false);
-    };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, []);
 
   async function save(draft: boolean) {
     if (!onSave) return;
@@ -69,64 +56,20 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
     <div className="flex flex-col gap-4">
       {/* หัวฟอร์ม */}
       <div className="flex flex-wrap items-center gap-3.5 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-5 py-3.5">
-        <span className="grid h-11 w-11 place-items-center rounded-xl text-white" style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}>
+        <span
+          className="grid h-11 w-11 place-items-center rounded-xl text-white"
+          style={{
+            background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
+          }}
+        >
           <Icon className="h-[22px] w-[22px]" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[17px] font-bold text-indigo-800">{title}</p>
           <p className="text-[12.5px] text-slate-600">{desc}</p>
         </div>
-        <div className="flex gap-0.5 rounded-[10px] border border-indigo-100 bg-white p-[3px]">
-          {(
-            [
-              ['edit', readOnly ? 'ดูข้อมูล' : 'กรอกข้อมูล', readOnly ? FileText : Pencil],
-              ['preview', 'Preview', Eye],
-            ] as const
-          ).map(([k, l, I]) => (
-            <button key={k} type="button" onClick={() => setMode(k)} className={cn('relative inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-semibold', mode === k ? 'text-white' : 'text-slate-600')}>
-              {mode === k && <motion.span layoutId={`mode-${title}`} className="absolute inset-0 rounded-lg bg-brand-indigo" />}
-              <I className="relative h-3.5 w-3.5" />
-              <span className="relative">{l}</span>
-            </button>
-          ))}
-        </div>
-        <div className="relative" ref={menuRef}>
-          <Button variant="secondary" size="sm" icon={Download} iconRight={ChevronDown} className="!border-indigo-200 !text-brand-indigo" onClick={() => setMenu(!menu)}>
-            Export
-          </Button>
-          <AnimatePresence>
-            {menu && (
-              <motion.div
-                initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                className="absolute right-0 z-30 mt-2 w-[220px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-pop"
-              >
-                {[
-                  { icon: FileText, color: '#dc2626', t: 'PDF', d: 'เลือก “Save as PDF” ในหน้าต่างพิมพ์', fn: printForm },
-                  { icon: FileText, color: '#2563eb', t: 'Word (.doc)', d: 'แก้ไขต่อได้', fn: () => exportWord(fileName) },
-                  { icon: Printer, color: '#475569', t: 'พิมพ์', d: 'ส่งไปเครื่องพิมพ์', fn: printForm },
-                ].map((o) => (
-                  <button
-                    key={o.t}
-                    type="button"
-                    onClick={() => {
-                      setMenu(false);
-                      run(o.t === 'พิมพ์' ? 'กำลังเตรียมเอกสาร…' : `กำลังสร้างไฟล์ ${o.t.split(' ')[0]}…`, o.fn);
-                    }}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-slate-50"
-                  >
-                    <o.icon className="h-[18px] w-[18px]" style={{ color: o.color }} />
-                    <span>
-                      <span className="block text-[13px] font-semibold">{o.t}</span>
-                      <span className="block text-[11px] text-slate-400">{o.d}</span>
-                    </span>
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <ModeToggle id={title} mode={mode} onChange={setMode} editLabel={readOnly ? 'ดูข้อมูล' : 'กรอกข้อมูล'} editIcon={readOnly ? FileText : Pencil} />
+        <ExportMenu fileName={fileName} title={title} />
       </div>
 
       {notice}
@@ -159,38 +102,25 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
           <motion.div key="edit" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="flex flex-col gap-4">
             {children}
             {!readOnly && (
-            <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-slate-200 bg-white p-4">
-              <span className="text-xs text-slate-400">{savedInfo ?? 'ยังไม่ได้บันทึก'}</span>
-              <span className="flex-1" />
-              <Button variant="secondary" icon={Save} disabled={!!saving} onClick={() => save(true)}>
-                {saving === 'draft' ? 'กำลังบันทึก…' : 'บันทึกร่าง'}
-              </Button>
-              <Button variant="indigo" icon={Check} disabled={!!saving} onClick={() => save(false)}>
-                {saving === 'final' ? 'กำลังบันทึก…' : 'บันทึก'}
-              </Button>
-            </div>
+              <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-slate-200 bg-white p-4">
+                <span className="text-xs text-slate-400">{savedInfo ?? 'ยังไม่ได้บันทึก'}</span>
+                <span className="flex-1" />
+                <Button variant="secondary" icon={Save} disabled={!!saving} onClick={() => save(true)}>
+                  {saving === 'draft' ? 'กำลังบันทึก…' : 'บันทึกร่าง'}
+                </Button>
+                <Button variant="indigo" icon={Check} disabled={!!saving} onClick={() => save(false)}>
+                  {saving === 'final' ? 'กำลังบันทึก…' : 'บันทึก'}
+                </Button>
+              </div>
             )}
           </motion.div>
         ) : (
-          <motion.div key="preview" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex flex-col items-center gap-3 overflow-x-auto rounded-2xl bg-slate-200 p-6">
-            <div className="flex w-full max-w-[794px] items-center gap-2 text-xs text-slate-600">
-              <span className="rounded-full bg-white px-3 py-1">Preview · A4 แนวตั้ง</span>
-              <span className="flex-1" />
-              <span>Export ได้จากปุ่มด้านบน</span>
-            </div>
-            <div className="shadow-[0_4px_16px_rgba(0,0,0,.12)]">{preview}</div>
-            {previewNote && <p className="max-w-[794px] rounded-lg bg-white px-3 py-2 text-xs text-slate-600">{previewNote}</p>}
-          </motion.div>
+          <PreviewCanvas note={previewNote}>{preview}</PreviewCanvas>
         )}
       </>
 
       {/* สำเนาสำหรับพิมพ์ / Export (อยู่นอก #root — แสดงเฉพาะตอนพิมพ์) */}
-      {createPortal(
-        <div id={PRINT_ROOT_ID} className="print-only">
-          {preview}
-        </div>,
-        document.body,
-      )}
+      <PrintArea>{preview}</PrintArea>
 
       <AnimatePresence>
         {toast && (
@@ -199,7 +129,6 @@ export function FormShell({ title, desc, icon: Icon, gradient = ['#6366f1', '#4f
           </motion.div>
         )}
       </AnimatePresence>
-      <BusyDialog open={!!busy} title={busy ?? ''} desc={title} delay={0} />
     </div>
   );
 }

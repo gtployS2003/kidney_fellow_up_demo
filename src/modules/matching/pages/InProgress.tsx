@@ -2,7 +2,7 @@ import { SuccessDialog } from '@/components/brand/BuddyStates';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, CircleCheck, CircleMinus, CircleX, Clock, Database, EyeOff, Hourglass, Link2, Save, Search } from 'lucide-react';
+import { ArrowRight, CircleCheck, CircleMinus, CircleX, ClipboardList, Clock, Database, EyeOff, Hourglass, Link2, Save, Search } from 'lucide-react';
 import type { ChecklistDecision, ChecklistItemDto, MatchResult, MatchingInProgressDto, PairChecklistDto } from '@/types';
 import { useCrumbs } from '@/components/layout/crumbs';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -15,6 +15,8 @@ import { useAsync } from '@/hooks/useAsync';
 import { checklistSummary, matchingApi } from '@/services/api/matchingApi';
 import { cn, durationSince } from '@/lib/format';
 import { QTag, elapsed, thaiDateTime } from '../components/shared';
+import { ExportMenu, ModeToggle, PreviewCanvas, PrintArea, type ViewMode } from '@/components/forms/PreviewExport';
+import { PreKtChecklistPaper } from '@/components/paper/PreKtChecklistPaper';
 
 type Tab = 'living' | 'redcross';
 
@@ -60,6 +62,7 @@ function LivingTab({ pairs: fetched, initial }: { pairs: PairChecklistDto[] | nu
   const [draft, setDraft] = useState<PairChecklistDto | null>(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(false);
+  const [mode, setMode] = useState<ViewMode>('edit');
 
   useEffect(() => {
     if (!pairs?.length) return;
@@ -72,7 +75,12 @@ function LivingTab({ pairs: fetched, initial }: { pairs: PairChecklistDto[] | nu
   if (!pairs.length) return <EmptyState icon={Link2} title="ไม่มีคู่ผู้บริจาคมีชีวิตที่อยู่ระหว่างตรวจ" />;
 
   const list = pairs.filter((p) => `${p.recipient.name} ${p.donor.name}`.includes(q));
-  const setItem = (side: 'recipientItems' | 'donorItems', key: string, patch: Partial<ChecklistItemDto>) => draft && setDraft({ ...draft, [side]: draft[side].map((x) => (x.key === key ? { ...x, ...patch } : x)) });
+  const setItem = (side: 'recipientItems' | 'donorItems', key: string, patch: Partial<ChecklistItemDto>) =>
+    draft &&
+    setDraft({
+      ...draft,
+      [side]: draft[side].map((x) => (x.key === key ? { ...x, ...patch } : x)),
+    });
 
   async function save() {
     if (!draft) return;
@@ -133,26 +141,50 @@ function LivingTab({ pairs: fetched, initial }: { pairs: PairChecklistDto[] | nu
             </div>
           </div>
 
-          <div className="grid gap-3.5 xl:grid-cols-2">
-            <ChecklistColumn title="Recipient" fg="#1d4ed8" bg="#eff6ff" items={draft.recipientItems} onChange={(k, p) => setItem('recipientItems', k, p)} />
-            <ChecklistColumn title="Donor" fg="#0f766e" bg="#f0fdfa" items={draft.donorItems} onChange={(k, p) => setItem('donorItems', k, p)} />
+          {/* Pre-KT evaluation check lists — สลับกรอกข้อมูล / Preview + Export (ใช้ UI เดียวกับฟอร์มขั้นตอนย่อย) */}
+          <div className="flex flex-wrap items-center gap-3.5 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+            <span className="grid h-10 w-10 place-items-center rounded-[10px] bg-indigo-50 text-brand-indigo">
+              <ClipboardList className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-bold">Pre-KT evaluation check lists</p>
+              <p className="text-[12.5px] text-slate-500">ผลจาก iMed + แพทย์ตัดสิน · Preview / Export เป็นแบบฟอร์มกระดาษได้</p>
+            </div>
+            <ModeToggle id="pre-kt" mode={mode} onChange={setMode} />
+            <ExportMenu fileName={`Pre-KT-checklist-${draft.recipient.hn}-${draft.donor.hn}`} title="Pre-KT evaluation check lists" />
           </div>
+          <PrintArea>
+            <PreKtChecklistPaper pair={draft} />
+          </PrintArea>
 
-          <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-slate-200 bg-white p-4">
-            <Database className="h-3.5 w-3.5 text-slate-400" />
-            <span className="text-xs text-slate-400">อัปเดตจาก iMed ล่าสุด {thaiDateTime(draft.syncedAt)} · ข้อที่ไม่ตรงกับฟอร์ม 1.5/1.4 รอถามหน้างาน</span>
-            <span className="flex-1" />
-            <AnimatePresence>
-              {toast && (
-                <motion.span initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-[13px] font-semibold text-green-700">
-                  ✓ บันทึกแล้ว
-                </motion.span>
-              )}
-            </AnimatePresence>
-            <Button icon={Save} disabled={saving} onClick={save}>
-              {saving ? 'กำลังบันทึก…' : 'บันทึกผลการตัดสิน'}
-            </Button>
-          </div>
+          {mode === 'preview' ? (
+            <PreviewCanvas note="Preview ใช้ผลการตัดสินที่แสดงอยู่บนหน้าจอ · กด “บันทึกผลการตัดสิน” ในโหมดกรอกข้อมูลเพื่อบันทึกเข้าระบบ">
+              <PreKtChecklistPaper pair={draft} />
+            </PreviewCanvas>
+          ) : (
+            <>
+              <div className="grid gap-3.5 xl:grid-cols-2">
+                <ChecklistColumn title="Recipient" fg="#1d4ed8" bg="#eff6ff" items={draft.recipientItems} onChange={(k, p) => setItem('recipientItems', k, p)} />
+                <ChecklistColumn title="Donor" fg="#0f766e" bg="#f0fdfa" items={draft.donorItems} onChange={(k, p) => setItem('donorItems', k, p)} />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-slate-200 bg-white p-4">
+                <Database className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-xs text-slate-400">อัปเดตจาก iMed ล่าสุด {thaiDateTime(draft.syncedAt)} · ข้อที่ไม่ตรงกับฟอร์ม 1.5/1.4 รอถามหน้างาน</span>
+                <span className="flex-1" />
+                <AnimatePresence>
+                  {toast && (
+                    <motion.span initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-[13px] font-semibold text-green-700">
+                      ✓ บันทึกแล้ว
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                <Button icon={Save} disabled={saving} onClick={save}>
+                  {saving ? 'กำลังบันทึก…' : 'บันทึกผลการตัดสิน'}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -202,7 +234,11 @@ function ChecklistColumn({ title, fg, bg, items, onChange }: { title: string; fg
                   <p className="text-[11px] text-slate-400">{it.key === 'others' ? '—' : it.key === 'psa' ? 'เฉพาะผู้ชาย' : 'เฉพาะผู้หญิง'}</p>
                 ) : it.date ? (
                   <p className="text-[11px] text-slate-500">
-                    {it.date.split('-').reverse().join('/').replace(/\/(\d{4})$/, (_, y) => `/${(Number(y) + 543) % 100}`)}
+                    {it.date
+                      .split('-')
+                      .reverse()
+                      .join('/')
+                      .replace(/\/(\d{4})$/, (_, y) => `/${(Number(y) + 543) % 100}`)}
                     {it.comment && <span className={cn('ml-1.5', it.decision === 'fail' ? 'text-red-700' : 'text-slate-400')}>{it.comment}</span>}
                   </p>
                 ) : null}
@@ -372,7 +408,18 @@ function RedCrossTab({ rows, reload }: { rows: MatchingInProgressDto[] | null; r
                   ).map(([k, Icon, t, sub, fg, ibg, sbg, bd]) => {
                     const on = result === k;
                     return (
-                      <motion.button key={k} type="button" whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} onClick={() => setResult(k)} className="flex flex-col items-center gap-1.5 rounded-xl px-3 py-5" style={{ background: on ? sbg : '#fff', border: `${on ? 2 : 1.5}px solid ${on ? bd : '#e2e8f0'}` }}>
+                      <motion.button
+                        key={k}
+                        type="button"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setResult(k)}
+                        className="flex flex-col items-center gap-1.5 rounded-xl px-3 py-5"
+                        style={{
+                          background: on ? sbg : '#fff',
+                          border: `${on ? 2 : 1.5}px solid ${on ? bd : '#e2e8f0'}`,
+                        }}
+                      >
                         <span className="grid h-10 w-10 place-items-center rounded-full" style={{ background: ibg, color: fg }}>
                           <Icon className="h-5 w-5" />
                         </span>
@@ -404,7 +451,8 @@ function RedCrossTab({ rows, reload }: { rows: MatchingInProgressDto[] | null; r
                 </label>
                 {result && (
                   <p className="flex items-center gap-2 rounded-[10px] bg-slate-50 px-3 py-2.5 text-[12.5px] text-slate-600">
-                    <ArrowRight className="h-4 w-4" /> หลังบันทึก: ผู้ป่วย{result === 'received' ? 'เปลี่ยนเป็น “รอผ่าตัด”' : 'กลับไปสถานะ “รอไตจากสภากาชาด”'} และบันทึกลงประวัติการจับคู่
+                    <ArrowRight className="h-4 w-4" /> หลังบันทึก: ผู้ป่วย
+                    {result === 'received' ? 'เปลี่ยนเป็น “รอผ่าตัด”' : 'กลับไปสถานะ “รอไตจากสภากาชาด”'} และบันทึกลงประวัติการจับคู่
                   </p>
                 )}
                 <div className="flex justify-end gap-2.5">

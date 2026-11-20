@@ -1,4 +1,6 @@
-import type { PersonKind, PersonRef } from '@/types';
+import type { BloodGroup, HlaTyping, PersonKind, PersonRef } from '@/types';
+import { recipientsDb } from '@/mocks/recipients';
+import { donorsDb } from '@/mocks/donors';
 import { USE_MOCK, http, mockDelay } from './client';
 
 // ===== ข้อมูลขั้นตอน ผ่าตัด / ก่อนกลับบ้าน / ติดตาม OPD (ยังรอกำหนดแบบฟอร์มจริง — ใช้ตามดีไซน์ใน Figma) =====
@@ -26,6 +28,34 @@ export interface SurgeryRecord {
   urineD0: string;
   tacD5: string;
   dialysis: string;
+}
+
+/** 3.2 ข้อมูลผู้บริจาค (สภากาชาด) — กรอกหลังผ่าตัด · เฉพาะผู้รับที่ได้ไตจากสภากาชาด */
+export interface RcDonorRecord {
+  date: string;
+  redCrossCode: string;
+  sourceHospital: string;
+  receivedDate: string;
+  age: string;
+  sex: '' | 'male' | 'female';
+  causeOfDeath: string;
+  abo: '' | BloodGroup;
+  rh: '' | '+' | '-';
+  hla: {
+    A: [string, string];
+    B: [string, string];
+    DR: [string, string];
+    DQ: [string, string];
+  };
+  crossmatch: '' | 'Negative' | 'Positive';
+  pra: string;
+  dsa: '' | 'Negative' | 'Positive';
+  donorCr: string;
+  cmv: string;
+  cit: string;
+  /** HLA / PRA ของผู้รับ (ดึงจาก iMed · ไม่ได้กรอก) */
+  recipientHla?: HlaTyping;
+  recipientPra?: number;
 }
 
 export interface ChecklistRow {
@@ -110,7 +140,7 @@ export interface OpdComplications {
   rows: Complication[];
 }
 
-export type PostopSection = 'surgery' | 'dcChecklist' | 'dcSummary' | 'dcMeds' | 'dcFollow' | 'opdVisits' | 'opdMeds' | 'opdComplications';
+export type PostopSection = 'surgery' | 'rcDonor' | 'dcChecklist' | 'dcSummary' | 'dcMeds' | 'dcFollow' | 'opdVisits' | 'opdMeds' | 'opdComplications';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const addDays = (iso: string, n: number) => {
@@ -153,6 +183,33 @@ function sample(section: PostopSection, p: PersonRef, kind: PersonKind, filled: 
             dialysis: kind === 'donor' ? '—' : 'ไม่ต้อง',
           } satisfies SurgeryRecord)
         : ({ date: today(), donorType: '', donorName: '', surgeon: '', anesthetist: '', duration: '', side: '', cit: '', wit: '', hlaMm: '', induction: '', bloodLoss: '', djStent: '', complication: '', abo: '', notes: '', graft: '', creat: Array(8).fill(''), urineD0: '', tacD5: '', dialysis: '' } satisfies SurgeryRecord);
+    case 'rcDonor': {
+      const r = recipientsDb.find((x) => x.id === p.id);
+      const d = donorsDb.find((x) => x.caseType === 'redcross' && x.recipient.id === p.id);
+      // เดโม: กรอกแล้วถ้าผู้รับผ่านขั้นตอนผ่าตัดไปแล้ว
+      const done = filled && !!p.stageDates.discharge;
+      const empty: [string, string] = ['', ''];
+      return {
+        date: done ? addDays(surg, 1) : today(),
+        redCrossCode: done ? (d?.redCrossCode ?? 'DD-2569-0142') : '',
+        sourceHospital: done ? (d?.sourceHospital ?? 'รพ.พุทธชินราช พิษณุโลก') : '',
+        receivedDate: done ? surg : '',
+        age: done ? String(d?.age ?? 34) : '',
+        sex: done ? (d?.sex ?? 'male') : '',
+        causeOfDeath: done ? 'Traumatic brain injury' : '',
+        abo: done ? (d?.bloodGroup ?? p.bloodGroup) : '',
+        rh: done ? '+' : '',
+        hla: done ? { A: ['2', '24'], B: ['46', '13'], DR: ['9', '15'], DQ: ['3', '6'] } : { A: empty, B: empty, DR: empty, DQ: empty },
+        crossmatch: done ? 'Negative' : '',
+        pra: done ? String(r?.pra ?? 0) : '',
+        dsa: done ? 'Negative' : '',
+        donorCr: done ? '0.9' : '',
+        cmv: done ? 'D+ / R+' : '',
+        cit: done ? '14 ชม. 30 นาที' : '',
+        recipientHla: r?.hla,
+        recipientPra: r?.pra,
+      } satisfies RcDonorRecord;
+    }
     case 'dcChecklist': {
       const labels =
         kind === 'donor'
@@ -244,6 +301,56 @@ export const postopApi = {
     if (!USE_MOCK) return http(`/${kind === 'recipient' ? 'recipients' : 'donors'}/${id}/postop/${section}`, { method: 'PUT', body: JSON.stringify(data) });
     const savedAt = new Date().toISOString();
     store.set(key(kind, id, section), { data, savedAt });
+    if (section === 'rcDonor') upsertRedCrossDonor(id, data as RcDonorRecord);
     return mockDelay(savedAt, 350);
   },
 };
+
+/** เดโม: บันทึก 3.2 → สร้าง/อัปเดตรายการในเมนูผู้บริจาค › ไตจากสภากาชาด และผูกกับผู้รับ (ฝั่ง backend ทำใน transaction เดียวกัน) */
+function upsertRedCrossDonor(recipientId: string, f: RcDonorRecord) {
+  const r = recipientsDb.find((x) => x.id === recipientId);
+  if (!r) return;
+  const code = f.redCrossCode || `DD-${new Date().getFullYear() + 543}-NEW`;
+  const ex = donorsDb.find((x) => x.caseType === 'redcross' && x.recipient.id === recipientId);
+  const patch = {
+    redCrossCode: code,
+    sourceHospital: f.sourceHospital,
+    lastName: code,
+    age: Number(f.age) || 0,
+    sex: f.sex || 'male',
+    bloodGroup: f.abo || r.bloodGroup,
+    rh: f.rh || '+',
+    recipientSurgeryDate: r.stageDates.surgery,
+  } as const;
+  if (ex) {
+    Object.assign(ex, patch);
+    return;
+  }
+  const now = new Date().toISOString().slice(0, 10);
+  donorsDb.unshift({
+    id: `dd-${code.toLowerCase()}`,
+    hn: '',
+    prefix: '',
+    firstName: 'ผู้บริจาคสภากาชาด',
+    ...patch,
+    caseType: 'redcross',
+    status: 'postop',
+    statusSince: now,
+    registeredAt: now,
+    relation: 'จัดสรรโดยสภากาชาด',
+    recipient: {
+      id: r.id,
+      name: `${r.prefix}${r.firstName} ${r.lastName}`,
+      hn: r.hn,
+      bloodGroup: r.bloodGroup,
+      rh: r.rh,
+      status: r.status,
+    },
+    phone: '—',
+    nationalId: '—',
+    birthDate: '',
+    address: '—',
+    physician: r.physician,
+    stageDates: { register: now },
+  });
+}
